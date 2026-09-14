@@ -295,35 +295,21 @@
   },
   "desarrollo": {
     "modulos_en_desarrollo": [
-      "Nucleo MCP",
-      "Adaptador sintetico"
+      "Adaptador standards",
+      "Contenedor"
     ],
     "funcionalidades_en_progreso": [],
     "bloqueadores": [
       "Credenciales AWS sin configurar (el CLI 2.36.44 ya esta instalado). CORRECCION 14-09: el acceso a los modelos de Bedrock esta habilitado POR DEFECTO en las regiones comerciales, y los modelos de Amazon (Nova) ni siquiera pasan por Marketplace. No hay paso de solicitud: basta con invocar. Lo anotado antes era el flujo antiguo.",
       "Inscripcion en Devpost hecha; falta el formulario de creditos (requiere Devpost Profile URL)."
     ],
-    "proxima_entrega": "M1 - Nucleo e interfaz (14-27 sep)",
-    "notas_sprint": "M1 practicamente completo. HECHO: andamiaje, interfaz de proveedor, generador determinista de San Telmo, adaptador sintetico, las seis herramientas y el SERVIDOR sobre Streamable HTTP sin estado, con sonda /health y CI en GitHub Actions. 159 tests en verde, entre ellos un cliente MCP generico hablando HTTP real contra un socket. PENDIENTE de M1: congelar la interfaz de proveedor al cerrar el hito (ADR-006)."
+    "proxima_entrega": "M2 - Adaptador de estandares (14 sep - 4 oct)",
+    "notas_sprint": "M1 funcionalmente completo (161 tests, CI verde, las dos eras de protocolo verificadas); solo queda congelar la interfaz, previsto el 27-09. M2 adelantado para que la congelacion ocurra con el adaptador standards ya escrito. Orden de trabajo pensado contra la regla de corte 1: primero iCalendar e inventario CSV, que sobreviven a cualquier recorte, y LDAP al final, que es lo primero que cae si M2 se pasa del 4 de octubre."
   },
-  "evolutivoActivo": "M1",
+  "evolutivoActivo": "M2",
   "evolutivos": {
     "_doc": "Estructura de cada evolutivo (codigo, titulo, estado, asignadoA, rama, prioridad, fechas, creadoPor, notas) en schema.md#evolutivos",
     "pendientes": [
-      {
-        "codigo": "M2",
-        "titulo": "Adaptador de estandares, catalogo derivado y contenedor",
-        "estado": "pendiente",
-        "asignadoA": "hvaler",
-        "rama": null,
-        "prioridad": "alta",
-        "fechaCreacion": "2026-09-14",
-        "fechaInicio": "2026-09-28",
-        "fechaEstimada": "2026-10-04",
-        "fechaCompletado": null,
-        "creadoPor": "hvaler",
-        "notas": "Salida: la costura es real, no una promesa. Calendarios iCalendar, directorio LDAP e inventario en tabla; catalogo de herramientas derivado de las capacidades declaradas; imagen de contenedor y fichero de composicion."
-      },
       {
         "codigo": "M3",
         "titulo": "Orquestador, tarjetas, localizacion y confirmacion multivuelta",
@@ -409,6 +395,20 @@
         "fechaCompletado": null,
         "creadoPor": "hvaler",
         "notas": "Salida: responde a un cliente MCP generico. Servidor sobre Streamable HTTP con server/discover; tests de contrato y medicion de latencia en cada compilacion. LA INTERFAZ DE PROVEEDOR SE CONGELA AL CERRAR EL HITO: a partir de ahi solo se implementa. | Arrancado el 14-09 en paralelo con M0, que sigue abierto por la verificacion de Bedrock. M1 no toca AWS, asi que no depende de ella."
+      },
+      {
+        "codigo": "M2",
+        "titulo": "Adaptador de estandares, catalogo derivado y contenedor",
+        "estado": "en_progreso",
+        "asignadoA": "hvaler",
+        "rama": "main",
+        "prioridad": "alta",
+        "fechaCreacion": "2026-09-14",
+        "fechaInicio": "2026-09-14",
+        "fechaEstimada": "2026-10-04",
+        "fechaCompletado": null,
+        "creadoPor": "hvaler",
+        "notas": "Salida: la costura es real, no una promesa. Calendarios iCalendar, directorio LDAP e inventario en tabla; catalogo de herramientas derivado de las capacidades declaradas; imagen de contenedor y fichero de composicion. | Adelantado al 14-09 con los 13 dias de holgura de M1. Motivo: la interfaz de proveedor solo la ha tocado un adaptador, y la tesis del runbook es que uno solo finge la separacion. Se congela igualmente el 27-09, pero con dos adaptadores de evidencia."
       }
     ],
     "completados": []
@@ -437,6 +437,7 @@
   "alertas": {
     "_doc": "Claude muestra estas alertas al iniciar sesion",
     "activas": [
+      "PLAN - M2 adelantado al 14-09. La congelacion de la interfaz de proveedor SIGUE siendo el 27-09 (ADR-006): mover esa fecha es exactamente como la abstraccion se come el calendario.",
       "ORDEN DE ALTAS - 1) Devpost (su Profile URL es obligatorio en el formulario de creditos). 2) Los 150 $ se piden por PERFIL de Devpost, no por proyecto: presupuesto compartido con LREA. 3) Cuenta AWS ya creada en plan Free; el CLI 2.36.44 esta instalado y faltan credenciales. ATAJO: la actividad 'modelo fundacional en el playground de Bedrock' (20 $) ES la verificacion que cierra M0.",
       "AWS - Los 150 $ del hackathon son promotional credits y la pagina de free tier dice que solo los planes de pago son elegibles. Y el free tier no cubre inferencia de Bedrock. Confirmar ambas cosas antes de M3: el orquestador depende de Nova 2 Lite.",
       "UC-05 depende de que el cliente declare la capacidad 'elicitation': en era 2025 el input_required viaja como elicitation/create. Verificar que Alexa+ la soporta antes de M3; si no, confirmar en dos llamadas de herramienta. Ver DEUDA_TECNICA.md.",

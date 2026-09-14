@@ -1,0 +1,13 @@
+room_id,building_code,building_name,floor,kind,capacity,equipment,supervised
+QUA-G01,QUA,Quay House,0,lecture,150,"projector;screen;PA system",false
+QUA-G02,QUA,Quay House,0,lecture,150,"projector;screen;PA system",false
+QUA-101,QUA,Quay House,1,seminar,32,"projector;whiteboard",false
+QUA-102,QUA,Quay House,1,seminar,32,"projector;whiteboard",false
+QUA-103,QUA,Quay House,1,seminar,32,"projector;whiteboard",false
+QUA-201,QUA,Quay House,2,computer-lab,40,"workstations;projector",true
+QUA-202,QUA,Quay House,2,computer-lab,40,"workstations;projector",true
+QUA-301,QUA,Quay House,3,study,90,"power at every seat;silent study",false
+MIL-G01,MIL,The Mill,0,auditorium,240,"projector;PA system;hearing loop;streaming rig",false
+MIL-101,MIL,The Mill,1,seminar,28,"touchscreen display;whiteboard",false
+MIL-102,MIL,The Mill,1,seminar,28,"touchscreen display;whiteboard",false
+MIL-201,MIL,The Mill,2,lab,20,"fume hood;microscopes;emergency shower",true

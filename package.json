@@ -23,6 +23,9 @@
   "dependencies": {
     "@modelcontextprotocol/node": "2.0.0",
     "@modelcontextprotocol/server": "2.0.0",
+    "csv-parse": "7.0.2",
+    "ldapts": "9.0.0",
+    "node-ical": "0.27.2",
     "zod": "4.6.5"
   },
   "devDependencies": {

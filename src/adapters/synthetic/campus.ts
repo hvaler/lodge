@@ -8,22 +8,15 @@
  */
 
 import type { Room, RoomKind } from '../../provider/index.ts';
+import { instantAt, isOpenThroughout as isOpenIn, localParts, weekOf } from '../../shared/time.ts';
+import type { DayHours, OpeningHours } from '../../shared/time.ts';
 
 /** San Telmo is on the Spanish coast; opening hours below are wall-clock in this zone. */
 export const CAMPUS_TIMEZONE = 'Europe/Madrid';
 
-/** `HH:MM` in {@link CAMPUS_TIMEZONE}. */
-export interface DayHours {
-  readonly open: string;
-  readonly close: string;
-}
+export type { DayHours, OpeningHours } from '../../shared/time.ts';
 
-/** Seven entries, index 0 = Sunday … 6 = Saturday. `null` means closed that day. */
-export type OpeningHours = readonly (DayHours | null)[];
-
-function week(weekday: DayHours | null, saturday: DayHours | null, sunday: DayHours | null): OpeningHours {
-  return [sunday, weekday, weekday, weekday, weekday, weekday, saturday];
-}
+const week = weekOf;
 
 /** A run of consecutive rooms on one floor sharing kind, capacity and equipment. */
 interface RoomBlock {
@@ -209,75 +202,22 @@ export function walkBetween(from: string, to: string): Walk | null {
   return WALKS.get(`${from}>${to}`) ?? WALKS.get(`${to}>${from}`) ?? null;
 }
 
-/** Wall-clock parts of `at` in the campus timezone, for comparing against opening hours. */
+/** Wall-clock parts of `at` on the campus clock. */
 export function campusLocalParts(at: Date): { weekday: number; minutes: number; isoDate: string } {
-  const parts = new Intl.DateTimeFormat('en-GB', {
-    timeZone: CAMPUS_TIMEZONE,
-    weekday: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour12: false,
-  }).formatToParts(at);
-
-  const get = (type: string): string => parts.find((p) => p.type === type)?.value ?? '';
-  const weekdays: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
-  const hour = Number(get('hour')) % 24;
-
-  return {
-    weekday: weekdays[get('weekday')] ?? 0,
-    minutes: hour * 60 + Number(get('minute')),
-    isoDate: `${get('year')}-${get('month')}-${get('day')}`,
-  };
+  return localParts(at, CAMPUS_TIMEZONE);
 }
 
 /**
  * The instant at which the campus wall clock reads `isoDate` at `hhmm`.
  *
- * Needed because the academic calendar straddles the change of season: 9 October 2026 is CEST
- * (UTC+2) and 30 October is CET (UTC+1). Hardcoding either offset would put one of the two
- * deadlines an hour out, and `campus.deadlines` reports days remaining off that instant.
- *
- * Converges in two passes: the first correction lands within an hour, the second fixes the case
- * where that hour crossed the transition itself.
+ * Matters because the academic calendar straddles the change of season: 9 October 2026 is CEST
+ * (UTC+2) and 30 October is CET (UTC+1), and `campus.deadlines` reports days remaining off this.
  */
 export function campusInstant(isoDate: string, hhmm = '23:59'): Date {
-  const [year, month, day] = isoDate.split('-').map(Number) as [number, number, number];
-  const [hour, minute] = hhmm.split(':').map(Number) as [number, number];
-  const target = Date.UTC(year, month - 1, day, hour, minute);
-
-  let guess = target;
-  for (let pass = 0; pass < 2; pass++) {
-    const local = campusLocalParts(new Date(guess));
-    const actual = Date.UTC(
-      Number(local.isoDate.slice(0, 4)),
-      Number(local.isoDate.slice(5, 7)) - 1,
-      Number(local.isoDate.slice(8, 10)),
-      Math.floor(local.minutes / 60),
-      local.minutes % 60,
-    );
-    guess += target - actual;
-  }
-  return new Date(guess);
+  return instantAt(isoDate, hhmm, CAMPUS_TIMEZONE);
 }
 
-function toMinutes(hhmm: string): number {
-  const [h, m] = hhmm.split(':');
-  return Number(h) * 60 + Number(m);
-}
-
-/** Whether `building` is open for the whole of [from, to]. Half-open at the close. */
+/** Whether `building` is open for the whole of [from, to]. */
 export function isOpenThroughout(building: BuildingSpec, from: Date, to: Date): boolean {
-  const start = campusLocalParts(from);
-  const end = campusLocalParts(to);
-
-  // A window that crosses midnight or a day boundary is never fully inside opening hours here.
-  if (start.isoDate !== end.isoDate) return false;
-
-  const hours = building.openingHours[start.weekday];
-  if (!hours) return false;
-
-  return start.minutes >= toMinutes(hours.open) && end.minutes <= toMinutes(hours.close);
+  return isOpenIn(building.openingHours, from, to, CAMPUS_TIMEZONE);
 }
