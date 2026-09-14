@@ -31,15 +31,26 @@ async function listen(env: NodeJS.ProcessEnv = {}): Promise<void> {
   baseUrl = `http://127.0.0.1:${port}`;
 }
 
-async function connectClient(headers: Record<string, string> = {}): Promise<Client> {
+async function connectClient(
+  headers: Record<string, string> = {},
+  versionNegotiation?: { mode: 'legacy' | 'auto' },
+): Promise<Client> {
   const client = new Client(
     { name: 'generic-client', version: '0.0.0' },
     { capabilities: { elicitation: {} } },
   );
   await client.connect(
-    new StreamableHTTPClientTransport(new URL(`${baseUrl}/mcp`), { requestInit: { headers } }),
+    new StreamableHTTPClientTransport(new URL(`${baseUrl}/mcp`), {
+      requestInit: { headers },
+      ...(versionNegotiation ? { versionNegotiation } : {}),
+    }),
   );
   return client;
+}
+
+async function textOf(client: Client, name: string, args: Record<string, unknown> = {}): Promise<string> {
+  const result = await client.callTool({ name, arguments: args });
+  return ((result.content ?? []) as { text?: string }[]).map((b) => b.text).join(' ');
 }
 
 afterEach(async () => {
@@ -89,6 +100,22 @@ describe('a generic MCP client can use it over HTTP', () => {
     expect(await call(first)).toBe(await call(second));
     await Promise.all([first.close(), second.close()]);
   });
+
+  it.each([['legacy'], ['auto']] as const)(
+    'serves a client negotiating in %s mode',
+    async (mode) => {
+      // createMcpHandler promises both protocol eras from one factory, and ADR-009 leans on it:
+      // 2025-11-25 is what Alexa+ speaks, and the modern era comes along for free. Asserting both
+      // here is what stops that promise from being untested.
+      const client = await connectClient({}, { mode });
+
+      const { tools } = await client.listTools();
+      expect(tools).toHaveLength(6);
+      expect(await textOf(client, 'campus.find_room')).toMatch(/Free until/);
+
+      await client.close();
+    },
+  );
 
   it('serves a health probe describing what this deployment is', async () => {
     const response = await fetch(`${baseUrl}/health`);
