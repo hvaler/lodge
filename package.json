@@ -1,0 +1,31 @@
+{
+  "name": "lodge",
+  "version": "0.0.0",
+  "description": "The porter's lodge that never closes. A self-hosted MCP server that answers campus questions over the standards any institution already has.",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hvaler/lodge.git"
+  },
+  "homepage": "https://github.com/hvaler/lodge#readme",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/node": "2.0.0",
+    "@modelcontextprotocol/server": "2.0.0",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "24.13.4",
+    "typescript": "7.0.2",
+    "vitest": "5.0.0"
+  }
+}

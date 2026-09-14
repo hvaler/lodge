@@ -294,33 +294,22 @@
     "_campos_existencia_doc": "autenticacion=false y tests_existentes=false porque el codigo aun no existe: OAuth 2.1 llega en M4 y los tests de contrato en M1. documentacion_existente=true por el runbook."
   },
   "desarrollo": {
-    "modulos_en_desarrollo": [],
+    "modulos_en_desarrollo": [
+      "Nucleo MCP",
+      "Interfaz de proveedor"
+    ],
     "funcionalidades_en_progreso": [],
     "bloqueadores": [
       "Credenciales AWS sin configurar (el CLI ya esta instalado): sin ellas no se verifica Nova 2 Lite en us-east-1, que es el ultimo entregable de M0.",
       "Inscripcion en Devpost sin confirmar."
     ],
-    "proxima_entrega": "M0 - Cimientos (14-17 sep): falta verificar Bedrock",
+    "proxima_entrega": "M1 - Nucleo e interfaz (14-27 sep)",
     "notas_sprint": "M0 arrancado el 14-09-2026, un dia antes del plan. HECHO: repositorio publico https://github.com/hvaler/lodge con LICENSE Apache-2.0 y NOTICE en el primer commit; README propio; especificacion cerrada de San Telmo en docs/san-telmo.md; bases y recursos del hackathon verificados (elegibilidad de Espana OK, creditos de participacion, criterios de evaluacion) y runbook corregido en cuatro puntos, incluida la revision de protocolo (ADR-009). PENDIENTE: pedir los 150 $ de creditos y verificar Bedrock en us-east-1."
   },
-  "evolutivoActivo": "M0",
+  "evolutivoActivo": "M1",
   "evolutivos": {
     "_doc": "Estructura de cada evolutivo (codigo, titulo, estado, asignadoA, rama, prioridad, fechas, creadoPor, notas) en schema.md#evolutivos",
     "pendientes": [
-      {
-        "codigo": "M1",
-        "titulo": "Nucleo, interfaz de proveedor, adaptador sintetico y las seis herramientas",
-        "estado": "pendiente",
-        "asignadoA": "hvaler",
-        "rama": null,
-        "prioridad": "alta",
-        "fechaCreacion": "2026-09-14",
-        "fechaInicio": "2026-09-18",
-        "fechaEstimada": "2026-09-27",
-        "fechaCompletado": null,
-        "creadoPor": "hvaler",
-        "notas": "Salida: responde a un cliente MCP generico. Servidor sobre Streamable HTTP con server/discover; tests de contrato y medicion de latencia en cada compilacion. LA INTERFAZ DE PROVEEDOR SE CONGELA AL CERRAR EL HITO: a partir de ahi solo se implementa."
-      },
       {
         "codigo": "M2",
         "titulo": "Adaptador de estandares, catalogo derivado y contenedor",
@@ -406,6 +395,20 @@
         "fechaCompletado": null,
         "creadoPor": "hvaler",
         "notas": "Salida: conjunto de datos de referencia cerrado. Repositorio publico con licencia abierta desde el primer commit; cuenta AWS con acceso a Bedrock en us-east-1; Universidad de San Telmo definida (edificios, titulaciones, calendario). | Arrancado el 14-09-2026, un dia antes del plan: gana un dia de margen sobre M1. | 14-09: repositorio publico creado con licencia en el primer commit y dataset de San Telmo cerrado en docs/san-telmo.md. Queda la verificacion de Bedrock."
+      },
+      {
+        "codigo": "M1",
+        "titulo": "Nucleo, interfaz de proveedor, adaptador sintetico y las seis herramientas",
+        "estado": "en_progreso",
+        "asignadoA": "hvaler",
+        "rama": "main",
+        "prioridad": "alta",
+        "fechaCreacion": "2026-09-14",
+        "fechaInicio": "2026-09-14",
+        "fechaEstimada": "2026-09-27",
+        "fechaCompletado": null,
+        "creadoPor": "hvaler",
+        "notas": "Salida: responde a un cliente MCP generico. Servidor sobre Streamable HTTP con server/discover; tests de contrato y medicion de latencia en cada compilacion. LA INTERFAZ DE PROVEEDOR SE CONGELA AL CERRAR EL HITO: a partir de ahi solo se implementa. | Arrancado el 14-09 en paralelo con M0, que sigue abierto por la verificacion de Bedrock. M1 no toca AWS, asi que no depende de ella."
       }
     ],
     "completados": []
