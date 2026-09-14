@@ -35,18 +35,19 @@
     "lenguaje": "TypeScript",
     "tipo_proyecto": "Servidor MCP (Streamable HTTP, sin estado)",
     "sdk": "MCP TypeScript SDK (oficial)",
-    "protocolo": "MCP 2026-07-28, con degradacion a 2025-11-25 (minimo exigido por el hackathon)",
+    "protocolo": "MCP 2025-11-25 (revision objetivo; ADR-009). Handler multi-era para revisiones posteriores",
     "frontend": "Tarjetas visuales (extension MCP Apps) + orquestador web de demostracion",
     "modelo": "Amazon Nova 2 Lite (Amazon Bedrock)",
     "base_datos": "DynamoDB (solo en el despliegue gestionado)",
     "orm": null,
-    "identidad": "OAuth 2.1 + Client ID Metadata Documents (el registro dinamico de cliente esta obsoleto y no se usa)",
+    "identidad": "OAuth 2.1 authorization code + PKCE (S256), parametro 'resource' al URI canonico. Obligatorio para conectar con Alexa+, no solo identidad de usuario",
     "observabilidad": "OpenTelemetry (contexto de traza en las cabeceras del protocolo)",
     "infraestructura_como_codigo": "AWS CDK v2 (rama 2.263+; no existe v3)",
     "contenedor": "Imagen distroless + fichero de composicion",
     "formato_salida": "JSON (MCP)",
     "gestor_paquetes": "npm",
-    "politica_versiones": "Se fijan en M1, se revalidan una vez en M3, se congelan tras M4. Nada en preview."
+    "politica_versiones": "Se fijan en M1, se revalidan una vez en M3, se congelan tras M4. Nada en preview.",
+    "latencia_objetivo": "< 500 ms ida y vuelta (limite de plataforma Alexa+)"
   },
   "equipo": {
     "_doc": "'usuario' = usuario Git. 'nombre' = displayName EXACTO de AD (System.AssignedTo en Azure DevOps Server). 'roles' = array (multi-rol). Ver schema.md#equipo",
@@ -229,7 +230,7 @@
       "media",
       "baja"
     ],
-    "sla": null,
+    "sla": "< 500 ms ida y vuelta (limite de la plataforma Alexa+, verificado 14-09-2026)",
     "horario_mantenimiento": null,
     "dependencias_inter_proyecto": [
       "LREA - segunda candidatura del mismo equipo al hackathon. Compite por el mismo tiempo; Lodge tiene prioridad (regla de corte 3, 14 oct).",
@@ -239,7 +240,7 @@
   },
   "calendario": {
     "deadline": "2026-10-21",
-    "_deadline_doc": "Envio interno en Devpost. Cierre oficial: 2026-10-23 21:00 CEST. El margen de 48 h cubre una regrabacion o una caida de Devpost; no es holgura.",
+    "_deadline_doc": "Envio interno en Devpost. Cierre oficial verificado en las bases: 23 oct 2026, 12:00 PDT (= 21:00 CEST). El margen de 48 h cubre una regrabacion o una caida de Devpost; no es holgura.",
     "freeze_periods": [
       "2026-10-21 a 2026-10-23: repositorio congelado y demostracion accesible para el jurado hasta el cierre oficial"
     ],
@@ -299,7 +300,7 @@
       "El AWS CLI no esta instalado en la maquina, asi que el acceso a Bedrock en us-east-1 (ultimo entregable de M0) no se ha podido verificar. Instalar el CLI o comprobarlo desde la consola de AWS."
     ],
     "proxima_entrega": "M0 - Cimientos (14-17 sep): falta verificar Bedrock",
-    "notas_sprint": "M0 arrancado el 14-09-2026, un dia antes del plan. HECHO: repositorio publico https://github.com/hvaler/lodge con LICENSE Apache-2.0 y NOTICE en el primer commit; README propio; .gitignore con cobertura Node/TS/CDK y el andamiaje del ecosistema fuera del repo publico; especificacion cerrada de la Universidad de San Telmo en docs/san-telmo.md. PENDIENTE: verificar acceso a Bedrock en us-east-1."
+    "notas_sprint": "M0 arrancado el 14-09-2026, un dia antes del plan. HECHO: repositorio publico https://github.com/hvaler/lodge con LICENSE Apache-2.0 y NOTICE en el primer commit; README propio; especificacion cerrada de San Telmo en docs/san-telmo.md; bases y recursos del hackathon verificados (elegibilidad de Espana OK, creditos de participacion, criterios de evaluacion) y runbook corregido en cuatro puntos, incluida la revision de protocolo (ADR-009). PENDIENTE: pedir los 150 $ de creditos y verificar Bedrock en us-east-1."
   },
   "evolutivoActivo": "M0",
   "evolutivos": {
@@ -446,6 +447,9 @@
   "alertas": {
     "_doc": "Claude muestra estas alertas al iniciar sesion",
     "activas": [
+      "PEDIR YA - Creditos AWS de participacion (150 $): https://forms.gle/GaHFxSbBQNG9Kti6A . Son de participacion, distintos del premio de 15.000 $. Sin fecha limite publicada: no esperar.",
+      "OAuth 2.1 con PKCE (S256) esta en la RUTA CRITICA, no en M4: sin el no se conecta con Alexa+ (ADR-009). Presupuesto de latencia: < 500 ms ida y vuelta.",
+      "OAuth 2.1 con PKCE (S256) es OBLIGATORIO para conectar con Alexa+, y el runbook lo situaba en M4. Y el presupuesto de latencia tiene numero: < 500 ms ida y vuelta.",
       "M0 EN CURSO - Falta verificar el acceso a Amazon Bedrock (Nova 2 Lite) en us-east-1. Sin eso, el orquestador de demostracion de M3 no arranca. El AWS CLI no esta instalado.",
       "REGLA DE CORTE 1 - Si M2 se pasa del 4 de octubre: el adaptador de estandares se recorta a calendarios e inventario, dejando el directorio LDAP fuera.",
       "REGLA DE CORTE 2 - Si M3 se pasa del 11 de octubre: caen las tarjetas visuales. La voz sola cumple el track.",

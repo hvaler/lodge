@@ -14,6 +14,8 @@ Un servidor MCP autoalojado que responde por voz a las preguntas del campus —q
 | **Cierre** | 23 de octubre de 2026 · 21:00 CEST |
 
 > **Estado:** documento vivo. El registro de decisión fechado el 14-09-2026 explica *por qué* se eligió esta forma; este fichero es lo que cambia mientras se construye.
+>
+> **Revisado el 14-09-2026** contra la documentación del Alexa+ MCP Toolkit, el código del SDK de MCP para TypeScript y las bases del hackathon. Cambian cuatro cosas: la revisión del protocolo (§7), que OAuth es obligatorio para conectar siquiera (§5), un número real para el presupuesto de latencia (§7) y los créditos de participación (§10). Lo que el runbook acertó: la fecha límite, el techo en metálico y la forma del proyecto.
 
 ---
 
@@ -73,7 +75,7 @@ Generalizar es el agujero de alcance clásico. La disciplina es numérica: un ad
 | 03 | Adaptadores | `synthetic` · `standards` | Mismo contrato, distinto origen |
 | 04 | Tarjetas visuales | Extensión MCP Apps | Parrilla, plano de planta, ficha de incidencia |
 | 05 | Orquestador de demostración | Amazon Bedrock · Nova 2 Lite | Simulación propia de Alexa+; se publica |
-| 06 | Identidad | OAuth 2.1 · Client ID Metadata Documents | Cada persona ve solo lo suyo |
+| 06 | Identidad | OAuth 2.1 · authorization code + PKCE (S256) | **Obligatorio para conectar siquiera con Alexa+**, con `resource` apuntando al URI canónico del servidor. Cada persona ve solo lo suyo |
 | 07 | Despliegue autónomo | Contenedor · compose | Un fichero de configuración y credenciales propias |
 | 08 | Despliegue gestionado | AWS Lambda · DynamoDB · CDK v2 | El camino documentado para el mini-reto de AWS |
 | 09 | Observabilidad | OpenTelemetry | Contexto de traza en las cabeceras del protocolo |
@@ -103,12 +105,17 @@ Se fijan en M1, se revalidan una vez en M3 y se congelan tras M4. Nada en previe
 | :-- | :-- | :-- |
 | Ejecución | Node 24 LTS | LTS activa. Node 26 aún no está en soporte a largo plazo |
 | SDK MCP | TypeScript SDK | Ecosistema más maduro; único con extensión de tarjetas |
-| Protocolo | MCP 2026-07-28 | Revisión vigente, con degradación a 2025-11-25 (mínimo exigido) |
+| Protocolo | **MCP 2025-11-25** | Lo que habla Alexa+, y lo que el SDK de TypeScript llama `LATEST_PROTOCOL_VERSION`. La 2026-07-28 no está en su lista de versiones soportadas |
+| Latencia | **< 500 ms ida y vuelta** | Límite de la plataforma Alexa+, no una aspiración |
 | Modelo del orquestador | Amazon Nova 2 Lite | Latencia en el turno hablado |
 | Infraestructura | AWS CDK v2 (2.263+) | No existe una v3 |
 | Contenedor | Imagen distroless | Superficie mínima dentro de otra institución |
 
-**Qué implica 2026-07-28.** El protocolo pasa a ser **sin estado**: desaparecen las sesiones y el saludo de `initialize`, y `server/discover` es obligatorio. Aquí es ventaja directa: un servidor sin estado se replica sin coordinación. *Roots*, *sampling* y el *logging* del protocolo quedan obsoletos y no se adoptan. Las notificaciones de cambio van por `subscriptions/listen`.
+**Por qué 2025-11-25 y no 2026-07-28.** El primer borrador de este runbook fijaba la 2026-07-28 y trataba la 2025-11-25 como degradación. Estaba del revés: Alexa+ —la superficie que se juzga— habla 2025-11-25, y el SDK de TypeScript ni siquiera lista la 2026-07-28 entre sus versiones soportadas. Fijar una revisión que el cliente no habla nos habría costado el track.
+
+**El servidor sigue sin estado.** El argumento a favor de 2026-07-28 era que elimina las sesiones, y un servidor sin estado se replica sin coordinación: justo lo que necesita algo pensado para desplegarse en infraestructura ajena. Resulta que el modo sin estado es una *opción del transporte* (`WebStandardStreamableHTTPServerTransportOptions`: no emite identificador de sesión ni lo valida), no una propiedad de aquella revisión. Conservamos la propiedad arquitectónica sin perder nada.
+
+El SDK trae además `createMcpHandler(({ era }) => …)` para servir varias eras de protocolo desde un mismo handler. Las revisiones nuevas se añaden ahí cuando el SDK las soporte, sin reabrir la interfaz de proveedor.
 
 ## 8. Hitos
 
@@ -145,13 +152,16 @@ Los casos marcados *essential* en `docs/use-cases.md` sobreviven a cualquier rec
 
 - [ ] Proyecto creado o actualizado sustancialmente después del 31-08-2026
 - [ ] Repositorio público, licencia abierta, instrucciones verificadas
-- [ ] Servidor MCP autoalojado, Streamable HTTP, spec 2026-07-28
+- [ ] Servidor MCP autoalojado, Streamable HTTP, spec 2025-11-25
 - [ ] Tecnología del track importada e invocada en tiempo de ejecución
 - [ ] Demostración funcional accesible para el jurado
 - [ ] Vídeo público de menos de 3 minutos
 - [ ] Feedback de producto sobre todas las APIs utilizadas
 - [ ] Track declarado y ambos mini-retos seleccionados
 - [ ] Registro de fricción (hasta un 10 % de bonificación)
+- [ ] Pedir los 150 $ de créditos AWS de participación (https://forms.gle/GaHFxSbBQNG9Kti6A) — distintos de los 15.000 $ del premio
+- [ ] Vídeo público en YouTube o Vimeo, menos de 3 minutos
+- [ ] Feedback de producto: herramientas usadas, qué funcionó, qué mejorar, onboarding, si volveríamos a construir con ellas
 - [ ] Guía de adopción validada por alguien ajeno al desarrollo
 
 ## 11. Riesgos
@@ -161,7 +171,7 @@ Los casos marcados *essential* en `docs/use-cases.md` sobreviven a cualquier rec
 | Alto | Dos candidaturas, un equipo | Las reglas de corte. El 14 de octubre es el punto de no retorno |
 | Alto | La abstracción se come el calendario | Dos adaptadores, ni uno más. Interfaz congelada en M1 |
 | Medio | Lo genérico demuestra peor | San Telmo con detalle; el estudiante de intercambio como momento espectacular |
-| Medio | El registro de complementos de Alexa+ está cerrado (EE. UU. y socios seleccionados) | Las reglas admiten servidor autoalojado con simulación propia; ese orquestador se publica |
+| Medio | El registro de complementos de Alexa+ puede estar cerrado (EE. UU. y socios seleccionados) | La documentación describe una vía abierta (CLI `alexa-ai`, simulador web) y no menciona tal restricción — **confirmar en las *office hours* antes de M3**. Si está abierta, se usa y el vídeo muestra el producto real. Si no, las bases admiten servidor autoalojado con simulación propia, que se publica en cualquier caso |
 | Bajo | Datos y privacidad | Datos generados, comprobación de secretos en CI, ninguna credencial institucional |
 
 ## 12. Nota de alcance

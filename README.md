@@ -7,7 +7,7 @@ class moved to, when the deadline falls— running on the systems any institutio
 
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Node](https://img.shields.io/badge/node-24%20LTS-339933.svg)](https://nodejs.org)
-[![MCP](https://img.shields.io/badge/MCP-2026--07--28-orange.svg)](https://modelcontextprotocol.io)
+[![MCP](https://img.shields.io/badge/MCP-2025--11--25-orange.svg)](https://modelcontextprotocol.io)
 
 **Build, Ship, Shape: Amazon Developer Hackathon 2026** · Track Alexa+ · MCP · Mini-challenges: AWS
 Builder and Open Source.
@@ -103,7 +103,7 @@ adopted by any institution cannot demand a cloud account. Two first-class deploy
 ## Requirements
 
 - Node 24 LTS
-- An MCP client speaking revision 2026-07-28 (degrades to 2025-11-25)
+- An MCP client speaking MCP revision 2025-11-25 over Streamable HTTP
 - For the managed target only: an AWS account with Bedrock access in `us-east-1`
 
 ## Getting started

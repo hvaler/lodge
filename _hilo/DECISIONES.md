@@ -19,10 +19,11 @@ el markdown es **lo que cambia mientras se construye**.
 | ADR-002 | Exactamente dos adaptadores, ni uno ni tres | 2026-09-14 | Aceptada | Alcance |
 | ADR-003 | El nucleo corre en cualquier sitio; AWS es un destino | 2026-09-14 | Aceptada | Despliegue |
 | ADR-004 | El catalogo de herramientas se deriva de las capacidades | 2026-09-14 | Aceptada | Arquitectura |
-| ADR-005 | Protocolo sin estado (MCP 2026-07-28) | 2026-09-14 | Aceptada | Protocolo |
+| ADR-005 | Protocolo sin estado (MCP 2026-07-28) | 2026-09-14 | **Superada por ADR-009** | Protocolo |
 | ADR-006 | La interfaz de proveedor se congela al cerrar M1 | 2026-09-14 | Aceptada | Proceso |
 | ADR-007 | Los criterios de aceptacion viven en ingles, junto a los tests | 2026-09-14 | Aceptada | Documentacion |
 | ADR-008 | Licencia Apache-2.0 | 2026-09-14 | Aceptada | Legal |
+| ADR-009 | MCP 2025-11-25 como revision objetivo, sin estado por transporte | 2026-09-14 | Aceptada | Protocolo |
 
 ---
 
@@ -79,6 +80,8 @@ lugar de ser una promesa del README.**
 ---
 
 ## ADR-005 · Protocolo sin estado (MCP 2026-07-28)
+
+> ⚠️ **Superada por ADR-009 el 14-09-2026.** La premisa de que 2026-07-28 era «la revision vigente» no resistio la verificacion. Se conserva por que explica de donde venia la idea de que el servidor fuera sin estado, que si sobrevive.
 
 **Decision** — Adoptar la revision 2026-07-28 con degradacion a 2025-11-25 (el minimo que exige el
 hackathon). `server/discover` obligatorio. Notificaciones de cambio por `subscriptions/listen`.
@@ -137,3 +140,39 @@ codigo abierto.
 | `ecosystem.config.json` omite el bloque `database` | Su enum solo admite motores SQL y Lodge usa DynamoDB, y solo en el destino gestionado. Omitirlo es valido; inventar un motor no lo seria |
 | Los hitos M0-M6 del runbook son los evolutivos del Hilo | Hace que `/hv:estado` y `/hv:continuar` trabajen contra el plan real en lugar de contra una lista paralela |
 | Los PDF no entran en el repositorio | 1,4 MB de binario cada uno y su papel ya es de archivo historico. El documento vivo es `RUNBOOK.md` |
+
+---
+
+## ADR-009 · MCP 2025-11-25 como revision objetivo, sin estado por transporte
+
+**Fecha** 2026-09-14 · **Estado** Aceptada · **Supera a** ADR-005
+
+**Contexto** — El runbook fijaba MCP 2026-07-28 como revision principal y 2025-11-25 como
+«degradacion al minimo exigido». Verificado contra dos fuentes primarias:
+
+1. La documentacion del **Alexa+ MCP Toolkit**: «Alexa+ supports the 2025-11-25 version of the MCP
+   specification». Alexa+ es la superficie que se juzga en el track.
+2. El codigo del **SDK de TypeScript**: `LATEST_PROTOCOL_VERSION = '2025-11-25'`, y la 2026-07-28
+   **no figura** en `SUPPORTED_PROTOCOL_VERSIONS`.
+
+La premisa estaba invertida: 2025-11-25 no es el suelo, es el objetivo.
+
+**Decision** — Apuntar a **MCP 2025-11-25** como revision objetivo, con el servidor **sin estado**
+activado por opcion del transporte, y dejar montado el handler multi-era para cuando el SDK soporte
+revisiones posteriores.
+
+**Razon** — Fijar una revision que el cliente no habla habria costado el track entero. Y el argumento
+arquitectonico que motivaba la 2026-07-28 **no se pierde**: el modo sin estado es una opcion de
+`WebStandardStreamableHTTPServerTransportOptions` (no emite identificador de sesion ni lo valida), no
+una propiedad de aquella revision. Un servidor sin estado se sigue replicando sin coordinacion, que
+es lo que necesita algo pensado para desplegarse en infraestructura ajena.
+
+**Consecuencias**
+
+- `server/discover` y `subscriptions/listen` dejan de ser el camino principal. El SDK expone
+  negociacion de version (`legacy` | `auto` | `pin`) y `createMcpHandler(({ era }) => ...)`; se usa el
+  handler multi-era para no tener que reabrir la interfaz de proveedor cuando llegue una revision nueva.
+- **OAuth 2.1 con PKCE (S256) sube de M4 a la ruta critica**: es obligatorio para conectar con Alexa+,
+  no una mejora de identidad. El parametro `resource` apunta al URI canonico del servidor.
+- El presupuesto de latencia deja de ser cualitativo: **< 500 ms ida y vuelta**, limite de plataforma.
+- En desarrollo local hace falta un tunel (p. ej. `cloudflared`): Alexa+ exige URL remota.

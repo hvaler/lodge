@@ -14,6 +14,8 @@ A self-hosted MCP server that answers campus questions by voice — which room i
 | **Hard deadline** | October 23, 2026 · 12:00 PT |
 
 > **Status:** living document. The frozen decision record dated 2026-09-14 explains *why* this shape was chosen; this file is what changes as we build.
+>
+> **Revised 2026-09-14** against the Alexa+ MCP Toolkit docs, the MCP TypeScript SDK source and the hackathon rules. Four things moved: the protocol revision (§7), OAuth being required to connect at all (§5), a real number for the latency budget (§7), and the participation credits (§10). What the runbook got right: the deadline, the cash ceiling, and the shape of the thing.
 
 ---
 
@@ -73,7 +75,7 @@ Generalising is the classic scope trap. The discipline is numeric: one adapter f
 | 03 | Adapters | `synthetic` · `standards` | Same contract, different origin |
 | 04 | Visual cards | MCP Apps extension | Occupancy grid, floor plan, ticket detail |
 | 05 | Demo orchestrator | Amazon Bedrock · Nova 2 Lite | Our own Alexa+ simulation; ships as open source |
-| 06 | Identity | OAuth 2.1 · Client ID Metadata Documents | Each person sees only their own data |
+| 06 | Identity | OAuth 2.1 · authorization code + PKCE (S256) | **Required to connect to Alexa+ at all**, with `resource` set to the server's canonical URI. Each person sees only their own data |
 | 07 | Self-hosted target | Container · compose | One config file, the institution's own credentials |
 | 08 | Managed target | AWS Lambda · DynamoDB · CDK v2 | The path documented for the AWS mini-challenge |
 | 09 | Observability | OpenTelemetry | Trace context in the protocol's own headers |
@@ -103,12 +105,17 @@ Pinned at M1, revalidated once at M3, frozen after M4. Nothing in preview.
 | :-- | :-- | :-- |
 | Runtime | Node 24 LTS | Active LTS. Node 26 is not in long-term support yet |
 | MCP SDK | TypeScript SDK | Most mature ecosystem; only one with the visual-cards extension |
-| Protocol | MCP 2026-07-28 | Current revision, degrading to 2025-11-25 (the required minimum) |
+| Protocol | **MCP 2025-11-25** | What Alexa+ speaks, and what the TypeScript SDK calls `LATEST_PROTOCOL_VERSION`. 2026-07-28 is not in the SDK's supported list |
+| Latency | **< 500 ms round trip** | Alexa+ platform limit, not an aspiration |
 | Orchestrator model | Amazon Nova 2 Lite | Latency in the spoken turn |
 | Infrastructure | AWS CDK v2 (2.263+) | There is no v3 |
 | Container | Distroless image | Minimal surface inside someone else's institution |
 
-**What 2026-07-28 implies.** The protocol is **stateless**: sessions and the `initialize` handshake are gone, `server/discover` is mandatory. A direct advantage here — a stateless server replicates without coordination, which is what something deployed on other people's infrastructure needs. Roots, sampling and protocol logging are deprecated and not adopted. Change notifications go through `subscriptions/listen`.
+**Why 2025-11-25 and not 2026-07-28.** The first draft of this runbook pinned 2026-07-28 and treated 2025-11-25 as a fallback. That was backwards: Alexa+ — the judged surface — speaks 2025-11-25, and the TypeScript SDK does not list 2026-07-28 among its supported versions at all. Pinning a revision the client cannot speak would have cost us the track.
+
+**Statelessness survives the change.** The argument for 2026-07-28 was that it removes sessions, and a stateless server replicates without coordination — exactly what something deployed on other people's infrastructure needs. It turns out statelessness is a *transport option* (`WebStandardStreamableHTTPServerTransportOptions`: no session ID issued, no session validation), not a property of that revision. So we keep the architectural property and lose nothing.
+
+The SDK also ships `createMcpHandler(({ era }) => …)` for serving several protocol eras from one handler. Newer revisions get added there when the SDK supports them, without reopening the provider interface.
 
 ## 8. Milestones
 
@@ -145,13 +152,14 @@ Cases marked *essential* in `docs/use-cases.md` survive every cut; cases marked 
 
 - [ ] Project created or substantially updated after August 31, 2026
 - [ ] Public repository, open licence, verified setup instructions
-- [ ] Self-hosted MCP server, Streamable HTTP, spec 2026-07-28
+- [ ] Self-hosted MCP server, Streamable HTTP, spec 2025-11-25
 - [ ] Track technology imported and actually invoked at runtime
 - [ ] Working demo reachable by the judges
-- [ ] Public video under 3 minutes
-- [ ] Product feedback on every API and tool used
+- [ ] Public video under 3 minutes, on YouTube or Vimeo, showing the project actually running
+- [ ] Product feedback: which tools, what worked, what needs work, onboarding, would we build again
 - [ ] Track declared and both mini-challenges selected
 - [ ] Friction log (up to a 10% scoring bonus)
+- [ ] Request the $150 participation AWS credits (https://forms.gle/GaHFxSbBQNG9Kti6A) - separate from the $15,000 prize credits
 - [ ] Adoption guide validated by someone outside the project
 
 ## 11. Risks
@@ -161,7 +169,7 @@ Cases marked *essential* in `docs/use-cases.md` survive every cut; cases marked 
 | High | Two submissions, one team | The cut rules above. October 14 is the point of no return |
 | High | The abstraction eats the calendar | Two adapters, no more. Interface frozen at M1 |
 | Medium | Generic demos badly | San Telmo in detail; the exchange student as the spectacular moment |
-| Medium | Alexa+ add-on registry is closed (US + select partners) | Rules accept a self-hosted MCP server with our own simulation; that orchestrator ships as open source |
+| Medium | Alexa+ add-on registry may be closed (US + select partners) | The docs describe an open path (`alexa-ai` CLI, web simulator) and state no such restriction — **to be confirmed in office hours before M3**. If it is open, we use it and the video shows the real product. If not, the rules accept a self-hosted server with our own simulation, which ships as open source either way |
 | Low | Data and privacy | Generated data, secret scanning in CI, no institutional credential in the repo |
 
 ## 12. Scope note

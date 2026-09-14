@@ -47,7 +47,7 @@ Este archivo guía a Claude Code (claude.ai/code) cuando trabaja con código en 
 | **Versión** | 0.0.0 |
 | **Tipo** | Servidor MCP (Streamable HTTP, sin estado) |
 | **Runtime** | Node 24 LTS · TypeScript |
-| **Protocolo** | MCP 2026-07-28 (degradación a 2025-11-25) |
+| **Protocolo** | MCP 2025-11-25 · Streamable HTTP · sin estado |
 | **Destinos** | Contenedor distroless + compose · AWS Lambda · DynamoDB · CDK v2 |
 | **Entrega** | Envío 21 oct 2026 · cierre 23 oct 21:00 CEST |
 
@@ -154,7 +154,7 @@ Lodge/
 ```
 Cliente MCP (Alexa+ / orquestador propio / cualquier agente)
         ↓
-Servidor MCP  ──  Streamable HTTP, sin estado, server/discover
+Servidor MCP  ──  Streamable HTTP, sin estado (opción de transporte)
         ↓
 Interfaz de proveedor  ──  capacidades + idioma   [CONGELADA TRAS M1]
         ↓
@@ -176,8 +176,8 @@ Interfaz de proveedor  ──  capacidades + idioma   [CONGELADA TRAS M1]
 
 ### Protocolo e infraestructura
 
-- ❌ NUNCA introducir estado de sesión en el servidor: el protocolo 2026-07-28 es **sin estado**, y es
-  lo que permite replicarlo sin coordinación
+- ❌ NUNCA introducir estado de sesión en el servidor: el modo sin estado se activa por opción del
+  transporte y es lo que permite replicarlo sin coordinación (ADR-009)
 - ❌ NUNCA adoptar *roots*, *sampling* ni el *logging* del protocolo: están obsoletos
 - ✅ SIEMPRE resolver la identidad contra el token autenticado, nunca contra un parámetro de nombre
 - ✅ SIEMPRE derivar el catálogo de herramientas de las capacidades declaradas por el adaptador

@@ -19,7 +19,7 @@
 | **Lenguaje** | TypeScript, `strict: true` |
 | **Tipo de proyecto** | Servidor MCP — Streamable HTTP, **sin estado** |
 | **SDK** | MCP TypeScript SDK (oficial; el unico con extension de tarjetas visuales) |
-| **Protocolo** | MCP 2026-07-28, con degradacion a 2025-11-25 (minimo exigido) |
+| **Protocolo** | **MCP 2025-11-25** — la que habla Alexa+ y el `LATEST` del SDK (ADR-009) |
 | **Gestor de paquetes** | npm (lockfile commiteado) |
 | **IDE** | Sin fijar (`organization.ide = none`) |
 
@@ -35,7 +35,7 @@
 | **Motor** | Amazon DynamoDB — **solo en el despliegue gestionado** |
 | **ORM** | Ninguno |
 | **Migraciones** | No aplica (tabla de estado creada por CDK) |
-| **Despliegue autonomo** | Sin base de datos: el servidor es sin estado por protocolo |
+| **Despliegue autonomo** | Sin base de datos: el servidor es sin estado por opcion del transporte |
 
 > El bloque `database` de `ecosystem.config.json` se omite a proposito: su enum solo admite motores
 > SQL (`sqlserver|postgres|mysql|sqlite`).
@@ -47,9 +47,9 @@
 | Aspecto | Valor |
 |---------|-------|
 | **Proveedor** | OAuth 2.1 genérico (`identity.idp = oidc-generic`) |
-| **Tipo** | Client ID Metadata Documents |
-| **Registro dinamico de cliente** | **No se usa** — obsoleto en la revision vigente |
-| **Estado** | Sin implementar. Llega en **M4** (12-16 oct) |
+| **Flujo** | Authorization code + **PKCE (S256)**, con parametro `resource` al URI canonico del servidor |
+| **Registro de cliente** | Por confirmar en M4: la documentacion de Alexa+ especifica PKCE y `resource`, pero no si admite Client ID Metadata Documents o exige registro previo |
+| **Estado** | Sin implementar. **Sube a la ruta critica**: es obligatorio para conectar con Alexa+, no solo identidad de usuario (ADR-009) |
 
 Regla de identidad: el horario y las incidencias se resuelven **contra el token autenticado, nunca
 contra un parametro de nombre** (UC-02, UC-06). Minimizacion de datos por diseno: el servidor
@@ -66,7 +66,7 @@ devuelve datos de quien pregunta y no almacena expedientes.
 | Inventario de espacios | CSV / tabla | adaptador `standards` |
 | Gestor de incidencias | Segun institucion | `campus.report_issue`, `campus.issue_status` |
 | Amazon Bedrock — Nova 2 Lite | AWS SDK | orquestador de demostracion (`us-east-1`) |
-| Alexa+ | MCP | cliente (registro cerrado: se simula con orquestador propio) |
+| Alexa+ | MCP 2025-11-25 + OAuth 2.1/PKCE | cliente (via CLI `alexa-ai` y simulador web; ver riesgo en DEUDA_TECNICA.md) |
 
 ---
 
@@ -125,9 +125,11 @@ docs/use-cases.md ← criterios de aceptacion = tests de contrato
 
 - **La interfaz de proveedor se congela al cerrar M1** (27 sep). Despues solo se implementa contra
   ella: tocarla impacta a los dos adaptadores y a las seis herramientas a la vez.
-- El protocolo 2026-07-28 es **sin estado**: no introducir sesiones. *Roots*, *sampling* y el
-  *logging* del protocolo estan obsoletos y no se adoptan; las notificaciones de cambio van por
-  `subscriptions/listen`.
+- El servidor es **sin estado** por opcion del transporte, no por la revision: no introducir sesiones.
+  Se deja montado `createMcpHandler(({ era }) => ...)` para servir revisiones posteriores sin reabrir
+  la interfaz de proveedor (ADR-009).
+- **Latencia: < 500 ms ida y vuelta.** Limite de la plataforma Alexa+, medido en cada compilacion.
+- En local hace falta tunel (`cloudflared` o similar): Alexa+ exige una URL remota.
 - El adaptador `synthetic` es **determinista**: quien clone el repositorio obtiene exactamente las
   respuestas del video.
 - **Cero datos reales**: San Telmo es ficticia y sus datos se generan, no se anonimizan.

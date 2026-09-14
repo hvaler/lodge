@@ -66,14 +66,38 @@ los `improvement` (hoy solo UC-06) caen primero.
 
 ---
 
-## Abierto ahora mismo (todo M0, 15-17 sep)
+## Abierto ahora mismo (M0, arrancado el 14 sep)
 
 | Asunto | Estado | Fecha limite |
 |---|---|---|
-| Repositorio publico en GitHub sin crear | `proyecto.repositorio` esta en `null` a proposito, no se ha inventado | 17 sep |
-| `LICENSE` Apache-2.0 | Debe entrar **en el primer commit**, no despues | 17 sep |
-| Cuenta AWS con acceso a Bedrock en `us-east-1` | Sin verificar | 17 sep |
-| Universidad de San Telmo | Definida en el runbook, sin generar el dataset | 17 sep |
+| Repositorio publico con licencia en el primer commit | ✅ https://github.com/hvaler/lodge, Apache-2.0 | hecho 14 sep |
+| Universidad de San Telmo | ✅ definicion cerrada en `docs/san-telmo.md` | hecho 14 sep |
+| Creditos AWS de participacion (150 $) | ⬜ formulario sin enviar | cuanto antes |
+| Cuenta AWS con acceso a Bedrock en `us-east-1` | ⬜ el AWS CLI no esta instalado en la maquina | 17 sep |
+| Version de protocolo a la que apuntar | ⬜ **decision pendiente** tras verificar que Alexa+ habla 2025-11-25 | antes de M1, 18 sep |
+
+---
+
+## Administrativo del hackathon (verificado 14-09-2026)
+
+Cifras y requisitos leidos de las bases y de la pagina de recursos, no del runbook.
+
+| Asunto | Estado |
+|---|---|
+| **Creditos AWS de participacion: 150 $** | ⬜ **Pedirlos ya**: https://forms.gle/GaHFxSbBQNG9Kti6A — son de participacion, no el premio. El runbook no los mencionaba |
+| Presupuesto de nube | El *free tier* "es suficiente para empezar" segun las bases; 150 $ cubren Bedrock y Lambda de la demo |
+| Video | Menos de 3 min **y publico en YouTube o Vimeo**. Debe mostrar el proyecto *funcionando en el dispositivo para el que se construyo* |
+| Criterios de evaluacion | Tech Implementation · Design · Potential Impact · Quality of the Idea. **No estaban en el runbook** |
+| Registro de friccion | Hasta **10 %** de bonificacion. Confirmado |
+| Feedback de producto | Debe responder: que herramientas se usaron, que funciono, que hay que mejorar, como fue el *onboarding* y si volverias a construir con ellas |
+| Repositorio | Publico, con fichero de licencia abierta, con **todo** el codigo, assets e instrucciones. ✅ hecho en M0 |
+| Fecha limite | **23 oct 2026, 12:00 PDT** = 21:00 CEST. ✅ el runbook acertaba |
+| **Elegibilidad** | ✅ **Espana no esta excluida.** La lista es: Brasil, Quebec, Rusia, Crimea, Cuba, Iran y Corea del Norte. Individuos, equipos y organizaciones admitidos |
+| Periodo de envio | 31 ago 2026 10:15 PT - 23 oct 2026 12:00 PT. El primer commit (14 sep) entra de sobra en "creado despues del 31 de agosto" |
+| Premios (Alexa+ 1.º) | 25.000 $ + 15.000 $ en creditos. Mini-retos: 5.000 $ + 5.000 $ en creditos **cada uno** |
+
+> Correccion al runbook: el techo de creditos acumulados es **25.000 $** (15 + 5 + 5), no 20.000 $.
+> El techo en metalico, 35.000 $, si estaba bien.
 
 ---
 

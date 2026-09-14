@@ -50,19 +50,50 @@ preview.** Es lo que evita el goteo de upgrades a tres semanas del cierre.
 |---|---|---|
 | Ejecucion | Node 24 LTS | LTS activa. Node 26 aun no esta en soporte a largo plazo |
 | SDK MCP | TypeScript SDK | Ecosistema mas maduro; unico con extension de tarjetas |
-| Protocolo | MCP 2026-07-28 | Revision vigente, con degradacion a 2025-11-25 (minimo exigido) |
+| Protocolo | **MCP 2025-11-25** | Revision objetivo: la que habla Alexa+ y el `LATEST` del SDK. La 2026-07-28 no esta en `SUPPORTED_PROTOCOL_VERSIONS` (ADR-009) |
+| Latencia | **< 500 ms ida y vuelta** | Limite de la plataforma Alexa+, no una aspiracion |
 | Modelo del orquestador | Amazon Nova 2 Lite | Latencia en el turno hablado |
 | Infraestructura | AWS CDK v2 (2.263+) | No existe una v3 |
 | Contenedor | Imagen distroless | Superficie minima dentro de otra institucion |
 
-### Que implica MCP 2026-07-28
+### Que implica la eleccion de revision
 
-El protocolo pasa a ser **sin estado**: desaparecen las sesiones y el saludo de `initialize`, y
-`server/discover` es obligatorio. Aqui es ventaja directa — un servidor sin estado se replica sin
-coordinacion, que es justo lo que necesita algo pensado para desplegarse en sitios ajenos.
+El servidor es **sin estado**, pero por **opcion del transporte**
+(`WebStandardStreamableHTTPServerTransportOptions`: no emite identificador de sesion ni lo valida), no
+por la revision del protocolo. La propiedad arquitectonica se conserva — se replica sin coordinacion,
+que es lo que necesita algo pensado para desplegarse en sitios ajenos — sin pagar el precio de fijar
+una revision que el cliente no habla.
 
-- Las notificaciones de cambio van por **`subscriptions/listen`**.
-- *Roots*, *sampling* y el *logging* del protocolo quedan **obsoletos y no se adoptan**.
+- El SDK ofrece negociacion de version (`legacy` | `auto` | `pin`) y `createMcpHandler(({ era }) => ...)`
+  para servir varias eras desde un mismo handler. Ahi se anaden revisiones nuevas cuando el SDK las
+  soporte, sin reabrir la interfaz de proveedor.
+- *Roots*, *sampling* y el *logging* del protocolo no se adoptan.
+
+---
+
+## Restricciones de la plataforma Alexa+
+
+> Verificado el 14-09-2026 contra la documentacion oficial del **Alexa+ MCP Toolkit**
+> (`developer.amazon.com/docs/alexaplus/add-ons/`). Varias de estas cifras **no estaban en el
+> runbook** y algunas lo contradicen.
+
+| Restriccion | Valor | Consecuencia |
+|---|---|---|
+| **Version de spec MCP** | **2025-11-25** | Alexa+ soporta esa, no la 2026-07-28. Ver ADR-009 |
+| Transporte | Streamable HTTP obligatorio | HTTP+SSE quedo deprecado en 2025-11-25. Coincide con el plan |
+| **Autenticacion** | **OAuth 2.1, authorization code + PKCE (S256)**, con parametro `resource` apuntando al URI canonico del servidor | **Obligatoria para conectar**, no opcional. El runbook la situaba en M4 |
+| **Latencia** | **< 500 ms ida y vuelta** | Es el "presupuesto de latencia" de UC-01, ahora con numero |
+| Accesibilidad | URL remota; en local hace falta tunel (p. ej. `cloudflared`) | Afecta al bucle de desarrollo desde M1 |
+| UI visual | Opcional, via MCP Apps SDK | Coincide con el plan (tarjetas, M3) |
+
+**Ruta oficial de conexion** (CLI `alexa-ai`): `alexa-ai configure` -> `alexa-ai new mcp --name ...
+--locale ... --mcp-server-url ...` -> `alexa-ai deploy`. Existe ademas un **simulador web** oficial
+para probar el add-on desplegado, y un "add-on Agent Skill" para hacerlo desde un agente de codigo.
+
+> ⚠️ **La documentacion no menciona la restriccion a socios seleccionados** que el runbook da por
+> hecha en su riesgo MEDIO. Ausencia de mencion no es prueba de que este abierto: confirmarlo en las
+> *office hours* del equipo de Amazon antes de M3. Si la ruta oficial esta abierta, el orquestador
+> propio deja de ser necesario y el video muestra el producto real, que es lo que piden las bases.
 
 ---
 
@@ -75,7 +106,7 @@ coordinacion, que es justo lo que necesita algo pensado para desplegarse en siti
 | Inventario de espacios | CSV / tabla | `standards` | Edificios, aulas, aforos, equipamiento |
 | Gestor de incidencias | Segun institucion | `campus.report_issue`, `campus.issue_status` | Si no existe, esas herramientas no se publican |
 | Amazon Bedrock | AWS SDK | Orquestador de demostracion | Nova 2 Lite, region `us-east-1` |
-| Alexa+ | MCP | Cliente | El registro de complementos esta cerrado; se simula con orquestador propio |
+| Alexa+ | MCP **2025-11-25** + OAuth 2.1/PKCE | Cliente | Ruta oficial via CLI `alexa-ai` y simulador web. La restriccion a socios seleccionados que asume el runbook **no consta en la documentacion**: confirmar en *office hours* |
 
 Mapeo a Context7 para documentacion viva: `ESTADO_PROYECTO.json` → `dominiosExternos`.
 
@@ -90,7 +121,7 @@ Mapeo a Context7 para documentacion viva: `ESTADO_PROYECTO.json` → `dominiosEx
 | Declaracion de capacidades | El catalogo publicado en tiempo de ejecucion | El agente nunca debe ofrecer lo que el adaptador no soporta |
 | Adaptador `synthetic` | Reproducibilidad de la demostracion y del video | Es determinista por contrato: quien clone el repositorio obtiene exactamente las respuestas del video |
 | Adaptador `standards` | Adopcion por terceros | Es la prueba de que la costura es real |
-| Version de protocolo | Compatibilidad con el cliente | Degradacion a 2025-11-25 es el minimo exigido por el hackathon |
+| Version de protocolo | Compatibilidad con el cliente y con Alexa+ | 2025-11-25 es la revision objetivo (ADR-009). Cambiarla es cambiar de cliente: no se toca sin releer ese ADR |
 | Datos de San Telmo | Video, demostracion y tests del adaptador sintetico | Cero datos reales: generados, no anonimizados |
 
 ---

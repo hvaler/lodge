@@ -147,13 +147,14 @@ Dos consecuencias gobiernan el proyecto:
 
 - [ ] Proyecto creado o actualizado sustancialmente despues del 31-08-2026
 - [ ] Repositorio publico, licencia abierta, instrucciones verificadas
-- [ ] Servidor MCP autoalojado, Streamable HTTP, spec 2026-07-28
+- [ ] Servidor MCP autoalojado, Streamable HTTP, spec 2025-11-25
 - [ ] Tecnologia del track importada e invocada en tiempo de ejecucion
 - [ ] Demostracion funcional accesible para el jurado
-- [ ] Video publico de menos de 3 minutos
+- [ ] Video publico de menos de 3 minutos, en YouTube o Vimeo, mostrandolo funcionar de verdad
 - [ ] Feedback de producto sobre todas las APIs utilizadas
 - [ ] Track declarado y ambos mini-retos seleccionados
 - [ ] Registro de friccion (hasta un 10 % de bonificacion)
+- [ ] Pedir los 150 $ de creditos AWS de participacion (https://forms.gle/GaHFxSbBQNG9Kti6A)
 - [ ] Guia de adopcion validada por alguien ajeno al desarrollo
 
 ---

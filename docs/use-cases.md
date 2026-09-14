@@ -19,7 +19,7 @@ Every case ends in a **checkable condition**. That condition is the contract tes
 - **Actor:** Student
 - **Trigger:** Between classes, needs somewhere to work
 - **Flow:** `campus.find_room` with building and time window. The spoken answer offers two or three options; the card shows the occupancy grid.
-- **Acceptance:** No occupied, booked or out-of-hours room is ever listed, and the answer lands inside the latency budget.
+- **Acceptance:** No occupied, booked or out-of-hours room is ever listed, and the answer lands inside the latency budget of **500 ms round trip** (the Alexa+ platform limit, measured on every build).
 - **Priority:** essential
 
 ## UC-02 · What do I have tomorrow
