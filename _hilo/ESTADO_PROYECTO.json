@@ -300,8 +300,8 @@
     ],
     "funcionalidades_en_progreso": [],
     "bloqueadores": [
-      "Credenciales AWS sin configurar (el CLI ya esta instalado): sin ellas no se verifica Nova 2 Lite en us-east-1, que es el ultimo entregable de M0.",
-      "Inscripcion en Devpost sin confirmar."
+      "Credenciales AWS sin configurar (el CLI 2.36.44 ya esta instalado). CORRECCION 14-09: el acceso a los modelos de Bedrock esta habilitado POR DEFECTO en las regiones comerciales, y los modelos de Amazon (Nova) ni siquiera pasan por Marketplace. No hay paso de solicitud: basta con invocar. Lo anotado antes era el flujo antiguo.",
+      "Inscripcion en Devpost hecha; falta el formulario de creditos (requiere Devpost Profile URL)."
     ],
     "proxima_entrega": "M1 - Nucleo e interfaz (14-27 sep)",
     "notas_sprint": "M1 practicamente completo. HECHO: andamiaje, interfaz de proveedor, generador determinista de San Telmo, adaptador sintetico, las seis herramientas y el SERVIDOR sobre Streamable HTTP sin estado, con sonda /health y CI en GitHub Actions. 159 tests en verde, entre ellos un cliente MCP generico hablando HTTP real contra un socket. PENDIENTE de M1: congelar la interfaz de proveedor al cerrar el hito (ADR-006)."
