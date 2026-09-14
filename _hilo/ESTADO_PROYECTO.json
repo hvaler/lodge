@@ -27,8 +27,7 @@
     "jefe_proyecto": "Hugo Carlos Valer Rojas",
     "responsable_tecnico": "Hugo Carlos Valer Rojas",
     "fecha_inicio": "2026-09-15",
-    "repositorio": null,
-    "_repositorio_doc": "Pendiente: el repositorio publico con licencia Apache-2.0 desde el primer commit es entregable de M0 (15-17 sep)."
+    "repositorio": "https://github.com/hvaler/lodge"
   },
   "stack": {
     "_doc": "Stack real del proyecto (no .NET). Campos documentados en ESTADO_PROYECTO.schema.md#stack",
@@ -63,7 +62,7 @@
           "desarrollador"
         ],
         "git_author_name": null,
-        "githubLogin": null
+        "githubLogin": "hvaler"
       }
     ]
   },
@@ -213,7 +212,8 @@
       "pipeline_existente": false,
       "deployment_groups": false,
       "pipelines": [],
-      "_pipelines_doc": "El modelo R25 (un pipeline por entrypoint .NET) no aplica. CI en GitHub Actions desde M1: tests de contrato, medicion de latencia y comprobacion de secretos en cada compilacion."
+      "_pipelines_doc": "El modelo R25 (un pipeline por entrypoint .NET) no aplica. CI en GitHub Actions desde M1: tests de contrato, medicion de latencia y comprobacion de secretos en cada compilacion.",
+      "_repo": "hvaler/lodge (publico, Apache-2.0)"
     },
     "aprobadores": {
       "Pre": [],
@@ -293,19 +293,13 @@
     "_campos_existencia_doc": "autenticacion=false y tests_existentes=false porque el codigo aun no existe: OAuth 2.1 llega en M4 y los tests de contrato en M1. documentacion_existente=true por el runbook."
   },
   "desarrollo": {
-    "modulos_en_desarrollo": [
-      "Cimientos del repositorio",
-      "Dataset de San Telmo"
-    ],
-    "funcionalidades_en_progreso": [
-      "Repositorio publico con licencia Apache-2.0 desde el primer commit",
-      "Universidad de San Telmo: edificios, titulaciones y calendario academico"
-    ],
+    "modulos_en_desarrollo": [],
+    "funcionalidades_en_progreso": [],
     "bloqueadores": [
-      "AWS CLI no instalado en la maquina: el acceso a Bedrock en us-east-1 no se puede verificar todavia (entregable de M0)."
+      "El AWS CLI no esta instalado en la maquina, asi que el acceso a Bedrock en us-east-1 (ultimo entregable de M0) no se ha podido verificar. Instalar el CLI o comprobarlo desde la consola de AWS."
     ],
-    "proxima_entrega": "M0 - Cimientos (14-17 sep, en progreso)",
-    "notas_sprint": "M0 abierto el 14-09-2026. Hecho: .gitignore con cobertura Node/TS/CDK, LICENSE Apache-2.0 (texto canonico), NOTICE y README del proyecto. Pendiente: repositorio publico en GitHub, verificacion de Bedrock y dataset de San Telmo."
+    "proxima_entrega": "M0 - Cimientos (14-17 sep): falta verificar Bedrock",
+    "notas_sprint": "M0 arrancado el 14-09-2026, un dia antes del plan. HECHO: repositorio publico https://github.com/hvaler/lodge con LICENSE Apache-2.0 y NOTICE en el primer commit; README propio; .gitignore con cobertura Node/TS/CDK y el andamiaje del ecosistema fuera del repo publico; especificacion cerrada de la Universidad de San Telmo en docs/san-telmo.md. PENDIENTE: verificar acceso a Bedrock en us-east-1."
   },
   "evolutivoActivo": "M0",
   "evolutivos": {
@@ -409,7 +403,7 @@
         "fechaEstimada": "2026-09-17",
         "fechaCompletado": null,
         "creadoPor": "hvaler",
-        "notas": "Salida: conjunto de datos de referencia cerrado. Repositorio publico con licencia abierta desde el primer commit; cuenta AWS con acceso a Bedrock en us-east-1; Universidad de San Telmo definida (edificios, titulaciones, calendario). | Arrancado el 14-09-2026, un dia antes del plan: gana un dia de margen sobre M1."
+        "notas": "Salida: conjunto de datos de referencia cerrado. Repositorio publico con licencia abierta desde el primer commit; cuenta AWS con acceso a Bedrock en us-east-1; Universidad de San Telmo definida (edificios, titulaciones, calendario). | Arrancado el 14-09-2026, un dia antes del plan: gana un dia de margen sobre M1. | 14-09: repositorio publico creado con licencia en el primer commit y dataset de San Telmo cerrado en docs/san-telmo.md. Queda la verificacion de Bedrock."
       }
     ],
     "completados": []
@@ -420,8 +414,8 @@
     "evolutivoActivo": "M0",
     "usuario": "Hugo Carlos Valer Rojas",
     "ramaActiva": "main",
-    "proximoPaso": "M0: dataset de la Universidad de San Telmo y verificacion de Bedrock en us-east-1",
-    "resumenSesion": "/hv:init y /hv:onboarding. Hilo contextualizado desde el runbook; runbook incorporado al repo.",
+    "proximoPaso": "Verificar acceso a Bedrock en us-east-1 y cerrar M0; despues abrir M1 (nucleo e interfaz de proveedor)",
+    "resumenSesion": "/hv:init, /hv:onboarding y arranque de M0: repositorio publico, licencia, README y dataset de San Telmo.",
     "archivosModificados": [
       ".claude/",
       ".gitattributes",
@@ -452,6 +446,7 @@
   "alertas": {
     "_doc": "Claude muestra estas alertas al iniciar sesion",
     "activas": [
+      "M0 EN CURSO - Falta verificar el acceso a Amazon Bedrock (Nova 2 Lite) en us-east-1. Sin eso, el orquestador de demostracion de M3 no arranca. El AWS CLI no esta instalado.",
       "REGLA DE CORTE 1 - Si M2 se pasa del 4 de octubre: el adaptador de estandares se recorta a calendarios e inventario, dejando el directorio LDAP fuera.",
       "REGLA DE CORTE 2 - Si M3 se pasa del 11 de octubre: caen las tarjetas visuales. La voz sola cumple el track.",
       "REGLA DE CORTE 3 - 14 de octubre, punto de no retorno: si no hay demostracion de punta a punta, se abandona LREA y todo el equipo pasa a Lodge. Una candidatura terminada vale mas que dos a medias.",

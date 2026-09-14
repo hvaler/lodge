@@ -54,7 +54,7 @@ three are goldsmithing, **two force it to be real**.
 
 | Adapter | Source | Purpose |
 | :-- | :-- | :-- |
-| `synthetic` | Deterministic generator | Reference, demo, reproducibility. It is the University of San Telmo |
+| `synthetic` | Deterministic generator | Reference, demo, reproducibility. It is the [University of San Telmo](docs/san-telmo.md) |
 | `standards` | iCalendar · LDAP · CSV | What any institution already has, with nothing to build |
 
 **Explicitly out of scope:** connectors for specific teaching platforms. They are the natural first

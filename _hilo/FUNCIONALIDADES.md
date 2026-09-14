@@ -106,10 +106,19 @@ de ejecucion en lugar de ser una promesa del README.
 
 **Universidad de San Telmo** — ficticia, completa, **generada (no anonimizada)**.
 
-- Tres edificios: Mendizabal, Santa Clara y El Faro, con plantas, aulas, aforos y equipamiento.
-- Seis titulaciones con cursos, grupos y solapamientos realistas.
-- Calendario academico: matricula, examenes, festivos.
+> **Especificacion cerrada en M0**: [`docs/san-telmo.md`](../docs/san-telmo.md). Ahi viven los numeros
+> exactos; el generador determinista que los expande es codigo de M1. Si un numero tiene que cambiar,
+> cambia primero ahi.
+
+- Tres edificios: Mendizabal, Santa Clara y El Faro — 36 salas, 2 066 plazas, con plantas, aforos y
+  equipamiento por sala.
+- Seis titulaciones (HAR, INF, ENF, DER, BMA, TEI) con grupos y solapamientos deliberados, incluido
+  el pico de las 16:00 de martes y jueves.
+- Calendario academico 2026-2027, con plazos vivos en octubre y la semana en que todo se acumula
+  (5-9 oct).
+- Seis identidades y una cola de incidencias sembrada, para que UC-02 y UC-06 tengan que responder.
 - **Cero datos reales**: ninguna persona, ninguna institucion existente, ningun sistema en produccion.
+- **Semilla fija** `san-telmo-2026`: mismo clon, mismas respuestas que el video.
 
 Lo generico se demuestra mal: "aulas libres en el edificio configurable" es un video peor que un
 sitio con nombre. Por eso el adaptador de referencia no contiene datos vagos.
