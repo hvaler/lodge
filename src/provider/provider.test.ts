@@ -19,6 +19,7 @@ function descriptorFor(capabilities: readonly Capability[]): ProviderDescriptor 
     id: 'fixture',
     institution: 'Fixture University',
     locale: 'en-GB',
+    timeZone: 'Europe/London',
     capabilities,
   };
 }

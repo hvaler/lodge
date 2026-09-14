@@ -36,6 +36,15 @@ export interface ProviderDescriptor {
   readonly institution: string;
   /** BCP 47 tag. Responses and cards are localised to it: Spanish in Madrid, English in Dublin. */
   readonly locale: string;
+  /**
+   * IANA zone, e.g. `Europe/Madrid`.
+   *
+   * Separate from the locale because they are genuinely independent — a Dublin institution could
+   * declare `es-ES` for its Spanish-speaking exchange students and still open at Irish hours. A
+   * spoken "your class is at nine" is wrong in the reader's zone unless the institution says which
+   * one it means.
+   */
+  readonly timeZone: string;
   readonly capabilities: readonly Capability[];
 }
 

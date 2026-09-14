@@ -1,0 +1,372 @@
+/**
+ * The six MCP tools.
+ *
+ * Registered from the provider's *declared* capabilities, not from this file's imports (ADR-004):
+ * an institution with no issue tracker never sees the agent offer to file a fault, because the
+ * tools were never published.
+ *
+ * Everything here answers for a speaker first. The spoken text has to stand on its own — visual
+ * cards arrive in M3 and are an improvement, not the answer.
+ */
+
+import { acceptedContent, inputRequired } from '@modelcontextprotocol/server';
+import type { CallToolResult, InputRequiredResult, McpServer } from '@modelcontextprotocol/server';
+import * as z from 'zod/v4';
+
+import {
+  CAPABILITY_TOOLS,
+  InvalidRequestError,
+  NotFoundError,
+  UnauthenticatedError,
+} from '../provider/index.ts';
+import type { Capability, Deadline, Provider, RequestContext, Room, Session } from '../provider/index.ts';
+
+/** Builds the per-request context. The server supplies the real one; tests supply a stub. */
+export type ResolveContext = (toolCtx: { mcpReq?: unknown }) => RequestContext;
+
+const say = (text: string): CallToolResult => ({ content: [{ type: 'text', text }] });
+
+// ── formatting ───────────────────────────────────────────────────────────────
+
+function timeOf(at: Date, provider: Provider): string {
+  return new Intl.DateTimeFormat(provider.descriptor.locale, {
+    timeZone: provider.descriptor.timeZone,
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(at);
+}
+
+function dayOf(at: Date, provider: Provider): string {
+  return new Intl.DateTimeFormat(provider.descriptor.locale, {
+    timeZone: provider.descriptor.timeZone,
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  }).format(at);
+}
+
+function describeRoom(room: Room): string {
+  return `${room.id}, ${room.kind.replace('-', ' ')}, seats ${room.capacity}`;
+}
+
+/**
+ * Whole calendar days from `now` to `at`, in the institution's own zone.
+ *
+ * Deliberately not `ceil` over elapsed milliseconds. On Tuesday afternoon, a deadline at
+ * Friday 23:59 is 3.3 elapsed days, which rounds up to "4 days left" — and nobody says that.
+ * Counting dates rather than durations gives the answer a person would: Tuesday to Friday is
+ * three days, and a deadline later today is zero.
+ */
+function daysUntil(at: Date, now: Date, timeZone: string): number {
+  const dayOnly = (d: Date): number =>
+    Date.parse(
+      new Intl.DateTimeFormat('en-CA', {
+        timeZone,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      }).format(d),
+    );
+
+  return Math.round((dayOnly(at) - dayOnly(now)) / 86_400_000);
+}
+
+/**
+ * Turns an adapter error into something the agent can say.
+ *
+ * Rethrows anything unrecognised: a bug should surface as a protocol error rather than be read
+ * aloud as though it were an answer about the campus.
+ */
+function spoken(error: unknown): CallToolResult {
+  if (error instanceof UnauthenticatedError) return say('You need to be signed in for that.');
+  if (error instanceof NotFoundError) return say(`I have no ${error.kind} on record for ${error.ref}.`);
+  if (error instanceof InvalidRequestError) return say(error.message);
+  throw error;
+}
+
+// ── registration ─────────────────────────────────────────────────────────────
+
+/**
+ * Registers the tools the provider's capabilities publish, and returns their names.
+ *
+ * The switch is exhaustive over {@link Capability}: adding a capability without adding its tools
+ * fails to compile, which is the same drift `assertProviderCoherent` catches at runtime.
+ */
+export function registerTools(
+  server: McpServer,
+  provider: Provider,
+  resolveContext: ResolveContext,
+): readonly string[] {
+  const registered: string[] = [];
+
+  for (const capability of provider.descriptor.capabilities) {
+    switch (capability) {
+      case 'rooms':
+        registerFindRoom(server, provider, resolveContext);
+        break;
+      case 'timetable':
+        registerTimetable(server, provider, resolveContext);
+        break;
+      case 'deadlines':
+        registerDeadlines(server, provider, resolveContext);
+        break;
+      case 'wayfinding':
+        registerWayfind(server, provider, resolveContext);
+        break;
+      case 'issues':
+        registerReportIssue(server, provider, resolveContext);
+        registerIssueStatus(server, provider, resolveContext);
+        break;
+    }
+    registered.push(...CAPABILITY_TOOLS[capability]);
+  }
+
+  return registered;
+}
+
+// ── campus.find_room ─────────────────────────────────────────────────────────
+
+function registerFindRoom(server: McpServer, provider: Provider, resolve: ResolveContext): void {
+  server.registerTool(
+    'campus.find_room',
+    {
+      description: 'Find a room that is free right now, or for the next while.',
+      inputSchema: z.object({
+        building: z.string().optional().describe('Building code, e.g. MEN. Omit to search the whole campus.'),
+        forMinutes: z.number().int().min(15).max(480).optional().describe('How long it is needed for. Defaults to an hour.'),
+        minCapacity: z.number().int().min(1).optional().describe('Minimum seats.'),
+      }),
+    },
+    async ({ building, forMinutes, minCapacity }, toolCtx): Promise<CallToolResult> => {
+      const ctx = resolve(toolCtx);
+      const window = {
+        start: ctx.now,
+        end: new Date(ctx.now.getTime() + (forMinutes ?? 60) * 60_000),
+      };
+
+      try {
+        const rooms = await provider.findFreeRooms!(ctx, {
+          window,
+          ...(building ? { building } : {}),
+          ...(minCapacity !== undefined ? { minCapacity } : {}),
+        });
+
+        if (rooms.length === 0) {
+          const where = building ? ` in ${building}` : '';
+          return say(`Nothing free${where} until ${timeOf(window.end, provider)}.`);
+        }
+
+        // Two or three options, not a list of twenty: this is being read out loud.
+        const shortlist = rooms.slice(0, 3).map(describeRoom);
+        const more = rooms.length > shortlist.length ? ` And ${rooms.length - shortlist.length} more.` : '';
+        return say(`Free until ${timeOf(window.end, provider)}: ${shortlist.join('; ')}.${more}`);
+      } catch (error) {
+        return spoken(error);
+      }
+    },
+  );
+}
+
+// ── campus.timetable ─────────────────────────────────────────────────────────
+
+function registerTimetable(server: McpServer, provider: Provider, resolve: ResolveContext): void {
+  server.registerTool(
+    'campus.timetable',
+    {
+      // No name or student parameter, deliberately: the timetable returned is always the caller's
+      // own. UC-02 requires that nobody can obtain another person's even by asking explicitly.
+      description: "Your own timetable. Resolves against who you are signed in as, not a name.",
+      inputSchema: z.object({
+        when: z.enum(['today', 'tomorrow']).optional().describe('Defaults to today.'),
+      }),
+    },
+    async ({ when }, toolCtx): Promise<CallToolResult> => {
+      const ctx = resolve(toolCtx);
+      const offset = when === 'tomorrow' ? 86_400_000 : 0;
+      const dayStart = new Date(ctx.now.getTime() + offset);
+      dayStart.setUTCHours(0, 0, 0, 0);
+      const window = { start: dayStart, end: new Date(dayStart.getTime() + 86_400_000 - 1) };
+
+      try {
+        const sessions = await provider.timetable!(ctx, { window });
+        if (sessions.length === 0) return say(`Nothing on ${dayOf(window.start, provider)}.`);
+
+        const lines = sessions.map(
+          (s: Session) => `${timeOf(s.start, provider)} ${s.courseCode}, group ${s.group}, in ${s.roomId}`,
+        );
+        return say(`${dayOf(window.start, provider)}: ${lines.join('; ')}.`);
+      } catch (error) {
+        return spoken(error);
+      }
+    },
+  );
+}
+
+// ── campus.deadlines ─────────────────────────────────────────────────────────
+
+function registerDeadlines(server: McpServer, provider: Provider, resolve: ResolveContext): void {
+  server.registerTool(
+    'campus.deadlines',
+    {
+      description: 'When an administrative deadline falls, and how long is left.',
+      inputSchema: z.object({
+        topic: z.string().optional().describe('What it is about, e.g. enrolment. Omit for everything upcoming.'),
+      }),
+    },
+    async ({ topic }, toolCtx): Promise<CallToolResult> => {
+      const ctx = resolve(toolCtx);
+
+      try {
+        const found = await provider.deadlines!(ctx, { ...(topic ? { topic } : {}) });
+
+        // Saying so is the answer. Never approximate a date that is not on record (UC-03): a
+        // confidently wrong enrolment deadline is how somebody misses the real one.
+        if (found.length === 0) {
+          return say(
+            topic
+              ? `I have nothing on record about ${topic}. Worth checking with the registry.`
+              : 'I have no deadlines on record.',
+          );
+        }
+
+        const upcoming = found.filter((d: Deadline) => d.closesOn > ctx.now);
+        const list = (upcoming.length > 0 ? upcoming : found).slice(0, 3);
+
+        const lines = list.map((d: Deadline) => {
+          const when = dayOf(d.closesOn, provider);
+          if (d.closesOn <= ctx.now) return `${d.label} closed on ${when}`;
+
+          const days = daysUntil(d.closesOn, ctx.now, provider.descriptor.timeZone);
+          // "0 days left" is the most urgent case and the worst phrasing for it.
+          if (days <= 0) return `${d.label} closes today`;
+          return `${d.label} closes ${when}, ${days} day${days === 1 ? '' : 's'} left`;
+        });
+
+        return say(`${lines.join('. ')}.`);
+      } catch (error) {
+        return spoken(error);
+      }
+    },
+  );
+}
+
+// ── campus.wayfind ───────────────────────────────────────────────────────────
+
+function registerWayfind(server: McpServer, provider: Provider, resolve: ResolveContext): void {
+  server.registerTool(
+    'campus.wayfind',
+    {
+      description: 'Spoken directions to a room or building.',
+      inputSchema: z.object({
+        to: z.string().describe('Room id or building code, e.g. FAR-104 or FAR.'),
+        from: z.string().optional().describe('Where you are now, if known.'),
+      }),
+    },
+    async ({ to, from }, toolCtx): Promise<CallToolResult> => {
+      const ctx = resolve(toolCtx);
+
+      try {
+        const route = await provider.wayfind!(ctx, { to, ...(from ? { from } : {}) });
+        if (!route) return say(`I do not know a place called ${to}.`);
+
+        // The steps alone have to get you there; the floor plan reference is for surfaces that
+        // happen to have a screen, and is not mentioned in the spoken answer.
+        return say(route.steps.join(' '));
+      } catch (error) {
+        return spoken(error);
+      }
+    },
+  );
+}
+
+// ── campus.report_issue ──────────────────────────────────────────────────────
+
+const confirmationSchema = z.object({
+  confirm: z.boolean().meta({ title: 'Yes, file it' }),
+});
+
+function registerReportIssue(server: McpServer, provider: Provider, resolve: ResolveContext): void {
+  server.registerTool(
+    'campus.report_issue',
+    {
+      description: 'Report faulty equipment in a room. Confirms with you before filing anything.',
+      inputSchema: z.object({
+        room: z.string().describe('Room id, e.g. MEN-203.'),
+        equipment: z.string().describe('What is broken, e.g. projector.'),
+        note: z.string().optional().describe('Anything else worth passing on.'),
+      }),
+    },
+    async ({ room, equipment, note }, toolCtx): Promise<CallToolResult | InputRequiredResult> => {
+      const ctx = resolve(toolCtx);
+
+      try {
+        // Check the room and its kit BEFORE asking for confirmation. Confirming "the projector in
+        // 301" and only then discovering 301 has no projector wastes the person's turn and makes
+        // the confirmation look like a formality.
+        const target = await provider.getRoom!(ctx, room);
+        if (!target) return say(`I have no room called ${room}.`);
+
+        const wanted = equipment.trim().toLowerCase();
+        if (!target.equipment.some((item) => item.toLowerCase() === wanted)) {
+          return say(`${target.id} has no ${equipment}. It has: ${target.equipment.join(', ')}.`);
+        }
+
+        const responses = (toolCtx as { mcpReq?: { inputResponses?: unknown } }).mcpReq?.inputResponses;
+        const answer = acceptedContent(responses as never, 'confirm', confirmationSchema);
+
+        if (answer?.confirm !== true) {
+          // Returning rather than blocking: the client answers and retries the call. A server that
+          // is stateless by protocol cannot park an in-flight request across replicas (ADR-009).
+          return inputRequired({
+            inputRequests: {
+              confirm: inputRequired.elicit({
+                message: `File a fault for the ${equipment} in ${target.id}?`,
+                requestedSchema: confirmationSchema,
+              }),
+            },
+          });
+        }
+
+        const ticket = await provider.reportIssue!(ctx, {
+          roomId: target.id,
+          equipment,
+          ...(note ? { note } : {}),
+        });
+
+        // The number is spoken back so the reporter can chase it later (UC-06).
+        return say(`Filed. The reference is ${ticket.number}, for the ${ticket.equipment} in ${ticket.roomId}.`);
+      } catch (error) {
+        return spoken(error);
+      }
+    },
+  );
+}
+
+// ── campus.issue_status ──────────────────────────────────────────────────────
+
+function registerIssueStatus(server: McpServer, provider: Provider, resolve: ResolveContext): void {
+  server.registerTool(
+    'campus.issue_status',
+    {
+      // Again no parameter for whose reports to list: only the caller's own come back.
+      description: 'How the faults you reported are getting on.',
+      inputSchema: z.object({}),
+    },
+    async (_args, toolCtx): Promise<CallToolResult> => {
+      const ctx = resolve(toolCtx);
+
+      try {
+        const tickets = await provider.issueStatus!(ctx);
+        if (tickets.length === 0) return say('You have not reported anything.');
+
+        const lines = tickets
+          .slice(0, 3)
+          .map((t) => `${t.number}, ${t.equipment} in ${t.roomId}, ${t.status.replace('-', ' ')}`);
+        return say(lines.join('. ') + '.');
+      } catch (error) {
+        return spoken(error);
+      }
+    },
+  );
+}

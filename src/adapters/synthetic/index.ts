@@ -27,7 +27,7 @@ import type {
   WayfindQuery,
 } from '../../provider/index.ts';
 import { CALENDAR, personBySubject } from './academic.ts';
-import { ROOMS, buildingByCode, isOpenThroughout, roomById, walkBetween } from './campus.ts';
+import { CAMPUS_TIMEZONE, ROOMS, buildingByCode, isOpenThroughout, roomById, walkBetween } from './campus.ts';
 import { InMemoryIssueStore } from './issues.ts';
 import type { IssueStore } from './issues.ts';
 import { busyRoomIds, sessionsForPerson } from './timetable.ts';
@@ -36,6 +36,7 @@ export const SYNTHETIC_DESCRIPTOR: ProviderDescriptor = {
   id: 'synthetic',
   institution: 'Universidad de San Telmo',
   locale: 'es-ES',
+  timeZone: CAMPUS_TIMEZONE,
   capabilities: ['rooms', 'timetable', 'deadlines', 'wayfinding', 'issues'],
 };
 
