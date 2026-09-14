@@ -90,10 +90,14 @@ una revision que el cliente no habla.
 --locale ... --mcp-server-url ...` -> `alexa-ai deploy`. Existe ademas un **simulador web** oficial
 para probar el add-on desplegado, y un "add-on Agent Skill" para hacerlo desde un agente de codigo.
 
-> ⚠️ **La documentacion no menciona la restriccion a socios seleccionados** que el runbook da por
-> hecha en su riesgo MEDIO. Ausencia de mencion no es prueba de que este abierto: confirmarlo en las
-> *office hours* del equipo de Amazon antes de M3. Si la ruta oficial esta abierta, el orquestador
-> propio deja de ser necesario y el video muestra el producto real, que es lo que piden las bases.
+> ⚠️ **Esa ruta oficial NO esta disponible para nosotros.** Verificado el 14-09-2026 en la pagina
+> de Alexa+ for Builders: «currently available to **select partners working directly with our team**».
+> El hackathon no abre excepcion — su guia para el track dice literalmente «simulate an Alexa+
+> experience using your preferred agentic tools via a web app».
+>
+> Se documenta aqui porque es la forma de la integracion real (transporte, revision, OAuth, latencia)
+> y contra ella se construye el orquestador propio: cuando el programa se abra, conectar debe ser
+> cambiar de cliente, no reescribir el servidor.
 
 ---
 
@@ -106,7 +110,7 @@ para probar el add-on desplegado, y un "add-on Agent Skill" para hacerlo desde u
 | Inventario de espacios | CSV / tabla | `standards` | Edificios, aulas, aforos, equipamiento |
 | Gestor de incidencias | Segun institucion | `campus.report_issue`, `campus.issue_status` | Si no existe, esas herramientas no se publican |
 | Amazon Bedrock | AWS SDK | Orquestador de demostracion | Nova 2 Lite, region `us-east-1` |
-| Alexa+ | MCP **2025-11-25** + OAuth 2.1/PKCE | Cliente | Ruta oficial via CLI `alexa-ai` y simulador web. La restriccion a socios seleccionados que asume el runbook **no consta en la documentacion**: confirmar en *office hours* |
+| Alexa+ | MCP **2025-11-25** + OAuth 2.1/PKCE | Cliente (simulado) | El programa oficial esta restringido a socios seleccionados (verificado 14-09-2026). Se construye contra su contrato, con orquestador propio como cliente |
 
 Mapeo a Context7 para documentacion viva: `ESTADO_PROYECTO.json` → `dominiosExternos`.
 

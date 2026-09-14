@@ -169,7 +169,7 @@ Cases marked *essential* in `docs/use-cases.md` survive every cut; cases marked 
 | High | Two submissions, one team | The cut rules above. October 14 is the point of no return |
 | High | The abstraction eats the calendar | Two adapters, no more. Interface frozen at M1 |
 | Medium | Generic demos badly | San Telmo in detail; the exchange student as the spectacular moment |
-| Medium | Alexa+ add-on registry may be closed (US + select partners) | The docs describe an open path (`alexa-ai` CLI, web simulator) and state no such restriction — **to be confirmed in office hours before M3**. If it is open, we use it and the video shows the real product. If not, the rules accept a self-hosted server with our own simulation, which ships as open source either way |
+| Medium | Alexa+ add-on registry is closed | **Confirmed 2026-09-14**: "Alexa+ for Builders is currently available to select partners working directly with our team." The hackathon grants no exception — its own guidance is to "simulate an Alexa+ experience using your preferred agentic tools via a web app" | Rules accept a self-hosted MCP server with our own simulation; that orchestrator ships as open source and counts towards the open-source mini-challenge |
 | Low | Data and privacy | Generated data, secret scanning in CI, no institutional credential in the repo |
 
 ## 12. Scope note

@@ -171,7 +171,7 @@ Los casos marcados *essential* en `docs/use-cases.md` sobreviven a cualquier rec
 | Alto | Dos candidaturas, un equipo | Las reglas de corte. El 14 de octubre es el punto de no retorno |
 | Alto | La abstracción se come el calendario | Dos adaptadores, ni uno más. Interfaz congelada en M1 |
 | Medio | Lo genérico demuestra peor | San Telmo con detalle; el estudiante de intercambio como momento espectacular |
-| Medio | El registro de complementos de Alexa+ puede estar cerrado (EE. UU. y socios seleccionados) | La documentación describe una vía abierta (CLI `alexa-ai`, simulador web) y no menciona tal restricción — **confirmar en las *office hours* antes de M3**. Si está abierta, se usa y el vídeo muestra el producto real. Si no, las bases admiten servidor autoalojado con simulación propia, que se publica en cualquier caso |
+| Medio | El registro de complementos de Alexa+ está cerrado | **Confirmado el 14-09-2026**: «Alexa+ for Builders is currently available to select partners working directly with our team». El hackathon no abre excepción: su propia guía dice «simulate an Alexa+ experience using your preferred agentic tools via a web app» | Las bases admiten servidor MCP autoalojado con simulación propia; ese orquestador se publica y suma en el mini-reto de código abierto |
 | Bajo | Datos y privacidad | Datos generados, comprobación de secretos en CI, ninguna credencial institucional |
 
 ## 12. Nota de alcance

@@ -138,3 +138,26 @@ Ejemplos de preferencias:
 ---
 
 *Archivo de lecciones aprendidas - Ovillo*
+
+---
+
+## L-001 · Que una subpagina no mencione una restriccion no significa que no exista
+
+**Fecha** 2026-09-14 · **Contexto** Verificacion de la via oficial de Alexa+ antes de M3
+
+Las paginas del **Alexa+ MCP Toolkit** describen un camino completo y self-service: CLI `alexa-ai`,
+`alexa-ai deploy`, simulador web, un *add-on Agent Skill*. Ninguna menciona restriccion de acceso.
+De ahi se concluyo —mal— que el riesgo MEDIO del runbook («el registro esta cerrado») podia estar
+obsoleto, y se reescribio el riesgo en ambos runbooks.
+
+La pagina **principal** del programa lo decia sin ambiguedad: «Alexa+ for Builders is currently
+available to **select partners working directly with our team**». La documentacion tecnica describe
+*como* funciona el producto; la pagina de programa dice *quien* puede usarlo. Son cosas distintas y
+viven en sitios distintos.
+
+**Que hacer la proxima vez**: antes de contradecir un riesgo del runbook, leer la pagina de entrada
+del programa, no solo la referencia tecnica. Y cuando se contradiga, decirlo como hipotesis a
+confirmar —que fue lo unico que salvo esto— en lugar de darlo por hecho.
+
+**Coste**: un commit que hubo que revertir. Ninguna decision de arquitectura llego a tomarse sobre la
+premisa equivocada.

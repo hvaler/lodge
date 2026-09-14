@@ -297,7 +297,8 @@
     "modulos_en_desarrollo": [],
     "funcionalidades_en_progreso": [],
     "bloqueadores": [
-      "El AWS CLI no esta instalado en la maquina, asi que el acceso a Bedrock en us-east-1 (ultimo entregable de M0) no se ha podido verificar. Instalar el CLI o comprobarlo desde la consola de AWS."
+      "Sin cuenta AWS configurada (~/.aws no existe) y sin AWS CLI instalado: el acceso a Bedrock en us-east-1 no se puede verificar. Ademas, Nova 2 Lite requiere habilitar el acceso al modelo explicitamente en la consola de Bedrock, no basta con tener cuenta.",
+      "Inscripcion en Devpost sin confirmar."
     ],
     "proxima_entrega": "M0 - Cimientos (14-17 sep): falta verificar Bedrock",
     "notas_sprint": "M0 arrancado el 14-09-2026, un dia antes del plan. HECHO: repositorio publico https://github.com/hvaler/lodge con LICENSE Apache-2.0 y NOTICE en el primer commit; README propio; especificacion cerrada de San Telmo en docs/san-telmo.md; bases y recursos del hackathon verificados (elegibilidad de Espana OK, creditos de participacion, criterios de evaluacion) y runbook corregido en cuatro puntos, incluida la revision de protocolo (ADR-009). PENDIENTE: pedir los 150 $ de creditos y verificar Bedrock en us-east-1."
@@ -447,7 +448,7 @@
   "alertas": {
     "_doc": "Claude muestra estas alertas al iniciar sesion",
     "activas": [
-      "PEDIR YA - Creditos AWS de participacion (150 $): https://forms.gle/GaHFxSbBQNG9Kti6A . Son de participacion, distintos del premio de 15.000 $. Sin fecha limite publicada: no esperar.",
+      "ALTAS PENDIENTES - 1) Devpost: inscribirse en el hackathon (sin eso no se puede enviar). 2) Cuenta AWS: no hay ninguna configurada en la maquina. 3) Pedir los 150 $ de creditos (https://forms.gle/GaHFxSbBQNG9Kti6A) DESPUES de tener la cuenta AWS. NO hace falta cuenta de Amazon Developer: Alexa+ for Builders esta restringido a socios seleccionados.",
       "OAuth 2.1 con PKCE (S256) esta en la RUTA CRITICA, no en M4: sin el no se conecta con Alexa+ (ADR-009). Presupuesto de latencia: < 500 ms ida y vuelta.",
       "OAuth 2.1 con PKCE (S256) es OBLIGATORIO para conectar con Alexa+, y el runbook lo situaba en M4. Y el presupuesto de latencia tiene numero: < 500 ms ida y vuelta.",
       "M0 EN CURSO - Falta verificar el acceso a Amazon Bedrock (Nova 2 Lite) en us-east-1. Sin eso, el orquestador de demostracion de M3 no arranca. El AWS CLI no esta instalado.",

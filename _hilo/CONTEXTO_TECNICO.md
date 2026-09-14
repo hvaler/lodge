@@ -66,7 +66,7 @@ devuelve datos de quien pregunta y no almacena expedientes.
 | Inventario de espacios | CSV / tabla | adaptador `standards` |
 | Gestor de incidencias | Segun institucion | `campus.report_issue`, `campus.issue_status` |
 | Amazon Bedrock — Nova 2 Lite | AWS SDK | orquestador de demostracion (`us-east-1`) |
-| Alexa+ | MCP 2025-11-25 + OAuth 2.1/PKCE | cliente (via CLI `alexa-ai` y simulador web; ver riesgo en DEUDA_TECNICA.md) |
+| Alexa+ | MCP 2025-11-25 + OAuth 2.1/PKCE | cliente **simulado**: el programa oficial esta restringido a socios seleccionados (verificado 14-09-2026) |
 
 ---
 
