@@ -296,7 +296,7 @@
   "desarrollo": {
     "modulos_en_desarrollo": [
       "Nucleo MCP",
-      "Interfaz de proveedor"
+      "Adaptador sintetico"
     ],
     "funcionalidades_en_progreso": [],
     "bloqueadores": [
@@ -304,7 +304,7 @@
       "Inscripcion en Devpost sin confirmar."
     ],
     "proxima_entrega": "M1 - Nucleo e interfaz (14-27 sep)",
-    "notas_sprint": "M0 arrancado el 14-09-2026, un dia antes del plan. HECHO: repositorio publico https://github.com/hvaler/lodge con LICENSE Apache-2.0 y NOTICE en el primer commit; README propio; especificacion cerrada de San Telmo en docs/san-telmo.md; bases y recursos del hackathon verificados (elegibilidad de Espana OK, creditos de participacion, criterios de evaluacion) y runbook corregido en cuatro puntos, incluida la revision de protocolo (ADR-009). PENDIENTE: pedir los 150 $ de creditos y verificar Bedrock en us-east-1."
+    "notas_sprint": "M1 en curso. HECHO: andamiaje (versiones fijadas), interfaz de proveedor con assertProviderCoherent, y el generador determinista de San Telmo entero: PRNG con semilla, inventario de 36 salas, calendario 2026-2027 con manejo correcto de CEST/CET, seis identidades, cola de incidencias sembrada y generador de horarios con las tres colisiones del spec garantizadas. 85 tests en verde. PENDIENTE: el adaptador que implementa Provider sobre estos datos, las seis herramientas y el servidor Streamable HTTP."
   },
   "evolutivoActivo": "M1",
   "evolutivos": {
@@ -442,7 +442,7 @@
     "notas": "El ecosistema hv asume .NET; Lodge es TypeScript/Node. CLAUDE.md y el Hilo estan adaptados."
   },
   "metricas": {
-    "cobertura_tests": null,
+    "cobertura_tests": "85 tests, 5 ficheros",
     "ultimo_build": null,
     "ultimo_deploy": null,
     "incidencias_abiertas": 0,
