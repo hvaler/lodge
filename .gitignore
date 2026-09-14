@@ -1,0 +1,187 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# GITIGNORE - Plantilla Claude Code Ovillo
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# CONFIGURACIÓN PERSONAL DE CLAUDE (NO COMMITEAR)
+# ─────────────────────────────────────────────────────────────────────────────────
+# OJO: se ignora lo PER-DEV, nunca '.claude/' entero. Lo que /hv:init escribe ahi es lo que un
+# plugin no puede traer y el equipo necesita igual: settings.json, rules/, CLAUDE_BASE.md y su
+# EXTENDIDO, CONFIGURACION.md, schemas/, scripts/ y smoke-tests/. Si se ignora la carpeta entera,
+# en un clon limpio la skill 'estandares-base' manda leer un CLAUDE_BASE.md que no existe, cada
+# desarrollador acaba con su propio estandar, y los hooks quedan sin cablear (ADR-039).
+# Cada desarrollador tiene su propia configuración
+.claude/user-config.json
+
+# Credenciales MCP Server Ovillo (PER-DEV, gitignored)
+# .mcp-credentials.json es per-dev (apiKey personal de cada developer).
+# .mcp-project.json (no aparece aqui) SI se commitea — contiene projectId + serverUrl
+# para que otros devs del equipo se unan via /v2/join al clonar el repo.
+_hilo/.mcp-credentials.json
+_hilo/.mcp-telemetry-state.json
+_hilo/.mcp-check.json
+_hilo/.skill-guard.json
+_hilo/.update-check.json
+.claude/settings.local.json
+.claude/sql-legacy-baseline.txt
+_hilo/agent-telemetry.jsonl
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# BUILD Y COMPILACIÓN (.NET)
+# ─────────────────────────────────────────────────────────────────────────────────
+**/bin/
+**/obj/
+**/packages/
+**/.nuget/
+*.nupkg
+*.snupkg
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# IDE Y EDITORES
+# ─────────────────────────────────────────────────────────────────────────────────
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.rsuser
+
+# Visual Studio Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# JetBrains Rider
+.idea/
+*.sln.iml
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# TESTS Y COBERTURA
+# ─────────────────────────────────────────────────────────────────────────────────
+**/TestResults/
+**/coverage/
+*.trx
+*.coverage
+*.coveragexml
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# LOGS Y TEMPORALES
+# ─────────────────────────────────────────────────────────────────────────────────
+*.log
+*.tmp
+*.temp
+*.bak
+*.swp
+*~
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# SECRETS Y CONFIGURACIÓN SENSIBLE (NUNCA COMMITEAR)
+# ─────────────────────────────────────────────────────────────────────────────────
+**/secrets.json
+**/appsettings.Development.json
+**/appsettings.Local.json
+**/.env
+**/.env.local
+**/.env.*.local
+*.pfx
+*.key
+*.pem
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# PUBLICACIÓN Y DEPLOY
+# ─────────────────────────────────────────────────────────────────────────────────
+**/publish/
+**/PublishOutput/
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# SISTEMA OPERATIVO
+# ─────────────────────────────────────────────────────────────────────────────────
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Linux
+*~
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# NODE / TYPESCRIPT (stack principal de este proyecto)
+# ─────────────────────────────────────────────────────────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Salida de compilacion TypeScript
+dist/
+build/
+*.tsbuildinfo
+
+# Cache de herramientas
+.npm/
+.eslintcache
+.vitest/
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# AWS CDK
+# ─────────────────────────────────────────────────────────────────────────────────
+# cdk.out puede contener identificadores de cuenta y ARNs en las plantillas sintetizadas
+cdk.out/
+*.cdk.staging/
+.cdk.staging/
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# DATOS Y CREDENCIALES DE ADAPTADORES (NUNCA COMMITEAR)
+# ─────────────────────────────────────────────────────────────────────────────────
+# El adaptador 'standards' se configura contra calendarios, LDAP e inventarios reales
+# de cada institucion. Nada de eso entra aqui: los datos del repo son los generados
+# de la Universidad de San Telmo, que es ficticia.
+*.ldaprc
+ldap.local.*
+calendars.local/
+inventory.local.*
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# ESTE REPOSITORIO ES PUBLICO — QUE NO SE PUBLICA
+# ═══════════════════════════════════════════════════════════════════════════════
+# Lodge se publica con licencia abierta desde el primer commit (entregable M0) y aspira a que
+# lo instale un desconocido (M5). Todo lo de abajo es andamiaje del ecosistema Ovillo: sigue
+# existiendo en local y funcionando igual, pero no tiene nada que ver con un servidor MCP en
+# TypeScript y solo estorbaria a quien llegue de fuera.
+#
+# NOTA: esto deroga a proposito el ADR-039 del ecosistema ("nunca ignorar '.claude/' entero"),
+# que esta pensado para repositorios de equipo internos. Aqui el equipo es una persona, que
+# tiene el plugin instalado, y el repositorio es publico.
+
+# Base de conocimiento de la organizacion (54 ficheros de estandares .NET/SQL)
+_patron/
+
+# Configuracion del ecosistema: skills, reglas, schemas, smoke-tests
+.claude/
+
+# Entorno de desarrollo del andamio: SQL Server 2017 con contrasena por defecto.
+# Lodge no usa SQL Server. El contenedor y el fichero de composicion REALES son
+# entregable de M2: cuando lleguen, se retira esta linea.
+ops/environment/
+
+# Runbook en PDF (registro de decision del 14-09-2026): 1,4 MB de binario cada uno.
+# El documento vivo es RUNBOOK.md.
+*.pdf
+
+# Analisis local de SonarQube
+.sonar/
+
+# Guia de instalacion del ecosistema Ovillo (pide el SDK de .NET: desorienta en este repo)
+INICIO_RAPIDO.md
+
+# Plantilla neutra del ecosistema; la configuracion real de Lodge es ecosystem.config.json
+ecosystem.config.example.json

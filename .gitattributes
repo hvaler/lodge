@@ -1,0 +1,52 @@
+# .gitattributes - plantilla del ecosistema Ovillo
+#
+# DOS objetivos:
+#   1. Normalizar finales de linea (EOL) entre Windows/Linux/WSL.
+#   2. Driver merge=ours en archivos per-rama (evita conflicts en _hilo/*).
+#
+# IMPORTANTE: el driver "ours" debe activarse una sola vez por developer:
+#   git config --local merge.ours.driver true
+# (sin esto, los attributes merge=ours se ignoran silenciosamente).
+
+# ============================================================================
+# _hilo/ - Memoria del proyecto, contenido per-rama
+# ============================================================================
+# Estos archivos cambian constantemente segun la sesion activa y la rama
+# de trabajo. Al mergear main -> develop (o viceversa), siempre queremos
+# CONSERVAR la version de la rama destino (la que esta haciendo el merge).
+# Evita merge conflicts recurrentes en multi-rama.
+_hilo/SESION_ACTUAL.md           merge=ours
+_hilo/ESTADO_PROYECTO.json       merge=ours
+_hilo/HISTORIAL_CAMBIOS.md       merge=ours
+
+# ============================================================================
+# .claude/ - Configuracion local del developer (per-dev, no per-proyecto)
+# ============================================================================
+.claude/settings.local.json       merge=ours
+
+# ============================================================================
+# Normalizacion EOL - LF en todas las plataformas
+# ============================================================================
+# Una sola politica: LF en el indice y en el working tree, con cualquier
+# core.autocrlf y en cualquier sistema. Los hooks (Node), los scripts .sh y
+# los pipelines piden LF; el SDK de .NET, PowerShell 7 y los IDE actuales lo
+# aceptan sin mas. Asi los hashes y las comparaciones no dependen del clon.
+* text=auto eol=lf
+
+# Archivos que SIEMPRE deben ser LF (scripts ejecutables en Linux/WSL)
+*.sh text eol=lf
+*.bash text eol=lf
+
+# Binarios - no tocar
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.zip binary
+*.pdf binary
+*.dll binary
+*.exe binary
+*.pdb binary
+*.pfx binary
+*.cer binary

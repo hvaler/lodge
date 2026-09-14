@@ -1,0 +1,499 @@
+{
+  "_schema": "Documentacion de campos, ejemplos y opciones extendidas: _hilo/ESTADO_PROYECTO.schema.md (NO se carga en contexto; consultar bajo demanda)",
+  "ecosistema": {
+    "nombre": "Ovillo",
+    "version": "1.0.2",
+    "repositorio": null,
+    "_repositorio_doc": "owner/repo del ecosistema en GitHub (lo usa /eval-gap para abrir issues); null si el ecosistema vive en Azure DevOps",
+    "componentes": {
+      "Ovillo": {
+        "descripcion": "Ecosistema completo (plantilla + comandos + skills + reglas)",
+        "carpeta": "/"
+      },
+      "Hilo": {
+        "descripcion": "Sistema de memoria del proyecto (estado, sesiones, lecciones)",
+        "carpeta": "_hilo/"
+      },
+      "Patrón": {
+        "descripcion": "Base de conocimiento (_patron, rules, patterns)",
+        "carpeta": "_patron/"
+      }
+    }
+  },
+  "proyecto": {
+    "nombre": "Lodge",
+    "descripcion": "La conserjeria que no cierra: servidor MCP autoalojado que responde por voz a las preguntas del campus (aulas libres, horarios, plazos, incidencias) sobre los estandares que cualquier institucion ya tiene.",
+    "owner": "Candidatura propia - Build, Ship, Shape: Amazon Developer Hackathon 2026. Track primario Alexa+ / MCP; mini-retos AWS Builder y Open Source.",
+    "jefe_proyecto": "Hugo Carlos Valer Rojas",
+    "responsable_tecnico": "Hugo Carlos Valer Rojas",
+    "fecha_inicio": "2026-09-15",
+    "repositorio": null,
+    "_repositorio_doc": "Pendiente: el repositorio publico con licencia Apache-2.0 desde el primer commit es entregable de M0 (15-17 sep)."
+  },
+  "stack": {
+    "_doc": "Stack real del proyecto (no .NET). Campos documentados en ESTADO_PROYECTO.schema.md#stack",
+    "runtime": "Node 24 LTS",
+    "lenguaje": "TypeScript",
+    "tipo_proyecto": "Servidor MCP (Streamable HTTP, sin estado)",
+    "sdk": "MCP TypeScript SDK (oficial)",
+    "protocolo": "MCP 2026-07-28, con degradacion a 2025-11-25 (minimo exigido por el hackathon)",
+    "frontend": "Tarjetas visuales (extension MCP Apps) + orquestador web de demostracion",
+    "modelo": "Amazon Nova 2 Lite (Amazon Bedrock)",
+    "base_datos": "DynamoDB (solo en el despliegue gestionado)",
+    "orm": null,
+    "identidad": "OAuth 2.1 + Client ID Metadata Documents (el registro dinamico de cliente esta obsoleto y no se usa)",
+    "observabilidad": "OpenTelemetry (contexto de traza en las cabeceras del protocolo)",
+    "infraestructura_como_codigo": "AWS CDK v2 (rama 2.263+; no existe v3)",
+    "contenedor": "Imagen distroless + fichero de composicion",
+    "formato_salida": "JSON (MCP)",
+    "gestor_paquetes": "npm",
+    "politica_versiones": "Se fijan en M1, se revalidan una vez en M3, se congelan tras M4. Nada en preview."
+  },
+  "equipo": {
+    "_doc": "'usuario' = usuario Git. 'nombre' = displayName EXACTO de AD (System.AssignedTo en Azure DevOps Server). 'roles' = array (multi-rol). Ver schema.md#equipo",
+    "miembros": [
+      {
+        "usuario": "hvaler",
+        "nombre": "Hugo Carlos Valer Rojas",
+        "email": "hvaler@comillas.edu",
+        "roles": [
+          "jefe_proyecto",
+          "lider_tecnico",
+          "arquitecto",
+          "desarrollador"
+        ],
+        "git_author_name": null,
+        "githubLogin": null
+      }
+    ]
+  },
+  "configuracion": {
+    "nivelIntegracionGit": "medio",
+    "_niveles_disponibles": [
+      "basico",
+      "medio",
+      "alto"
+    ],
+    "prefijoCommit": "[{codigo}]",
+    "branching": {
+      "_doc": "Configurado en /onboarding. Lo usan /commit, /git-sync, /liberar, /cicd-init (R21/R24). Ver schema.md#branching",
+      "estrategia": "github-flow-simplificado",
+      "_estrategias_disponibles": [
+        "github-flow",
+        "github-flow-simplificado",
+        "trunk-based",
+        "release-flow",
+        "oneflow",
+        "gitflow",
+        "gitlab-flow",
+        "developer-flow",
+        "developer-branch",
+        "ship-show-ask",
+        "stacked-prs",
+        "forking",
+        "environment-branching"
+      ],
+      "ramaBase": "main",
+      "ramaDevelop": null,
+      "mergeStrategy": "no-ff",
+      "_mergeStrategies": [
+        "squash",
+        "no-ff",
+        "rebase",
+        "merge"
+      ],
+      "releasesBranches": false,
+      "convencionRamas": "feature/{codigo}-{descripcion}",
+      "_convencionRamas_opciones": [
+        "feature/{codigo}-{descripcion}",
+        "yyyyMMdd-{tipo}-{codigo}-{descripcion}",
+        "yyyyMMdd-{tipo}/{codigo}-{descripcion}",
+        "custom"
+      ],
+      "pushFeatures": false,
+      "tiposTarea": null,
+      "branchPolicies": {
+        "reviewersMinimo": 0,
+        "buildValidation": true,
+        "linkedWorkItems": false,
+        "commentResolution": false
+      },
+      "flujoDespliegue": "main -> local (compose) -> demo (AWS, manual via CDK)"
+    }
+  },
+  "soluciones": {
+    "_doc": "Multi-solucion: auto-detectado por /onboarding e integracion-vs.ps1. Estructura de cada entrada en schema.md#soluciones",
+    "multiSolucion": false,
+    "solucionActiva": null,
+    "soluciones": []
+  },
+  "jira": {
+    "_doc": "Se auto-configura al detectar un ticket Jira. Ver schema.md#jira",
+    "habilitado": false,
+    "proyectoKey": null,
+    "url": null
+  },
+  "estado": {
+    "modo": "desarrollo",
+    "_modos_disponibles": [
+      "puesta_a_punto",
+      "desarrollo",
+      "mantenimiento",
+      "soporte_uap"
+    ],
+    "fase_actual": "desarrollo",
+    "_fases_disponibles": [
+      "onboarding",
+      "diseno",
+      "desarrollo",
+      "pruebas",
+      "despliegue",
+      "documentacion",
+      "produccion"
+    ],
+    "sprint_actual": null,
+    "version_actual": "0.0.0",
+    "ultima_actualizacion": "2026-09-14",
+    "actualizado_por": "Hugo Carlos Valer Rojas"
+  },
+  "acceso_bd": {
+    "_doc": "Conexion de Claude a BD de desarrollo con enmascaramiento dinamico. Ver schema.md#acceso_bd",
+    "habilitado": false,
+    "entorno": "desarrollo",
+    "connection_string_key": null,
+    "usuario_claude": null,
+    "enmascaramiento_dinamico": true,
+    "columnas_enmascaradas": [
+      "email",
+      "telefono",
+      "dni",
+      "direccion",
+      "nombre_completo",
+      "cuenta_bancaria"
+    ],
+    "tablas_restringidas": [],
+    "permisos": {
+      "select": true,
+      "insert": false,
+      "update": false,
+      "delete": false,
+      "execute_sp": false
+    }
+  },
+  "infraestructura": {
+    "_doc": "Topologia de despliegue (/onboarding Fase 5b). Routing por tipo+publico del entrypoint (R25). Ejemplos de entornos y pipelines[] (web/api/console) en schema.md#infraestructura",
+    "_topologia_doc": "Lodge no usa el modelo Dev/Pre/Pro: tiene dos destinos de despliegue de primera clase. El nucleo corre en cualquier sitio; AWS es un destino, no un requisito.",
+    "entornos": [
+      {
+        "nombre": "Local",
+        "tipo": "desarrollo",
+        "servidor_app": "contenedor distroless (compose)",
+        "servidor_servicios": null,
+        "url_app": "http://localhost:3000",
+        "url_servicios": null,
+        "deploy_automatico": false,
+        "balanceo": false,
+        "notas": "Despliegue autonomo: la institucion lo levanta en su infraestructura con un fichero de configuracion y sus credenciales. Sin dependencia de nube."
+      },
+      {
+        "nombre": "Demo",
+        "tipo": "produccion",
+        "servidor_app": "AWS Lambda (URL de funcion)",
+        "servidor_servicios": "Amazon DynamoDB",
+        "url_app": null,
+        "url_servicios": null,
+        "deploy_automatico": false,
+        "balanceo": false,
+        "estrategia_deploy": "cdk deploy",
+        "notas": "Despliegue gestionado (AWS CDK v2). Es la demostracion accesible para el jurado y el camino documentado del mini-reto AWS. URL pendiente hasta M4."
+      }
+    ],
+    "cicd": {
+      "plataforma": "github-actions",
+      "pipeline_existente": false,
+      "deployment_groups": false,
+      "pipelines": [],
+      "_pipelines_doc": "El modelo R25 (un pipeline por entrypoint .NET) no aplica. CI en GitHub Actions desde M1: tests de contrato, medicion de latencia y comprobacion de secretos en cada compilacion."
+    },
+    "aprobadores": {
+      "Pre": [],
+      "Pro": [
+        "Hugo Carlos Valer Rojas"
+      ]
+    }
+  },
+  "criticidad": {
+    "nivel": "alta",
+    "_niveles_disponibles": [
+      "alta",
+      "media",
+      "baja"
+    ],
+    "sla": null,
+    "horario_mantenimiento": null,
+    "dependencias_inter_proyecto": [
+      "LREA - segunda candidatura del mismo equipo al hackathon. Compite por el mismo tiempo; Lodge tiene prioridad (regla de corte 3, 14 oct).",
+      "Amazon Bedrock (us-east-1): el orquestador de demostracion depende de acceso al modelo Nova 2 Lite.",
+      "Registro de complementos de Alexa+: cerrado a socios seleccionados, por eso la experiencia se simula en aplicacion web propia."
+    ]
+  },
+  "calendario": {
+    "deadline": "2026-10-21",
+    "_deadline_doc": "Envio interno en Devpost. Cierre oficial: 2026-10-23 21:00 CEST. El margen de 48 h cubre una regrabacion o una caida de Devpost; no es holgura.",
+    "freeze_periods": [
+      "2026-10-21 a 2026-10-23: repositorio congelado y demostracion accesible para el jurado hasta el cierre oficial"
+    ],
+    "release_cycle": "continuo",
+    "_release_cycle_opciones": [
+      "continuo",
+      "semanal",
+      "quincenal",
+      "mensual",
+      "por_sprint"
+    ]
+  },
+  "mcpSync": {
+    "_doc": "Sincronizacion con el Hub del ecosistema (opt-in; default de organizacion en ecosystem.config.json -> hub). SCOPE per-PROYECTO (commiteable); credenciales per-DEV en _hilo/.mcp-credentials.json (gitignored). Ver schema.md#mcpSync",
+    "_NO_anadir_telemetryOptIn_aqui": "telemetryOptIn es PER-DEV — vive SOLO en .mcp-credentials.json y mcp.ProyectoDevs. Anadirlo aqui permitiria a un dev cambiar el opt-in de todo el equipo. Usar /mcp-register.",
+    "habilitado": false,
+    "serverUrl": null,
+    "projectId": null,
+    "enviarNombreCompleto": false,
+    "categorias": {
+      "decisiones": true,
+      "lecciones": true,
+      "nugets": true,
+      "deuda": true,
+      "evolutivos": true,
+      "equipo": true,
+      "feedbackEcosistema": true
+    },
+    "ultimaSync": null
+  },
+  "onboarding": {
+    "completado": true,
+    "fecha_inicio_onboarding": "2026-09-14",
+    "fecha_fin_onboarding": "2026-09-14",
+    "_fuente": "RUNBOOK.md / RUNBOOK.es.md (documento vivo) y docs/use-cases.md. Registro de decision fechado el 14-09-2026.",
+    "pasos_completados": {
+      "informacion_general": true,
+      "stack_tecnologico": true,
+      "estructura_codigo": true,
+      "base_datos": true,
+      "integraciones": true,
+      "infraestructura_despliegue": true,
+      "autenticacion": false,
+      "funcionalidades": true,
+      "dependencias": true,
+      "tests_existentes": false,
+      "documentacion_existente": true,
+      "equipo": true,
+      "problemas_conocidos": true
+    },
+    "_campos_existencia_doc": "autenticacion=false y tests_existentes=false porque el codigo aun no existe: OAuth 2.1 llega en M4 y los tests de contrato en M1. documentacion_existente=true por el runbook."
+  },
+  "desarrollo": {
+    "modulos_en_desarrollo": [
+      "Cimientos del repositorio",
+      "Dataset de San Telmo"
+    ],
+    "funcionalidades_en_progreso": [
+      "Repositorio publico con licencia Apache-2.0 desde el primer commit",
+      "Universidad de San Telmo: edificios, titulaciones y calendario academico"
+    ],
+    "bloqueadores": [
+      "AWS CLI no instalado en la maquina: el acceso a Bedrock en us-east-1 no se puede verificar todavia (entregable de M0)."
+    ],
+    "proxima_entrega": "M0 - Cimientos (14-17 sep, en progreso)",
+    "notas_sprint": "M0 abierto el 14-09-2026. Hecho: .gitignore con cobertura Node/TS/CDK, LICENSE Apache-2.0 (texto canonico), NOTICE y README del proyecto. Pendiente: repositorio publico en GitHub, verificacion de Bedrock y dataset de San Telmo."
+  },
+  "evolutivoActivo": "M0",
+  "evolutivos": {
+    "_doc": "Estructura de cada evolutivo (codigo, titulo, estado, asignadoA, rama, prioridad, fechas, creadoPor, notas) en schema.md#evolutivos",
+    "pendientes": [
+      {
+        "codigo": "M1",
+        "titulo": "Nucleo, interfaz de proveedor, adaptador sintetico y las seis herramientas",
+        "estado": "pendiente",
+        "asignadoA": "hvaler",
+        "rama": null,
+        "prioridad": "alta",
+        "fechaCreacion": "2026-09-14",
+        "fechaInicio": "2026-09-18",
+        "fechaEstimada": "2026-09-27",
+        "fechaCompletado": null,
+        "creadoPor": "hvaler",
+        "notas": "Salida: responde a un cliente MCP generico. Servidor sobre Streamable HTTP con server/discover; tests de contrato y medicion de latencia en cada compilacion. LA INTERFAZ DE PROVEEDOR SE CONGELA AL CERRAR EL HITO: a partir de ahi solo se implementa."
+      },
+      {
+        "codigo": "M2",
+        "titulo": "Adaptador de estandares, catalogo derivado y contenedor",
+        "estado": "pendiente",
+        "asignadoA": "hvaler",
+        "rama": null,
+        "prioridad": "alta",
+        "fechaCreacion": "2026-09-14",
+        "fechaInicio": "2026-09-28",
+        "fechaEstimada": "2026-10-04",
+        "fechaCompletado": null,
+        "creadoPor": "hvaler",
+        "notas": "Salida: la costura es real, no una promesa. Calendarios iCalendar, directorio LDAP e inventario en tabla; catalogo de herramientas derivado de las capacidades declaradas; imagen de contenedor y fichero de composicion."
+      },
+      {
+        "codigo": "M3",
+        "titulo": "Orquestador, tarjetas, localizacion y confirmacion multivuelta",
+        "estado": "pendiente",
+        "asignadoA": "hvaler",
+        "rama": null,
+        "prioridad": "alta",
+        "fechaCreacion": "2026-09-14",
+        "fechaInicio": "2026-10-05",
+        "fechaEstimada": "2026-10-11",
+        "fechaCompletado": null,
+        "creadoPor": "hvaler",
+        "notas": "Salida: conversacion completa extremo a extremo. Orquestador sobre Bedrock con traza de llamadas visible; tarjetas visuales y respuestas localizadas; input_required en las herramientas de escritura."
+      },
+      {
+        "codigo": "M4",
+        "titulo": "Pila CDK, OAuth 2.1 y trazas OpenTelemetry",
+        "estado": "pendiente",
+        "asignadoA": "hvaler",
+        "rama": null,
+        "prioridad": "alta",
+        "fechaCreacion": "2026-09-14",
+        "fechaInicio": "2026-10-12",
+        "fechaEstimada": "2026-10-16",
+        "fechaCompletado": null,
+        "creadoPor": "hvaler",
+        "notas": "Salida: dos destinos de despliegue funcionando. Funcion gestionada, tabla de estado e identidad; OAuth 2.1 con Client ID Metadata Documents. El registro de friccion se escribe mientras duele, no al final."
+      },
+      {
+        "codigo": "M5",
+        "titulo": "Guia de adopcion, documentacion, video y feedback",
+        "estado": "pendiente",
+        "asignadoA": "hvaler",
+        "rama": null,
+        "prioridad": "alta",
+        "fechaCreacion": "2026-09-14",
+        "fechaInicio": "2026-10-17",
+        "fechaEstimada": "2026-10-20",
+        "fechaCompletado": null,
+        "creadoPor": "hvaler",
+        "notas": "Salida: instalable por un desconocido. Guia cronometrada en maquina limpia por alguien ajeno al proyecto; documentacion de como escribir un tercer adaptador; video con limite duro de tres minutos; feedback de producto sobre cada API usada."
+      },
+      {
+        "codigo": "M6",
+        "titulo": "Envio en Devpost",
+        "estado": "pendiente",
+        "asignadoA": "hvaler",
+        "rama": null,
+        "prioridad": "alta",
+        "fechaCreacion": "2026-09-14",
+        "fechaInicio": "2026-10-21",
+        "fechaEstimada": "2026-10-21",
+        "fechaCompletado": null,
+        "creadoPor": "hvaler",
+        "notas": "Salida: enviado 48 h antes del cierre. Formulario con track y ambos mini-retos, registro de friccion, repositorio congelado y demostracion accesible para el jurado. Cierre oficial: 23 oct 21:00 CEST."
+      }
+    ],
+    "enProgreso": [
+      {
+        "codigo": "M0",
+        "titulo": "Cimientos",
+        "estado": "en_progreso",
+        "asignadoA": "hvaler",
+        "rama": "main",
+        "prioridad": "alta",
+        "fechaCreacion": "2026-09-14",
+        "fechaInicio": "2026-09-14",
+        "fechaEstimada": "2026-09-17",
+        "fechaCompletado": null,
+        "creadoPor": "hvaler",
+        "notas": "Salida: conjunto de datos de referencia cerrado. Repositorio publico con licencia abierta desde el primer commit; cuenta AWS con acceso a Bedrock en us-east-1; Universidad de San Telmo definida (edificios, titulaciones, calendario). | Arrancado el 14-09-2026, un dia antes del plan: gana un dia de margen sobre M1."
+      }
+    ],
+    "completados": []
+  },
+  "ultimaSesion": {
+    "_doc": "Se actualiza con /pausar y se lee con /continuar",
+    "fecha": "2026-09-14",
+    "evolutivoActivo": "M0",
+    "usuario": "Hugo Carlos Valer Rojas",
+    "ramaActiva": "main",
+    "proximoPaso": "M0: dataset de la Universidad de San Telmo y verificacion de Bedrock en us-east-1",
+    "resumenSesion": "/hv:init y /hv:onboarding. Hilo contextualizado desde el runbook; runbook incorporado al repo.",
+    "archivosModificados": [
+      ".claude/",
+      ".gitattributes",
+      ".gitignore",
+      "CLAUDE.md",
+      "INICIO_RAPIDO.md",
+      "README.md",
+      "RUNBOOK.es.md",
+      "RUNBOOK.md",
+      "VERSION.json",
+      "_hilo/",
+      "_patron/",
+      "docs/",
+      "ecosystem.config.example.json",
+      "ecosystem.config.json",
+      "ops/",
+      "src/"
+    ],
+    "notas": "El ecosistema hv asume .NET; Lodge es TypeScript/Node. CLAUDE.md y el Hilo estan adaptados."
+  },
+  "metricas": {
+    "cobertura_tests": null,
+    "ultimo_build": null,
+    "ultimo_deploy": null,
+    "incidencias_abiertas": 0,
+    "evolutivos_completados_mes": 0
+  },
+  "alertas": {
+    "_doc": "Claude muestra estas alertas al iniciar sesion",
+    "activas": [
+      "REGLA DE CORTE 1 - Si M2 se pasa del 4 de octubre: el adaptador de estandares se recorta a calendarios e inventario, dejando el directorio LDAP fuera.",
+      "REGLA DE CORTE 2 - Si M3 se pasa del 11 de octubre: caen las tarjetas visuales. La voz sola cumple el track.",
+      "REGLA DE CORTE 3 - 14 de octubre, punto de no retorno: si no hay demostracion de punta a punta, se abandona LREA y todo el equipo pasa a Lodge. Una candidatura terminada vale mas que dos a medias.",
+      "PRIORIDAD DE RECORTE - Los casos marcados essential en docs/use-cases.md sobreviven a cualquier recorte; los marcados improvement (hoy solo UC-06) caen primero.",
+      "Las reglas de corte se aplican sin convocar reunion. Tienen fecha, no criterio."
+    ]
+  },
+  "historial_modos": [
+    {
+      "modo": "puesta_a_punto",
+      "fecha": "2026-09-14",
+      "motivo": "Scaffold del ecosistema con /hv:init"
+    },
+    {
+      "modo": "desarrollo",
+      "fecha": "2026-09-14",
+      "motivo": "Onboarding completado desde el runbook; M0 arranca el 15-09-2026"
+    }
+  ],
+  "dominiosExternos": [
+    {
+      "nombre": "MCP TypeScript SDK",
+      "carpetaPattern": "src/server|src/tools",
+      "context7Library": "modelcontextprotocol/typescript-sdk",
+      "anchorTopics": [
+        "streamable http",
+        "server/discover",
+        "tools",
+        "mcp apps"
+      ],
+      "skipPaths": []
+    },
+    {
+      "nombre": "AWS CDK v2",
+      "carpetaPattern": "infra|cdk",
+      "context7Library": "aws/aws-cdk",
+      "anchorTopics": [
+        "lambda function url",
+        "dynamodb table",
+        "stack"
+      ],
+      "skipPaths": []
+    }
+  ]
+}

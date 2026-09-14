@@ -1,0 +1,38 @@
+{
+  "_comentario": "Historial de analisis del proyecto. Se actualiza automaticamente con /analizar.",
+  "_version": "1.0.0",
+  "_campos": {
+    "fecha": "ISO 8601 timestamp del analisis",
+    "version_ecosistema": "Version de Ovillo usada",
+    "usuario": "Usuario Git que ejecuto el analisis",
+    "parametros": "Parametros usados (--full, --quick, etc.)",
+    "metricas": {
+      "archivos_cs": "Total archivos .cs analizados",
+      "controllers": "Total controllers detectados",
+      "servicios": "Total servicios detectados",
+      "paquetes_nuget": "Total paquetes NuGet",
+      "conformidad_pct": "Porcentaje de conformidad con plantilla",
+      "cobertura_tests_pct": "Porcentaje de cobertura de tests (null si no ejecutados)",
+      "deuda_critica": "Issues criticos encontrados",
+      "deuda_importante": "Issues importantes encontrados",
+      "deuda_menor": "Issues menores encontrados",
+      "deuda_total": "Total issues de deuda tecnica",
+      "deuda_horas_estimadas": "Estimacion total en horas",
+      "secrets_expuestos": "Secrets detectados en codigo",
+      "cves_detectados": "Vulnerabilidades CVE detectadas",
+      "async_antipatterns": "Antipatrones async detectados (.Result, .Wait, async void)",
+      "salud": {
+        "seguridad": "verde/amarillo/rojo",
+        "deuda": "verde/amarillo/rojo",
+        "conformidad": "verde/amarillo/rojo",
+        "infraestructura": "verde/amarillo/rojo",
+        "tests": "verde/amarillo/rojo",
+        "global": "verde/amarillo/rojo"
+      },
+      "deploy_risk": "verde/amarillo/rojo",
+      "deploy_risk_score": "X/6 factores OK"
+    },
+    "diagramas_generados": "Numero de diagramas Mermaid generados"
+  },
+  "analisis": []
+}
