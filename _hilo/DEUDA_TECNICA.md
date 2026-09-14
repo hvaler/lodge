@@ -84,6 +84,9 @@ Cifras y requisitos leidos de las bases y de la pagina de recursos, no del runbo
 
 | Asunto | Estado |
 |---|---|
+| **Plan de la cuenta AWS** | ⚠️ **Free plan** (confirmado 14-09-2026 por captura de la consola). El free tier nuevo son 100 $ inmediatos + hasta 100 $ por actividades, 6 meses, y la cuenta **se cierra sola** a los 6 meses o al agotar creditos |
+| **Creditos de actividades: 100 $** | ⬜ 0 de 5 hechas. Dos estan en la ruta de Lodge: *modelo fundacional en el playground de Bedrock* (20 $, **es la verificacion que cierra M0**) y *aplicacion web con Lambda* (20 $, destino de M4). *AWS Budgets* (20 $) no es de Lodge pero conviene. EC2 y Aurora/RDS (40 $) estan fuera de ruta |
+| **Bedrock en plan Free** | ⚠️ La pagina de free tier dice que **no cubre inferencia de Bedrock**, y AgentCore figura como exclusivo de plan de pago. El orquestador de M3 vive de Nova 2 Lite: verificar que se puede invocar desde este plan |
 | **Creditos AWS de participacion: 150 $** | ⬜ **Pedirlos ya**: https://forms.gle/GaHFxSbBQNG9Kti6A — son de participacion, no el premio. El runbook no los mencionaba |
 | Presupuesto de nube | El *free tier* "es suficiente para empezar" segun las bases; 150 $ cubren Bedrock y Lambda de la demo |
 | Video | Menos de 3 min **y publico en YouTube o Vimeo**. Debe mostrar el proyecto *funcionando en el dispositivo para el que se construyo* |
