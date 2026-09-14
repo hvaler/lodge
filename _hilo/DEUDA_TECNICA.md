@@ -97,10 +97,14 @@ Cifras y requisitos leidos de las bases y de la pagina de recursos, no del runbo
 | Fecha limite | **23 oct 2026, 12:00 PDT** = 21:00 CEST. ✅ el runbook acertaba |
 | **Elegibilidad** | ✅ **Espana no esta excluida.** La lista es: Brasil, Quebec, Rusia, Crimea, Cuba, Iran y Corea del Norte. Individuos, equipos y organizaciones admitidos |
 | Periodo de envio | 31 ago 2026 10:15 PT - 23 oct 2026 12:00 PT. El primer commit (14 sep) entra de sobra en "creado despues del 31 de agosto" |
-| Premios (Alexa+ 1.º) | 25.000 $ + 15.000 $ en creditos. Mini-retos: 5.000 $ + 5.000 $ en creditos **cada uno** |
+| Premios (Alexa+ 1.º) | 25.000 $ + 15.000 $ en creditos. Mini-retos: 5.000 $ + 5.000 $ en creditos cada uno, pero **un proyecto solo puede ganar UN mini-reto**: «A project can only win one (1) track prize and one (1) mini challenge prize» |
+| **Techo real de Lodge** | **30.000 $** en metalico (25k + 5k) y **20.000 $** en creditos (15k + 5k). Optar a los dos mini-retos sigue mereciendo la pena: se gana uno |
+| Varias candidaturas | ✅ Permitidas: «An Entrant may submit more than one Submission, however, each Submission must be unique and substantially different». LREA no esta bloqueada; el limite de un proyecto por pantalla es de la interfaz de Devpost, no de las bases |
 
-> Correccion al runbook: el techo de creditos acumulados es **25.000 $** (15 + 5 + 5), no 20.000 $.
-> El techo en metalico, 35.000 $, si estaba bien.
+> **Correccion de una correccion (14-09-2026).** Se anoto aqui que el techo de creditos era 25.000 $
+> en lugar de los 20.000 $ del runbook. Estaba mal: asumia que un proyecto podia ganar los dos
+> mini-retos, y las bases lo limitan a uno. Las cifras buenas son 30.000 $ en metalico y 20.000 $
+> en creditos — o sea, el runbook acertaba en los creditos y se pasaba en el metalico.
 
 ---
 

@@ -233,7 +233,7 @@
     "sla": "< 500 ms ida y vuelta (limite de la plataforma Alexa+, verificado 14-09-2026)",
     "horario_mantenimiento": null,
     "dependencias_inter_proyecto": [
-      "LREA - segunda candidatura del mismo equipo al hackathon. Compite por el mismo tiempo; Lodge tiene prioridad (regla de corte 3, 14 oct).",
+      "LREA - segunda candidatura del mismo equipo. Las bases PERMITEN varias candidaturas si son sustancialmente distintas, asi que no esta bloqueada; lo que compite es el tiempo. Lodge tiene prioridad (regla de corte 3, 14 oct).",
       "Amazon Bedrock (us-east-1): el orquestador de demostracion depende de acceso al modelo Nova 2 Lite.",
       "Registro de complementos de Alexa+: cerrado a socios seleccionados, por eso la experiencia se simula en aplicacion web propia."
     ]
@@ -422,22 +422,8 @@
     "proximoPaso": "Verificar acceso a Bedrock en us-east-1 y cerrar M0; despues abrir M1 (nucleo e interfaz de proveedor)",
     "resumenSesion": "/hv:init, /hv:onboarding y arranque de M0: repositorio publico, licencia, README y dataset de San Telmo.",
     "archivosModificados": [
-      ".claude/",
-      ".gitattributes",
-      ".gitignore",
-      "CLAUDE.md",
-      "INICIO_RAPIDO.md",
-      "README.md",
-      "RUNBOOK.es.md",
-      "RUNBOOK.md",
-      "VERSION.json",
-      "_hilo/",
-      "_patron/",
-      "docs/",
-      "ecosystem.config.example.json",
-      "ecosystem.config.json",
-      "ops/",
-      "src/"
+      "_hilo/ESTADO_PROYECTO.json",
+      "_hilo/METRICAS.json"
     ],
     "notas": "El ecosistema hv asume .NET; Lodge es TypeScript/Node. CLAUDE.md y el Hilo estan adaptados."
   },

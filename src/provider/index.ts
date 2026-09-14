@@ -26,3 +26,10 @@ export {
 } from './provider.ts';
 
 export type { Capability, Provider, ProviderDescriptor } from './provider.ts';
+
+export {
+  InvalidRequestError,
+  NotFoundError,
+  UnauthenticatedError,
+  UnsupportedCapabilityError,
+} from './errors.ts';

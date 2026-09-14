@@ -100,10 +100,13 @@ Morning `09:00–14:00`, afternoon `15:00–20:00`, in 1-hour blocks with a 10-m
 
 Deliberate collisions, so `campus.find_room` has something real to solve:
 
-- **16:00–18:00 Tue and Thu** — peak load. `DER` and `INF` both run large groups; Mendizábal's two
-  seminar floors (1 and 2, twelve rooms) are fully booked and the spare capacity is across campus in
-  El Faro. This is the slot that makes `campus.find_room` earn its keep: the honest answer sends the
-  student an eleven-minute walk away.
+- **16:00–18:00 Tue and Thu** — peak load. `DER` and `INF` both run large groups, and all twelve of
+  Mendizábal's seminar rooms (floors 1 and 2) are teaching. What is left in that building is the
+  ground-floor lecture halls and the third-floor study rooms; El Faro is largely free.
+
+  This is the slot that makes `campus.find_room` earn its keep. Answering it means excluding twelve
+  busy rooms, knowing the study rooms upstairs are open to students, and knowing the Santa Clara
+  labs are not — a naive "list the empty rooms" gets all three wrong.
 - **Wed 09:00–11:00** — `ENF` occupies every Santa Clara wet lab.
 - **Fri afternoon** — near-empty campus. The easy case.
 
