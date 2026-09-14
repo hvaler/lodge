@@ -16,7 +16,9 @@
     "build": "tsc",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "start": "node dist/server/main.js",
+    "dev": "node --watch src/server/main.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/node": "2.0.0",

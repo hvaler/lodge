@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Read-only by default. A job that needs more asks for it itself.
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: typecheck, test, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      # Actions are pinned by commit SHA, not by tag: a tag can be moved, and this repository is
+      # public and meant to be adopted. The comment records which release each SHA is.
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          # The pinned runtime. Read from the file so there is one place to change it.
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      # Includes the contract tests derived from docs/use-cases.md and the latency measurement
+      # against the 500 ms Alexa+ budget. The runbook asks for both on every build; this is where
+      # "every build" becomes true.
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
