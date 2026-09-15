@@ -1,3 +1,5 @@
+import { mkdtemp, readFile, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
@@ -62,6 +64,28 @@ describe('deadlines from an iCalendar feed', () => {
     const times = (await loadDeadlines(deadlinesFeed, DUBLIN)).map((d) => d.closesOn.getTime());
 
     expect(times).toEqual([...times].sort((a, b) => a - b));
+  });
+
+  it('reads a feed whatever its line endings are', async () => {
+    // RFC 5545 mandates CRLF and real feeds emit it — the fixture is checked out that way on
+    // purpose. But plenty of systems emit bare LF, and refusing those would fail an institution
+    // over something invisible in a text editor.
+    const CR = String.fromCharCode(13);
+    const LF = String.fromCharCode(10);
+
+    const crlf = await readFile(deadlinesFeed, 'utf8');
+    expect(crlf).toContain(CR + LF);
+
+    const dir = await mkdtemp(join(tmpdir(), 'lodge-ics-'));
+    const lfPath = join(dir, 'deadlines-lf.ics');
+    await writeFile(lfPath, crlf.split(CR + LF).join(LF), 'utf8');
+
+    const fromCrlf = await loadDeadlines(deadlinesFeed, DUBLIN);
+    const fromLf = await loadDeadlines(lfPath, DUBLIN);
+
+    expect(fromLf.map((d) => [d.label, d.closesOn.toISOString()])).toEqual(
+      fromCrlf.map((d) => [d.label, d.closesOn.toISOString()]),
+    );
   });
 
   it('says which feed it could not read', async () => {

@@ -34,6 +34,10 @@ _hilo/HISTORIAL_CAMBIOS.md       merge=ours
 * text=auto eol=lf
 
 # Archivos que SIEMPRE deben ser LF (scripts ejecutables en Linux/WSL)
+# iCalendar: RFC 5545 exige CRLF. Es lo que emite cualquier feed real, asi que el fixture
+# debe llegar asi a cualquier maquina — si no, los tests no ejercitan el caso de verdad.
+*.ics text eol=crlf
+
 *.sh text eol=lf
 *.bash text eol=lf
 
