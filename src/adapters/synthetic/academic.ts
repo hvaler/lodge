@@ -42,15 +42,15 @@ export function programmeByCode(code: string): Programme | null {
  * empty — UC-03 requires the agent to say a deadline is not on record rather than approximate one.
  */
 export const CALENDAR: readonly Deadline[] = [
-  { id: 'enrolment-ordinary', label: 'Ordinary enrolment', opensOn: campusInstant('2026-07-01', '09:00'), closesOn: campusInstant('2026-07-17') },
-  { id: 'enrolment-late', label: 'Late enrolment and amendments', opensOn: campusInstant('2026-09-21', '09:00'), closesOn: campusInstant('2026-10-02') },
-  { id: 'credit-transfer', label: 'Credit-transfer applications', closesOn: campusInstant('2026-10-09') },
-  { id: 'placement-agreements', label: 'Placement agreements for Enfermería, year 3 and above', closesOn: campusInstant('2026-10-16') },
-  { id: 'final-project-autumn', label: 'Final-project submission, autumn sitting', closesOn: campusInstant('2026-10-30') },
-  { id: 'teaching-s1', label: 'Semester 1 teaching', opensOn: campusInstant('2026-09-14', '09:00'), closesOn: campusInstant('2027-01-22') },
-  { id: 'exams-s1', label: 'Semester 1 exams, first sitting', opensOn: campusInstant('2027-01-26', '09:00'), closesOn: campusInstant('2027-02-13') },
-  { id: 'teaching-s2', label: 'Semester 2 teaching', opensOn: campusInstant('2027-02-16', '09:00'), closesOn: campusInstant('2027-05-29') },
-  { id: 'exams-resit', label: 'Resit sitting', opensOn: campusInstant('2027-06-15', '09:00'), closesOn: campusInstant('2027-06-26') },
+  { id: 'enrolment-ordinary', label: 'Matrícula ordinaria', opensOn: campusInstant('2026-07-01', '09:00'), closesOn: campusInstant('2026-07-17') },
+  { id: 'enrolment-late', label: 'Matrícula extraordinaria y modificaciones', opensOn: campusInstant('2026-09-21', '09:00'), closesOn: campusInstant('2026-10-02') },
+  { id: 'credit-transfer', label: 'Solicitud de convalidaciones', closesOn: campusInstant('2026-10-09') },
+  { id: 'placement-agreements', label: 'Convenios de prácticas de Enfermería, a partir de 3.º', closesOn: campusInstant('2026-10-16') },
+  { id: 'final-project-autumn', label: 'Entrega de TFG, convocatoria de otoño', closesOn: campusInstant('2026-10-30') },
+  { id: 'teaching-s1', label: 'Docencia del primer cuatrimestre', opensOn: campusInstant('2026-09-14', '09:00'), closesOn: campusInstant('2027-01-22') },
+  { id: 'exams-s1', label: 'Exámenes del primer cuatrimestre, primera convocatoria', opensOn: campusInstant('2027-01-26', '09:00'), closesOn: campusInstant('2027-02-13') },
+  { id: 'teaching-s2', label: 'Docencia del segundo cuatrimestre', opensOn: campusInstant('2027-02-16', '09:00'), closesOn: campusInstant('2027-05-29') },
+  { id: 'exams-resit', label: 'Convocatoria extraordinaria', opensOn: campusInstant('2027-06-15', '09:00'), closesOn: campusInstant('2027-06-26') },
 ];
 
 /** Campus closed. Local patron's day, 13 October, is the one a generic calendar would miss. */
@@ -115,9 +115,9 @@ export interface SeededIssue {
  * first. Numbers are fixed rather than drawn: they are spoken back in the video.
  */
 export const SEEDED_ISSUES: readonly SeededIssue[] = [
-  { number: 'INC-2026-0019', roomId: 'SCL-201', equipment: 'workstations', openedBy: 'doc-0011', status: 'resolved', openedAt: campusInstant('2026-09-28', '11:20') },
-  { number: 'INC-2026-0028', roomId: 'FAR-104', equipment: 'touchscreen display', openedBy: 'doc-0011', status: 'in-progress', openedAt: campusInstant('2026-10-05', '16:40') },
-  { number: 'INC-2026-0031', roomId: 'MEN-203', equipment: 'projector', openedBy: 'doc-0007', status: 'open', openedAt: campusInstant('2026-10-06', '09:05') },
+  { number: 'INC-2026-0019', roomId: 'SCL-201', equipment: 'puestos de ordenador', openedBy: 'doc-0011', status: 'resolved', openedAt: campusInstant('2026-09-28', '11:20') },
+  { number: 'INC-2026-0028', roomId: 'FAR-104', equipment: 'pantalla táctil', openedBy: 'doc-0011', status: 'in-progress', openedAt: campusInstant('2026-10-05', '16:40') },
+  { number: 'INC-2026-0031', roomId: 'MEN-203', equipment: 'proyector', openedBy: 'doc-0007', status: 'open', openedAt: campusInstant('2026-10-06', '09:05') },
 ];
 
 /** Fault numbers continue the seeded run, so a new report reads as the next one in the queue. */

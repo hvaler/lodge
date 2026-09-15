@@ -97,7 +97,7 @@ describe('a generic MCP client can use it over HTTP', () => {
     const result = await client.callTool({ name: 'campus.find_room', arguments: { building: 'MEN' } });
     const text = ((result.content ?? []) as { text?: string }[]).map((b) => b.text).join(' ');
 
-    expect(text).toMatch(/Free until/);
+    expect(text).toMatch(/Libres hasta las/);
     await client.close();
   });
 
@@ -126,7 +126,7 @@ describe('a generic MCP client can use it over HTTP', () => {
 
       const { tools } = await client.listTools();
       expect(tools).toHaveLength(6);
-      expect(await textOf(client, 'campus.find_room')).toMatch(/Free until/);
+      expect(await textOf(client, 'campus.find_room')).toMatch(/Libres hasta las/);
 
       await client.close();
     },
@@ -163,7 +163,7 @@ describe('the development identity header', () => {
       const result = await client.callTool({ name: 'campus.timetable', arguments: {} });
       const text = ((result.content ?? []) as { text?: string }[]).map((b) => b.text).join(' ');
 
-      expect(text, `env ${JSON.stringify(env)}`).toMatch(/signed in/);
+      expect(text, `env ${JSON.stringify(env)}`).toMatch(/tienes que identificarte/);
       await client.close();
       await new Promise<void>((resolve) => server.close(() => resolve()));
     }

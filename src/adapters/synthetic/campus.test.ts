@@ -53,20 +53,20 @@ describe('the room inventory matches docs/san-telmo.md', () => {
 
 describe('equipment', () => {
   it('gives MEN-203 the projector that UC-05 reports broken', () => {
-    expect(roomById('MEN-203')?.equipment).toContain('projector');
+    expect(roomById('MEN-203')?.equipment).toContain('proyector');
   });
 
   it('gives MEN-203 the document camera the other rooms on its floor lack', () => {
-    expect(roomById('MEN-203')?.equipment).toContain('document camera');
-    expect(roomById('MEN-204')?.equipment).not.toContain('document camera');
+    expect(roomById('MEN-203')?.equipment).toContain('cámara de documentos');
+    expect(roomById('MEN-204')?.equipment).not.toContain('cámara de documentos');
   });
 
   it('equips FAR-104 with the touchscreen display of the seeded fault INC-2026-0028', () => {
-    expect(roomById('FAR-104')?.equipment).toContain('touchscreen display');
+    expect(roomById('FAR-104')?.equipment).toContain('pantalla táctil');
   });
 
   it('equips SCL-201 with the workstations of the seeded fault INC-2026-0019', () => {
-    expect(roomById('SCL-201')?.equipment).toContain('workstations');
+    expect(roomById('SCL-201')?.equipment).toContain('puestos de ordenador');
   });
 });
 
@@ -92,7 +92,7 @@ describe('walking between buildings', () => {
   });
 
   it('carries a hint, because the spoken answer has to work without a floor plan', () => {
-    expect(walkBetween('MEN', 'SCL')).toEqual({ minutes: 4, hint: 'cross the cloister courtyard' });
+    expect(walkBetween('MEN', 'SCL')).toEqual({ minutes: 4, hint: 'cruza el patio del claustro' });
   });
 
   it('costs nothing to stay put', () => {

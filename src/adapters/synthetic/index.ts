@@ -143,6 +143,10 @@ export class SyntheticProvider implements Provider {
    *
    * The steps have to be enough on their own: most of the surface is a speaker with no screen, and
    * UC-04 makes the floor plan an improvement rather than a requirement.
+   *
+   * Written in Spanish because that is what San Telmo declares. Route steps cross the interface
+   * already in the institution's language — the adapter is the only layer that knows both the
+   * locale and the building names, and half of every step is a building name.
    */
   async wayfind(_ctx: RequestContext, query: WayfindQuery): Promise<Route | null> {
     const destination = roomById(query.to);
@@ -158,22 +162,22 @@ export class SyntheticProvider implements Provider {
       const walk = walkBetween(from, target.code);
       const origin = buildingByCode(from);
       if (walk && origin) {
-        steps.push(`Leave ${origin.name} and ${walk.hint} — about ${walk.minutes} minutes on foot.`);
+        steps.push(`Sal de ${origin.name} y ${walk.hint}: unos ${walk.minutes} minutos a pie.`);
         minutes += walk.minutes;
       }
     }
 
-    steps.push(`You want ${target.name}.`);
+    steps.push(`Vas a ${target.name}.`);
 
     if (destination) {
       steps.push(
         destination.floor === 0
-          ? `${destination.id} is on the ground floor.`
-          : `Take the stairs to floor ${destination.floor}; ${destination.id} is signposted from the landing.`,
+          ? `${destination.id} está en la planta baja.`
+          : `Sube a la planta ${destination.floor}; ${destination.id} está señalizado desde el rellano.`,
       );
       // Santa Clara's west wing has no lift, and someone told to "take the lift" there is stuck.
       if (target.code === 'SCL' && destination.floor > 0) {
-        steps.push('There is no lift in the west wing, so allow a little longer.');
+        steps.push('En el ala oeste no hay ascensor, así que calcula un poco más.');
       }
       minutes += destination.floor;
     }

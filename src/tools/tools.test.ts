@@ -116,8 +116,9 @@ describe('campus.find_room', () => {
   it('offers a shortlist, not a catalogue, because it is being read aloud', async () => {
     const answer = await call('campus.find_room');
 
-    expect(answer).toMatch(/Free until/);
-    expect(answer.match(/seats \d+/g)?.length).toBeLessThanOrEqual(3);
+    // San Telmo answers in Spanish, which is what it declares.
+    expect(answer).toMatch(/Libres hasta las/);
+    expect(answer.match(/\d+ plazas/g)?.length).toBeLessThanOrEqual(3);
   });
 
   it('never offers a room that is teaching at the peak', async () => {
@@ -132,7 +133,7 @@ describe('campus.find_room', () => {
     // Santa Clara's rooms are all labs or occupied lecture halls; supervised ones never count.
     const answer = await call('campus.find_room', { building: 'SCL', minCapacity: 500 });
 
-    expect(answer).toMatch(/Nothing free in SCL/);
+    expect(answer).toMatch(/No hay nada libre en SCL/);
   });
 
   it('respects how long the room is needed for', async () => {
@@ -144,7 +145,7 @@ describe('campus.find_room', () => {
 
 describe('campus.timetable', () => {
   it('refuses an unauthenticated caller instead of guessing', async () => {
-    expect(await call('campus.timetable')).toMatch(/signed in/);
+    expect(await call('campus.timetable')).toMatch(/tienes que identificarte/);
   });
 
   it('gives two identities two different answers', async () => {
@@ -171,28 +172,31 @@ describe('campus.deadlines', () => {
     const answer = await call('campus.deadlines', { topic: 'credit-transfer' });
 
     // Tuesday to Friday is three days to a person, not the 3.3 elapsed days rounded up.
-    expect(answer).toMatch(/Credit-transfer applications —/);
-    expect(answer).toMatch(/3 days left/);
+    expect(answer).toMatch(/Solicitud de convalidaciones —/);
+    // "quedan 3 días": in Spanish the verb agrees with the number, which is why messages are
+    // functions rather than templates with holes.
+    expect(answer).toMatch(/quedan 3 días/);
   });
 
   it('says "closes today" rather than "0 days left" on the last day', async () => {
     // The most urgent case deserves the clearest phrasing.
     const answer = await call('campus.deadlines', { topic: 'credit-transfer' });
-    expect(answer).not.toMatch(/0 days/);
+    expect(answer).not.toMatch(/quedan 0|queda 0/);
   });
 
   it('says a deadline is not on record rather than offering the nearest one', async () => {
     const answer = await call('campus.deadlines', { topic: 'parking permit' });
 
-    expect(answer).toMatch(/nothing on record about parking permit/);
+    expect(answer).toMatch(/No me consta nada sobre parking permit/);
     // Crucially, it names no date at all.
     expect(answer).not.toMatch(/\d{1,2} (January|October|November)/);
   });
 
   it('reports a deadline that has already passed as closed, not as upcoming', async () => {
-    const answer = await call('campus.deadlines', { topic: 'Ordinary enrolment' });
+    // San Telmo's own label, in its own language: enrolment closed in July.
+    const answer = await call('campus.deadlines', { topic: 'Matrícula ordinaria' });
 
-    expect(answer).toMatch(/— closed,/);
+    expect(answer).toMatch(/— cerrado,/);
   });
 });
 
@@ -200,9 +204,9 @@ describe('campus.wayfind', () => {
   it('gives directions that work without a screen', async () => {
     const answer = await call('campus.wayfind', { to: 'FAR-104', from: 'MEN' });
 
-    expect(answer).toContain('seafront promenade');
+    expect(answer).toContain('paseo marítimo');
     expect(answer).toContain('El Faro');
-    expect(answer).toContain('floor 1');
+    expect(answer).toContain('planta 1');
   });
 
   it('does not read the floor-plan reference out loud', async () => {
@@ -212,7 +216,7 @@ describe('campus.wayfind', () => {
   });
 
   it('admits it does not know a place rather than inventing a route', async () => {
-    expect(await call('campus.wayfind', { to: 'ZZZ-999' })).toMatch(/do not know a place/);
+    expect(await call('campus.wayfind', { to: 'ZZZ-999' })).toMatch(/No conozco ningún sitio/);
   });
 });
 
@@ -224,7 +228,7 @@ describe('campus.report_issue', () => {
   it('files nothing when the confirmation is declined', async () => {
     onConfirm = () => ({ action: 'decline' });
 
-    await call('campus.report_issue', { room: 'MEN-203', equipment: 'projector' });
+    await call('campus.report_issue', { room: 'MEN-203', equipment: 'proyector' });
 
     // UC-05: no ticket exists without confirmation. doc-0007 already has the seeded
     // INC-2026-0031, so the check is that no NEW one appeared.
@@ -234,7 +238,7 @@ describe('campus.report_issue', () => {
   it('files nothing when the box is left unchecked', async () => {
     onConfirm = () => ({ action: 'accept', content: { confirm: false } });
 
-    await call('campus.report_issue', { room: 'MEN-203', equipment: 'projector' });
+    await call('campus.report_issue', { room: 'MEN-203', equipment: 'proyector' });
 
     expect(await call('campus.issue_status')).not.toContain('INC-2026-0032');
   });
@@ -242,10 +246,10 @@ describe('campus.report_issue', () => {
   it('files the fault once confirmed, and speaks the reference back', async () => {
     onConfirm = () => ({ action: 'accept', content: { confirm: true } });
 
-    const answer = await call('campus.report_issue', { room: 'MEN-203', equipment: 'projector' });
+    const answer = await call('campus.report_issue', { room: 'MEN-203', equipment: 'proyector' });
 
-    expect(answer).toMatch(/Filed\. The reference is INC-2026-0032/);
-    expect(answer).toContain('projector');
+    expect(answer).toMatch(/Hecho\. La referencia es INC-2026-0032/);
+    expect(answer).toContain('proyector');
     expect(answer).toContain('MEN-203');
     // And it is now chaseable by the person who filed it (UC-06).
     expect(await call('campus.issue_status')).toContain('INC-2026-0032');
@@ -259,22 +263,23 @@ describe('campus.report_issue', () => {
       return { action: 'decline' as const };
     });
 
-    await call('campus.report_issue', { room: 'FAR-104', equipment: 'touchscreen display' });
+    await call('campus.report_issue', { room: 'FAR-104', equipment: 'pantalla táctil' });
 
-    expect(asked).toBe('File a fault for the touchscreen display in FAR-104?');
+    expect(asked).toBe('¿Abro un aviso por pantalla táctil en FAR-104?');
   });
 
   it('checks the room and the equipment before asking, not after', async () => {
     // Confirming and only then learning the room has no projector wastes the person's turn.
-    const answer = await call('campus.report_issue', { room: 'MEN-301', equipment: 'projector' });
+    const answer = await call('campus.report_issue', { room: 'MEN-301', equipment: 'proyector' });
 
-    expect(answer).toMatch(/MEN-301 has no projector/);
-    expect(answer).toMatch(/whiteboard/);
+    expect(answer).toMatch(/MEN-301 no tiene proyector/);
+    // The equipment names are the institution's own words and stay untranslated.
+    expect(answer).toMatch(/pizarra/);
   });
 
   it('says so when the room does not exist', async () => {
-    expect(await call('campus.report_issue', { room: 'MEN-999', equipment: 'projector' })).toMatch(
-      /no room called MEN-999/,
+    expect(await call('campus.report_issue', { room: 'MEN-999', equipment: 'proyector' })).toMatch(
+      /No tengo ningún aula llamada MEN-999/,
     );
   });
 
@@ -282,8 +287,8 @@ describe('campus.report_issue', () => {
     principal = null;
     onConfirm = () => ({ action: 'accept', content: { confirm: true } });
 
-    expect(await call('campus.report_issue', { room: 'MEN-203', equipment: 'projector' })).toMatch(
-      /signed in/,
+    expect(await call('campus.report_issue', { room: 'MEN-203', equipment: 'proyector' })).toMatch(
+      /tienes que identificarte/,
     );
   });
 });
@@ -301,16 +306,16 @@ describe('campus.issue_status', () => {
   it('reads statuses aloud without the hyphen', async () => {
     principal = 'doc-0011';
 
-    expect(await call('campus.issue_status')).toContain('in progress');
+    expect(await call('campus.issue_status')).toContain('en curso');
   });
 
   it('says nothing is outstanding for someone who never reported anything', async () => {
     principal = 'est-0001';
 
-    expect(await call('campus.issue_status')).toMatch(/not reported anything/);
+    expect(await call('campus.issue_status')).toMatch(/No has dado ningún aviso/);
   });
 
   it('refuses an unauthenticated caller', async () => {
-    expect(await call('campus.issue_status')).toMatch(/signed in/);
+    expect(await call('campus.issue_status')).toMatch(/tienes que identificarte/);
   });
 });

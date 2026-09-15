@@ -295,8 +295,7 @@
   },
   "desarrollo": {
     "modulos_en_desarrollo": [
-      "Adaptador standards",
-      "Contenedor"
+      "Superficie y localizacion (M3)"
     ],
     "funcionalidades_en_progreso": [],
     "bloqueadores": [
@@ -304,7 +303,7 @@
       "Inscripcion en Devpost hecha; falta el formulario de creditos (requiere Devpost Profile URL)."
     ],
     "proxima_entrega": "M2 - Adaptador de estandares (14 sep - 4 oct)",
-    "notas_sprint": "M2 COMPLETO el 15-09, 19 dias antes del plazo. Incluye UC-07, que el runbook llama el caso que justifica la arquitectura entera: un solo servidor sirve San Telmo en /mcp y Carrigmore en /mcp/carrigmore, con catalogos distintos (6 y 4 herramientas) e idiomas distintos, sin reiniciar ni recompilar. Verificado en contenedor contra LDAP real. 235 tests. PENDIENTE: congelar la interfaz de proveedor el 27-09 (ADR-006)."
+    "notas_sprint": "M2 completo. Adelantada la localizacion de M3: catalogo de mensajes es/en, San Telmo responde entero en castellano y Carrigmore en ingles, desde el mismo servidor. La regla: se traduce lo que Lodge posee (tipos de sala, estados, las frases), nunca lo que posee la institucion (equipamiento, etiquetas de plazos, codigos). 248 tests. PENDIENTE: congelar la interfaz el 27-09; despues M3 (orquestador Bedrock, tarjetas visuales)."
   },
   "evolutivoActivo": "M2",
   "evolutivos": {
@@ -428,7 +427,7 @@
     "notas": "El ecosistema hv asume .NET; Lodge es TypeScript/Node. CLAUDE.md y el Hilo estan adaptados."
   },
   "metricas": {
-    "cobertura_tests": "235 tests, 12 ficheros",
+    "cobertura_tests": "248 tests, 13 ficheros",
     "ultimo_build": "2026-09-14 (local, verde)",
     "ultimo_deploy": null,
     "incidencias_abiertas": 0,

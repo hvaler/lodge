@@ -24,6 +24,11 @@ a number has to change, it changes *here* first.
 
 ## 1. Buildings
 
+Equipment names and calendar labels are in Spanish. They are the institution's own words, and
+the message catalogue never translates what the institution owns — only what Lodge owns (room
+kinds, statuses, the sentences around the data). A Spanish university whose rooms have a
+`projector` would answer half in each language.
+
 Room numbering is `{floor}{nn}` — floor `2`, room `03` is room **203**, the one whose projector fails
 in UC-05. Room codes are unique per building; the qualified form is `MEN-203`.
 
@@ -33,10 +38,10 @@ Nineteenth-century block on the main square. Ground floor plus three.
 
 | Floor | Rooms | Type | Capacity | Equipment |
 | :-- | :-- | :-- | :-- | :-- |
-| 0 | 001–004 | Lecture | 120, 120, 90, 90 | projector, screen, PA, lectern PC |
-| 1 | 101–106 | Seminar | 40 × 6 | projector, whiteboard |
-| 2 | 201–206 | Seminar | 35 × 6 | projector, whiteboard (**203** also has a document camera) |
-| 3 | 301–302 | Study room | 60, 60 | whiteboard, power at every seat |
+| 0 | 001–004 | Lecture | 120, 120, 90, 90 | proyector, pantalla, megafonía, ordenador de atril |
+| 1 | 101–106 | Seminar | 40 × 6 | proyector, pizarra |
+| 2 | 201–206 | Seminar | 35 × 6 | proyector, pizarra (**203** también cámara de documentos) |
+| 3 | 301–302 | Study room | 60, 60 | pizarra, enchufe en cada puesto |
 
 Opening hours: Mon–Fri 07:30–21:30 · Sat 09:00–14:00 · Sun closed.
 
@@ -46,9 +51,9 @@ Former convent, two cloisters, ground floor plus two. Thick walls, no lift in th
 
 | Floor | Rooms | Type | Capacity | Equipment |
 | :-- | :-- | :-- | :-- | :-- |
-| 0 | 001–002 | Lecture | 80, 80 | projector, screen |
-| 1 | 101–104 | Wet lab | 24 × 4 | fume hood, microscopes ×24, emergency shower |
-| 2 | 201–203 | Computer lab | 30 × 3 | 30 workstations, projector |
+| 0 | 001–002 | Lecture | 80, 80 | proyector, pantalla |
+| 1 | 101–104 | Wet lab | 24 × 4 | campana extractora, microscopios, ducha de emergencia |
+| 2 | 201–203 | Computer lab | 30 × 3 | puestos de ordenador, proyector |
 
 Opening hours: Mon–Fri 08:00–20:00 · Sat–Sun closed.
 Labs require a supervisor present: **never offered as a free room** by `campus.find_room`.
@@ -59,10 +64,10 @@ Built 2019 next to the old lighthouse. Ground floor plus one, fully accessible.
 
 | Floor | Rooms | Type | Capacity | Equipment |
 | :-- | :-- | :-- | :-- | :-- |
-| 0 | 001 | Auditorium | 300 | projector ×2, PA, streaming rig, hearing loop |
-| 0 | 002–003 | Lecture | 100 × 2 | projector, screen, PA |
-| 1 | 101–105 | Seminar | 30 × 5 | touchscreen display, whiteboard |
-| 1 | 106 | Study room | 80 | power at every seat, silent |
+| 0 | 001 | Auditorium | 300 | proyector ×2, megafonía, equipo de retransmisión, bucle magnético |
+| 0 | 002–003 | Lecture | 100 × 2 | proyector, pantalla, megafonía |
+| 1 | 101–105 | Seminar | 30 × 5 | pantalla táctil, pizarra |
+| 1 | 106 | Study room | 80 | enchufe en cada puesto, zona de silencio |
 
 Opening hours: Mon–Fri 07:00–22:00 · Sat 09:00–18:00 · Sun 10:00–14:00.
 
@@ -119,15 +124,15 @@ answers, and UC-03 requires that a deadline not on record is reported as unknown
 
 | Event | Dates |
 | :-- | :-- |
-| Ordinary enrolment | 1 – 17 Jul 2026 |
-| **Late enrolment and amendments** | **21 Sep – 2 Oct 2026** |
-| Semester 1 teaching | 14 Sep 2026 – 22 Jan 2027 |
-| **Credit-transfer applications** | **deadline 9 Oct 2026** |
-| **Final-project submission, autumn sitting** | **deadline 30 Oct 2026** |
-| Placement agreements (`ENF`, year 3+) | deadline 16 Oct 2026 |
-| Semester 1 exams, first sitting | 26 Jan – 13 Feb 2027 |
-| Semester 2 teaching | 16 Feb – 29 May 2027 |
-| Resit sitting | 15 – 26 Jun 2027 |
+| Matrícula ordinaria | 1 – 17 Jul 2026 |
+| **Matrícula extraordinaria y modificaciones** | **21 Sep – 2 Oct 2026** |
+| Docencia del primer cuatrimestre | 14 Sep 2026 – 22 Jan 2027 |
+| **Solicitud de convalidaciones** | **deadline 9 Oct 2026** |
+| **Entrega de TFG, convocatoria de otoño** | **deadline 30 Oct 2026** |
+| Convenios de prácticas (`ENF`, a partir de 3.º) | deadline 16 Oct 2026 |
+| Exámenes del primer cuatrimestre, primera convocatoria | 26 Jan – 13 Feb 2027 |
+| Docencia del segundo cuatrimestre | 16 Feb – 29 May 2027 |
+| Convocatoria extraordinaria | 15 – 26 Jun 2027 |
 
 **Public holidays** (campus closed): 12 Oct, 1 Nov, 6 Dec, 8 Dec 2026 · 1 Jan, 6 Jan 2027.
 **Local holiday**: 13 Oct 2026 (San Telmo patron).
@@ -171,9 +176,9 @@ Seeded open issues, so UC-06 has something to answer on a clean clone:
 
 | Number | Room | Equipment | Filed by | Status |
 | :-- | :-- | :-- | :-- | :-- |
-| `INC-2026-0031` | MEN-203 | Projector | `doc-0007` | open |
-| `INC-2026-0028` | FAR-104 | Touchscreen display | `doc-0011` | in progress |
-| `INC-2026-0019` | SCL-201 | Workstation 14 | `doc-0011` | resolved |
+| `INC-2026-0031` | MEN-203 | proyector | `doc-0007` | open |
+| `INC-2026-0028` | FAR-104 | pantalla táctil | `doc-0011` | in progress |
+| `INC-2026-0019` | SCL-201 | puestos de ordenador | `doc-0011` | resolved |
 
 ---
 

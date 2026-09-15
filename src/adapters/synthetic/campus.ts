@@ -11,7 +11,14 @@ import type { Room, RoomKind } from '../../provider/index.ts';
 import { instantAt, isOpenThroughout as isOpenIn, localParts, weekOf } from '../../shared/time.ts';
 import type { DayHours, OpeningHours } from '../../shared/time.ts';
 
-/** San Telmo is on the Spanish coast; opening hours below are wall-clock in this zone. */
+/**
+ * San Telmo is on the Spanish coast; opening hours below are wall-clock in this zone.
+ *
+ * Equipment names are in Spanish, and deliberately so: they are the institution's own words,
+ * which the message catalogue never translates. A Spanish university whose rooms have a
+ * `projector` would answer half in each language. What Lodge owns — room kinds, statuses, the
+ * sentences around the data — is translated; what the institution owns is not.
+ */
 export const CAMPUS_TIMEZONE = 'Europe/Madrid';
 
 export type { DayHours, OpeningHours } from '../../shared/time.ts';
@@ -59,18 +66,18 @@ export const BUILDINGS: readonly BuildingSpec[] = [
         count: 4,
         kind: 'lecture',
         capacity: [120, 120, 90, 90],
-        equipment: ['projector', 'screen', 'PA system', 'lectern PC'],
+        equipment: ['proyector', 'pantalla', 'megafonía', 'ordenador de atril'],
       },
-      { floor: 1, from: 1, count: 6, kind: 'seminar', capacity: 40, equipment: ['projector', 'whiteboard'] },
+      { floor: 1, from: 1, count: 6, kind: 'seminar', capacity: 40, equipment: ['proyector', 'pizarra'] },
       {
         floor: 2,
         from: 1,
         count: 6,
         kind: 'seminar',
         capacity: 35,
-        equipment: ['projector', 'whiteboard'],
+        equipment: ['proyector', 'pizarra'],
         // 203 is the room whose projector fails in UC-05, so it is the one worth over-equipping.
-        extras: { 203: ['document camera'] },
+        extras: { 203: ['cámara de documentos'] },
       },
       {
         floor: 3,
@@ -78,7 +85,7 @@ export const BUILDINGS: readonly BuildingSpec[] = [
         count: 2,
         kind: 'study',
         capacity: 60,
-        equipment: ['whiteboard', 'power at every seat'],
+        equipment: ['pizarra', 'enchufe en cada puesto'],
       },
     ],
   },
@@ -88,14 +95,14 @@ export const BUILDINGS: readonly BuildingSpec[] = [
     blurb: 'Former convent, two cloisters. Thick walls, and no lift in the west wing.',
     openingHours: week({ open: '08:00', close: '20:00' }, null, null),
     blocks: [
-      { floor: 0, from: 1, count: 2, kind: 'lecture', capacity: 80, equipment: ['projector', 'screen'] },
+      { floor: 0, from: 1, count: 2, kind: 'lecture', capacity: 80, equipment: ['proyector', 'pantalla'] },
       {
         floor: 1,
         from: 1,
         count: 4,
         kind: 'lab',
         capacity: 24,
-        equipment: ['fume hood', 'microscopes', 'emergency shower'],
+        equipment: ['campana extractora', 'microscopios', 'ducha de emergencia'],
         supervised: true,
       },
       {
@@ -104,7 +111,7 @@ export const BUILDINGS: readonly BuildingSpec[] = [
         count: 3,
         kind: 'computer-lab',
         capacity: 30,
-        equipment: ['workstations', 'projector'],
+        equipment: ['puestos de ordenador', 'proyector'],
         supervised: true,
       },
     ],
@@ -121,16 +128,16 @@ export const BUILDINGS: readonly BuildingSpec[] = [
         count: 1,
         kind: 'auditorium',
         capacity: 300,
-        equipment: ['projector', 'second projector', 'PA system', 'streaming rig', 'hearing loop'],
+        equipment: ['proyector', 'segundo proyector', 'megafonía', 'equipo de retransmisión', 'bucle magnético'],
       },
-      { floor: 0, from: 2, count: 2, kind: 'lecture', capacity: 100, equipment: ['projector', 'screen', 'PA system'] },
+      { floor: 0, from: 2, count: 2, kind: 'lecture', capacity: 100, equipment: ['proyector', 'pantalla', 'megafonía'] },
       {
         floor: 1,
         from: 1,
         count: 5,
         kind: 'seminar',
         capacity: 30,
-        equipment: ['touchscreen display', 'whiteboard'],
+        equipment: ['pantalla táctil', 'pizarra'],
       },
       {
         floor: 1,
@@ -138,7 +145,7 @@ export const BUILDINGS: readonly BuildingSpec[] = [
         count: 1,
         kind: 'study',
         capacity: 80,
-        equipment: ['power at every seat', 'silent study'],
+        equipment: ['enchufe en cada puesto', 'zona de silencio'],
       },
     ],
   },
@@ -184,21 +191,26 @@ export function buildingByCode(code: string): BuildingSpec | null {
   return BUILDINGS.find((b) => b.code === code) ?? null;
 }
 
-/** Walking time between buildings, with the hint that makes the spoken answer usable. */
+/**
+ * Walking time between buildings, with the hint that makes the spoken answer usable.
+ *
+ * In Spanish, because San Telmo declares `es-ES` and a route step is half the
+ * institution's own vocabulary. An adapter speaks its own institution's language.
+ */
 export interface Walk {
   readonly minutes: number;
   readonly hint: string;
 }
 
 const WALKS: ReadonlyMap<string, Walk> = new Map([
-  ['MEN>SCL', { minutes: 4, hint: 'cross the cloister courtyard' }],
-  ['MEN>FAR', { minutes: 11, hint: 'follow the seafront promenade' }],
-  ['SCL>FAR', { minutes: 9, hint: 'head downhill towards the lighthouse' }],
+  ['MEN>SCL', { minutes: 4, hint: 'cruza el patio del claustro' }],
+  ['MEN>FAR', { minutes: 11, hint: 'sigue el paseo marítimo' }],
+  ['SCL>FAR', { minutes: 9, hint: 'baja hacia el faro' }],
 ]);
 
 /** Symmetric: the walk back takes as long as the walk there. */
 export function walkBetween(from: string, to: string): Walk | null {
-  if (from === to) return { minutes: 0, hint: 'you are already in the building' };
+  if (from === to) return { minutes: 0, hint: 'ya estás en el edificio' };
   return WALKS.get(`${from}>${to}`) ?? WALKS.get(`${to}>${from}`) ?? null;
 }
 

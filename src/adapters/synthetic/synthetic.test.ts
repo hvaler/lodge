@@ -198,9 +198,11 @@ describe('UC-04 · finding the room', () => {
   it('gives directions that stand on their own, without a floor plan', async () => {
     const route = await provider.wayfind(ctx(), { from: 'MEN', to: 'FAR-104' });
 
+    // In Spanish: San Telmo declares es-ES, and route steps cross the interface already in the
+    // institution's language.
     expect(route).not.toBeNull();
     expect(route!.steps.join(' ')).toContain('El Faro');
-    expect(route!.steps.join(' ')).toContain('seafront promenade');
+    expect(route!.steps.join(' ')).toContain('paseo marítimo');
     expect(route!.minutes).toBeGreaterThanOrEqual(11);
   });
 
@@ -210,13 +212,13 @@ describe('UC-04 · finding the room', () => {
     expect(route!.floorPlanRef).toBe('MEN-floor-2');
     // Remove it and the directions still get you there.
     expect(route!.steps.length).toBeGreaterThan(0);
-    expect(route!.steps.join(' ')).toContain('floor 2');
+    expect(route!.steps.join(' ')).toContain('planta 2');
   });
 
   it('warns about the wing with no lift, which a generic answer would miss', async () => {
     const route = await provider.wayfind(ctx(), { to: 'SCL-201' });
 
-    expect(route!.steps.join(' ')).toContain('no lift');
+    expect(route!.steps.join(' ')).toContain('no hay ascensor');
   });
 
   it('returns null for a destination that does not exist rather than inventing a route', async () => {
@@ -228,7 +230,7 @@ describe('UC-05 · reporting a fault', () => {
   it('files a fault and hands back a number to speak aloud', async () => {
     const ticket = await provider.reportIssue(ctx('doc-0007'), {
       roomId: 'MEN-203',
-      equipment: 'projector',
+      equipment: 'proyector',
     });
 
     expect(ticket.number).toMatch(/^INC-2026-\d{4}$/);
@@ -241,41 +243,41 @@ describe('UC-05 · reporting a fault', () => {
     // This is what makes confirming "the projector in 203" mean something: a room without one
     // would have been refused, so the confirmation is a real check and not a ritual.
     await expect(
-      provider.reportIssue(ctx('doc-0007'), { roomId: 'MEN-301', equipment: 'projector' }),
+      provider.reportIssue(ctx('doc-0007'), { roomId: 'MEN-301', equipment: 'proyector' }),
     ).rejects.toThrow(InvalidRequestError);
   });
 
   it('names what the room does have, so the agent can offer the alternatives', async () => {
     await expect(
-      provider.reportIssue(ctx('doc-0007'), { roomId: 'MEN-301', equipment: 'projector' }),
-    ).rejects.toThrow(/whiteboard/);
+      provider.reportIssue(ctx('doc-0007'), { roomId: 'MEN-301', equipment: 'proyector' }),
+    ).rejects.toThrow(/pizarra/);
   });
 
   it('matches equipment case-insensitively, because it arrives from speech', async () => {
     const ticket = await provider.reportIssue(ctx('doc-0007'), {
       roomId: 'MEN-203',
-      equipment: 'PROJECTOR',
+      equipment: 'PROYECTOR',
     });
 
-    expect(ticket.equipment).toBe('projector');
+    expect(ticket.equipment).toBe('proyector');
   });
 
   it('refuses an unknown room', async () => {
     await expect(
-      provider.reportIssue(ctx('doc-0007'), { roomId: 'MEN-999', equipment: 'projector' }),
+      provider.reportIssue(ctx('doc-0007'), { roomId: 'MEN-999', equipment: 'proyector' }),
     ).rejects.toThrow(NotFoundError);
   });
 
   it('files nothing for an unauthenticated caller', async () => {
     await expect(
-      provider.reportIssue(ctx(null), { roomId: 'MEN-203', equipment: 'projector' }),
+      provider.reportIssue(ctx(null), { roomId: 'MEN-203', equipment: 'proyector' }),
     ).rejects.toThrow(UnauthenticatedError);
   });
 
   it('continues the numbering after the seeded faults', async () => {
     const ticket = await provider.reportIssue(ctx('doc-0007'), {
       roomId: 'MEN-203',
-      equipment: 'projector',
+      equipment: 'proyector',
     });
 
     expect(ticket.number).toBe('INC-2026-0032');
@@ -306,7 +308,7 @@ describe('UC-06 · chasing the report', () => {
   });
 
   it('shows a freshly filed fault to its reporter and to nobody else', async () => {
-    await provider.reportIssue(ctx('est-0001'), { roomId: 'FAR-106', equipment: 'silent study' });
+    await provider.reportIssue(ctx('est-0001'), { roomId: 'FAR-106', equipment: 'zona de silencio' });
 
     expect(await provider.issueStatus(ctx('est-0001'))).toHaveLength(1);
     expect(await provider.issueStatus(ctx('est-0002'))).toHaveLength(0);
@@ -334,7 +336,7 @@ describe('determinism', () => {
   it('takes its clock from the context, never from the wall', async () => {
     const ticket = await provider.reportIssue(ctx('doc-0007', campusInstant('2026-11-20', '08:15')), {
       roomId: 'MEN-203',
-      equipment: 'projector',
+      equipment: 'proyector',
     });
 
     expect(ticket.openedAt.toISOString()).toBe('2026-11-20T07:15:00.000Z');

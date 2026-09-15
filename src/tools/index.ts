@@ -20,6 +20,8 @@ import {
   UnauthenticatedError,
 } from '../provider/index.ts';
 import type { Capability, Deadline, Provider, RequestContext, Room, Session } from '../provider/index.ts';
+import { messagesFor } from './messages.ts';
+import type { Messages } from './messages.ts';
 
 /** Builds the per-request context. The server supplies the real one; tests supply a stub. */
 export type ResolveContext = (toolCtx: { mcpReq?: unknown }) => RequestContext;
@@ -46,8 +48,13 @@ function dayOf(at: Date, provider: Provider): string {
   }).format(at);
 }
 
-function describeRoom(room: Room): string {
-  return `${room.id}, ${room.kind.replace('-', ' ')}, seats ${room.capacity}`;
+/** Messages in the institution's own language. */
+function wordsFor(provider: Provider): Messages {
+  return messagesFor(provider.descriptor.locale);
+}
+
+function describeRoom(room: Room, m: Messages): string {
+  return m.describeRoom(room.id, m.roomKind[room.kind], room.capacity);
 }
 
 /**
@@ -78,9 +85,11 @@ function daysUntil(at: Date, now: Date, timeZone: string): number {
  * Rethrows anything unrecognised: a bug should surface as a protocol error rather than be read
  * aloud as though it were an answer about the campus.
  */
-function spoken(error: unknown): CallToolResult {
-  if (error instanceof UnauthenticatedError) return say('You need to be signed in for that.');
-  if (error instanceof NotFoundError) return say(`I have no ${error.kind} on record for ${error.ref}.`);
+function spoken(error: unknown, m: Messages): CallToolResult {
+  if (error instanceof UnauthenticatedError) return say(m.mustSignIn());
+  if (error instanceof NotFoundError) return say(m.notOnRecord(error.kind, error.ref));
+  // InvalidRequestError carries an adapter-composed message, which is already in the
+  // institution's language: it names its own rooms and its own equipment.
   if (error instanceof InvalidRequestError) return say(error.message);
   throw error;
 }
@@ -140,6 +149,7 @@ function registerFindRoom(server: McpServer, provider: Provider, resolve: Resolv
     },
     async ({ building, forMinutes, minCapacity }, toolCtx): Promise<CallToolResult> => {
       const ctx = resolve(toolCtx);
+      const m = wordsFor(provider);
       const window = {
         start: ctx.now,
         end: new Date(ctx.now.getTime() + (forMinutes ?? 60) * 60_000),
@@ -153,16 +163,14 @@ function registerFindRoom(server: McpServer, provider: Provider, resolve: Resolv
         });
 
         if (rooms.length === 0) {
-          const where = building ? ` in ${building}` : '';
-          return say(`Nothing free${where} until ${timeOf(window.end, provider)}.`);
+          return say(m.noFreeRooms(building ?? null, timeOf(window.end, provider)));
         }
 
         // Two or three options, not a list of twenty: this is being read out loud.
-        const shortlist = rooms.slice(0, 3).map(describeRoom);
-        const more = rooms.length > shortlist.length ? ` And ${rooms.length - shortlist.length} more.` : '';
-        return say(`Free until ${timeOf(window.end, provider)}: ${shortlist.join('; ')}.${more}`);
+        const shortlist = rooms.slice(0, 3).map((room) => describeRoom(room, m));
+        return say(m.freeRooms(timeOf(window.end, provider), shortlist, rooms.length - shortlist.length));
       } catch (error) {
-        return spoken(error);
+        return spoken(error, m);
       }
     },
   );
@@ -183,6 +191,7 @@ function registerTimetable(server: McpServer, provider: Provider, resolve: Resol
     },
     async ({ when }, toolCtx): Promise<CallToolResult> => {
       const ctx = resolve(toolCtx);
+      const m = wordsFor(provider);
       const offset = when === 'tomorrow' ? 86_400_000 : 0;
       const dayStart = new Date(ctx.now.getTime() + offset);
       dayStart.setUTCHours(0, 0, 0, 0);
@@ -190,16 +199,16 @@ function registerTimetable(server: McpServer, provider: Provider, resolve: Resol
 
       try {
         const sessions = await provider.timetable!(ctx, { window });
-        if (sessions.length === 0) return say(`Nothing on ${dayOf(window.start, provider)}.`);
+        const day = dayOf(window.start, provider);
+        if (sessions.length === 0) return say(m.timetableEmpty(day));
 
-        const lines = sessions.map((s: Session) => {
-          // Only institutions that actually have groups get one read out.
-          const group = s.group ? `, group ${s.group}` : '';
-          return `${timeOf(s.start, provider)} ${s.courseCode}${group}, in ${s.roomId}`;
-        });
-        return say(`${dayOf(window.start, provider)}: ${lines.join('; ')}.`);
+        // Only institutions that actually have groups get one read out.
+        const lines = sessions.map((s: Session) =>
+          m.session(timeOf(s.start, provider), s.courseCode, s.roomId, s.group),
+        );
+        return say(m.timetable(day, lines));
       } catch (error) {
-        return spoken(error);
+        return spoken(error, m);
       }
     },
   );
@@ -218,6 +227,7 @@ function registerDeadlines(server: McpServer, provider: Provider, resolve: Resol
     },
     async ({ topic }, toolCtx): Promise<CallToolResult> => {
       const ctx = resolve(toolCtx);
+      const m = wordsFor(provider);
 
       try {
         const found = await provider.deadlines!(ctx, { ...(topic ? { topic } : {}) });
@@ -225,11 +235,7 @@ function registerDeadlines(server: McpServer, provider: Provider, resolve: Resol
         // Saying so is the answer. Never approximate a date that is not on record (UC-03): a
         // confidently wrong enrolment deadline is how somebody misses the real one.
         if (found.length === 0) {
-          return say(
-            topic
-              ? `I have nothing on record about ${topic}. Worth checking with the registry.`
-              : 'I have no deadlines on record.',
-          );
+          return say(topic ? m.noDeadlineAbout(topic) : m.noDeadlinesAtAll());
         }
 
         const upcoming = found.filter((d: Deadline) => d.closesOn > ctx.now);
@@ -239,20 +245,19 @@ function registerDeadlines(server: McpServer, provider: Provider, resolve: Resol
           const when = dayOf(d.closesOn, provider);
 
           // The label is the institution's own prose, read straight from its feed, so the sentence
-          // around it cannot assume its grammar. San Telmo writes noun phrases ("Credit-transfer
-          // applications") and Carrigmore writes clauses ("Registration closes") — gluing a verb
-          // on gave "Registration closes closes Friday". A dash takes whatever it is given.
-          if (d.closesOn <= ctx.now) return `${d.label} — closed, ${when}`;
+          // around it cannot assume its grammar — and for the same reason it is never translated.
+          // San Telmo writes noun phrases and Carrigmore writes clauses; a dash takes either.
+          if (d.closesOn <= ctx.now) return m.deadlineClosed(d.label, when);
 
           const days = daysUntil(d.closesOn, ctx.now, provider.descriptor.timeZone);
           // "0 days left" is the most urgent case and the worst phrasing for it.
-          if (days <= 0) return `${d.label} — today`;
-          return `${d.label} — ${when}, ${days} day${days === 1 ? '' : 's'} left`;
+          if (days <= 0) return m.deadlineToday(d.label);
+          return m.deadlineLeft(d.label, when, days);
         });
 
         return say(`${lines.join('. ')}.`);
       } catch (error) {
-        return spoken(error);
+        return spoken(error, m);
       }
     },
   );
@@ -272,16 +277,19 @@ function registerWayfind(server: McpServer, provider: Provider, resolve: Resolve
     },
     async ({ to, from }, toolCtx): Promise<CallToolResult> => {
       const ctx = resolve(toolCtx);
+      const m = wordsFor(provider);
 
       try {
         const route = await provider.wayfind!(ctx, { to, ...(from ? { from } : {}) });
-        if (!route) return say(`I do not know a place called ${to}.`);
+        if (!route) return say(m.unknownPlace(to));
 
         // The steps alone have to get you there; the floor plan reference is for surfaces that
         // happen to have a screen, and is not mentioned in the spoken answer.
+        // The steps arrive already in the institution's language: the adapter knows its own
+        // locale, and half of each step is the institution's own building names.
         return say(route.steps.join(' '));
       } catch (error) {
-        return spoken(error);
+        return spoken(error, m);
       }
     },
   );
@@ -306,17 +314,18 @@ function registerReportIssue(server: McpServer, provider: Provider, resolve: Res
     },
     async ({ room, equipment, note }, toolCtx): Promise<CallToolResult | InputRequiredResult> => {
       const ctx = resolve(toolCtx);
+      const m = wordsFor(provider);
 
       try {
         // Check the room and its kit BEFORE asking for confirmation. Confirming "the projector in
         // 301" and only then discovering 301 has no projector wastes the person's turn and makes
         // the confirmation look like a formality.
         const target = await provider.getRoom!(ctx, room);
-        if (!target) return say(`I have no room called ${room}.`);
+        if (!target) return say(m.noSuchRoom(room));
 
         const wanted = equipment.trim().toLowerCase();
         if (!target.equipment.some((item) => item.toLowerCase() === wanted)) {
-          return say(`${target.id} has no ${equipment}. It has: ${target.equipment.join(', ')}.`);
+          return say(m.roomHasNoSuch(target.id, equipment, target.equipment));
         }
 
         const responses = (toolCtx as { mcpReq?: { inputResponses?: unknown } }).mcpReq?.inputResponses;
@@ -328,7 +337,7 @@ function registerReportIssue(server: McpServer, provider: Provider, resolve: Res
           return inputRequired({
             inputRequests: {
               confirm: inputRequired.elicit({
-                message: `File a fault for the ${equipment} in ${target.id}?`,
+                message: m.confirmFault(equipment, target.id),
                 requestedSchema: confirmationSchema,
               }),
             },
@@ -342,9 +351,9 @@ function registerReportIssue(server: McpServer, provider: Provider, resolve: Res
         });
 
         // The number is spoken back so the reporter can chase it later (UC-06).
-        return say(`Filed. The reference is ${ticket.number}, for the ${ticket.equipment} in ${ticket.roomId}.`);
+        return say(m.faultFiled(ticket.number, ticket.equipment, ticket.roomId));
       } catch (error) {
-        return spoken(error);
+        return spoken(error, m);
       }
     },
   );
@@ -362,17 +371,18 @@ function registerIssueStatus(server: McpServer, provider: Provider, resolve: Res
     },
     async (_args, toolCtx): Promise<CallToolResult> => {
       const ctx = resolve(toolCtx);
+      const m = wordsFor(provider);
 
       try {
         const tickets = await provider.issueStatus!(ctx);
-        if (tickets.length === 0) return say('You have not reported anything.');
+        if (tickets.length === 0) return say(m.noReports());
 
         const lines = tickets
           .slice(0, 3)
-          .map((t) => `${t.number}, ${t.equipment} in ${t.roomId}, ${t.status.replace('-', ' ')}`);
+          .map((t) => m.report(t.number, t.equipment, t.roomId, m.issueStatus[t.status]));
         return say(lines.join('. ') + '.');
       } catch (error) {
-        return spoken(error);
+        return spoken(error, m);
       }
     },
   );
