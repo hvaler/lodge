@@ -299,8 +299,9 @@
     ],
     "funcionalidades_en_progreso": [],
     "bloqueadores": [
-      "Credenciales AWS sin configurar (el CLI 2.36.44 ya esta instalado). CORRECCION 14-09: el acceso a los modelos de Bedrock esta habilitado POR DEFECTO en las regiones comerciales, y los modelos de Amazon (Nova) ni siquiera pasan por Marketplace. No hay paso de solicitud: basta con invocar. Lo anotado antes era el flujo antiguo.",
-      "Inscripcion en Devpost hecha; falta el formulario de creditos (requiere Devpost Profile URL)."
+      "BEDROCK BLOQUEADO POR VERIFICACION DE CUENTA (15-09). El playground devuelve AccessDeniedException: 'Your account is currently being verified. Verification normally takes less than 2 hours.' No es un problema de plan, de region ni de perfil de inferencia: el modelo y el perfil US estaban bien elegidos. Reintentar sin cambiar nada; si pasan 2 h, escribir a aws-verification@amazon.com.",
+      "SIGUE SIN RESPUESTA la pregunta que importa: si Bedrock funciona en plan Free. La verificacion corta antes de llegar ahi. Es la incognita que bloquea el orquestador de M3 (5-11 oct).",
+      "Inscripcion en Devpost hecha; formulario de creditos pendiente (requiere Devpost Profile URL)."
     ],
     "proxima_entrega": "M2 - Adaptador de estandares (14 sep - 4 oct)",
     "notas_sprint": "M3 avanzando sin depender de AWS: localizacion hecha y TARJETAS VISUALES hechas (parrilla de ocupacion, plano de planta, ficha de incidencia) como recursos MCP Apps. Se envian solo si el cliente declara la extension io.modelcontextprotocol/ui, y hay un test que comprueba que el texto hablado es IDENTICO con pantalla y sin ella. 264 tests. PENDIENTE de M3: el orquestador sobre Bedrock, que si depende de la verificacion de la cuenta. PENDIENTE de M2: congelar la interfaz el 27-09 — ha ganado listRooms al construir las tarjetas."
