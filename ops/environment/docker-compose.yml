@@ -44,7 +44,10 @@ services:
       context: ../..
       dockerfile: Dockerfile
     environment:
-      LODGE_CONFIG: /etc/lodge/carrigmore.json
+      # Both institutions from one server: San Telmo at /mcp, Carrigmore at /mcp/carrigmore.
+      # That is UC-07 — the exchange student asks the same question of the other place, and the
+      # switch happens with no restart and no recompile.
+      LODGE_CONFIG: /etc/lodge/demo.json
       PORT: "3000"
       # Until OAuth lands in M4, the demo needs a way to say who is asking. Off unless set to
       # exactly "1", and never set in a real deployment: it lets any caller name themselves.
@@ -52,6 +55,7 @@ services:
     volumes:
       # Everything read-only. Lodge answers questions; it has no business writing to an
       # institution's data.
+      - ./demo.json:/etc/lodge/demo.json:ro
       - ./carrigmore.json:/etc/lodge/carrigmore.json:ro
       - ../../fixtures/carrigmore:/srv/carrigmore:ro
     ports:

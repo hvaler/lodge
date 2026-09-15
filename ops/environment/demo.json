@@ -1,0 +1,29 @@
+{
+  "institutions": {
+    "san-telmo": {
+      "adapter": "synthetic"
+    },
+    "carrigmore": {
+      "adapter": "standards",
+      "standards": {
+        "institution": "Carrigmore College",
+        "locale": "en-IE",
+        "timeZone": "Europe/Dublin",
+        "inventory": { "location": "/srv/carrigmore/rooms.csv" },
+        "calendars": {
+          "timetable": "/srv/carrigmore/timetable.ics",
+          "deadlines": "/srv/carrigmore/deadlines.ics"
+        },
+        "directory": {
+          "url": "ldap://directory:1389",
+          "bindDN": "cn=admin,dc=carrigmore,dc=ie",
+          "bindPassword": "carrigmore-dev",
+          "baseDN": "ou=people,dc=carrigmore,dc=ie",
+          "groupsDN": "ou=modules,dc=carrigmore,dc=ie",
+          "subjectAttribute": "uid"
+        }
+      }
+    }
+  },
+  "default": "san-telmo"
+}

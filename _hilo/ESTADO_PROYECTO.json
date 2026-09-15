@@ -304,7 +304,7 @@
       "Inscripcion en Devpost hecha; falta el formulario de creditos (requiere Devpost Profile URL)."
     ],
     "proxima_entrega": "M2 - Adaptador de estandares (14 sep - 4 oct)",
-    "notas_sprint": "M2 casi completo el 15-09, con 19 dias de adelanto. HECHO: inventario CSV, calendarios iCalendar, directorio LDAP, adaptador de estandares con negociacion de capacidades real (Carrigmore publica 4 herramientas y San Telmo 6), configuracion por fichero, Dockerfile distroless y compose con OpenLDAP. Verificado levantando la pila de verdad: Lodge responde a un cliente MCP contra LDAP real y campus.report_issue NO EXISTE en Carrigmore. 229 tests. PENDIENTE: congelar la interfaz de proveedor el 27-09 (ADR-006)."
+    "notas_sprint": "M2 COMPLETO el 15-09, 19 dias antes del plazo. Incluye UC-07, que el runbook llama el caso que justifica la arquitectura entera: un solo servidor sirve San Telmo en /mcp y Carrigmore en /mcp/carrigmore, con catalogos distintos (6 y 4 herramientas) e idiomas distintos, sin reiniciar ni recompilar. Verificado en contenedor contra LDAP real. 235 tests. PENDIENTE: congelar la interfaz de proveedor el 27-09 (ADR-006)."
   },
   "evolutivoActivo": "M2",
   "evolutivos": {
@@ -428,7 +428,7 @@
     "notas": "El ecosistema hv asume .NET; Lodge es TypeScript/Node. CLAUDE.md y el Hilo estan adaptados."
   },
   "metricas": {
-    "cobertura_tests": "229 tests, 12 ficheros",
+    "cobertura_tests": "235 tests, 12 ficheros",
     "ultimo_build": "2026-09-14 (local, verde)",
     "ultimo_deploy": null,
     "incidencias_abiertas": 0,
