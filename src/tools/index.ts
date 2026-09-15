@@ -192,9 +192,11 @@ function registerTimetable(server: McpServer, provider: Provider, resolve: Resol
         const sessions = await provider.timetable!(ctx, { window });
         if (sessions.length === 0) return say(`Nothing on ${dayOf(window.start, provider)}.`);
 
-        const lines = sessions.map(
-          (s: Session) => `${timeOf(s.start, provider)} ${s.courseCode}, group ${s.group}, in ${s.roomId}`,
-        );
+        const lines = sessions.map((s: Session) => {
+          // Only institutions that actually have groups get one read out.
+          const group = s.group ? `, group ${s.group}` : '';
+          return `${timeOf(s.start, provider)} ${s.courseCode}${group}, in ${s.roomId}`;
+        });
         return say(`${dayOf(window.start, provider)}: ${lines.join('; ')}.`);
       } catch (error) {
         return spoken(error);

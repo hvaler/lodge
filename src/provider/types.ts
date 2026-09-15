@@ -68,7 +68,14 @@ export interface Session {
   readonly end: Date;
   readonly roomId: string;
   readonly courseCode: string;
-  readonly group: string;
+  /**
+   * Teaching group, where the institution has them.
+   *
+   * Optional because not every institution splits a cohort: San Telmo runs groups A and B on its
+   * larger programmes, Carrigmore runs none at all. Requiring it would have forced the second
+   * adapter to invent a value — which is exactly the fake seam two adapters exist to prevent.
+   */
+  readonly group?: string;
 }
 
 /**

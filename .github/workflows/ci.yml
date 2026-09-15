@@ -44,5 +44,13 @@ jobs:
       - name: Test
         run: npm test
 
+      # The same suite on the other side of the date line. iCalendar all-day dates are parsed as
+      # local midnight in the *process* zone, so a container in Dublin and one in Auckland used to
+      # disagree about when a deadline falls. Running here is what stops that regressing.
+      - name: Test under a distant time zone
+        run: npm test
+        env:
+          TZ: Pacific/Auckland
+
       - name: Build
         run: npm run build
