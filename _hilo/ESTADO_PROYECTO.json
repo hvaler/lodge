@@ -37,7 +37,7 @@
     "sdk": "MCP TypeScript SDK (oficial)",
     "protocolo": "MCP 2025-11-25 (revision objetivo; ADR-009). Handler multi-era para revisiones posteriores",
     "frontend": "Tarjetas visuales (extension MCP Apps) + orquestador web de demostracion",
-    "modelo": "Amazon Nova 2 Lite. modelId geografico 'us.amazon.nova-2-lite-v1:0' o global 'global.amazon.nova-2-lite-v1:0' — el id plano NO funciona in-region. Converse API con tool calling; 1M de contexto; prompt caching explicito",
+    "modelo": "Amazon Nova 2 Lite via us.amazon.nova-2-lite-v1:0 (perfil geografico US; no hay disponibilidad in-region). Converse API con tool calling, sin reasoningConfig (ADR-010). Verificado funcionando el 15-09-2026.",
     "base_datos": "DynamoDB (solo en el despliegue gestionado)",
     "orm": null,
     "identidad": "OAuth 2.1 authorization code + PKCE (S256), parametro 'resource' al URI canonico. Obligatorio para conectar con Alexa+, no solo identidad de usuario",
@@ -299,9 +299,7 @@
     ],
     "funcionalidades_en_progreso": [],
     "bloqueadores": [
-      "BEDROCK BLOQUEADO POR VERIFICACION DE CUENTA (15-09). El playground devuelve AccessDeniedException: 'Your account is currently being verified. Verification normally takes less than 2 hours.' No es un problema de plan, de region ni de perfil de inferencia: el modelo y el perfil US estaban bien elegidos. Reintentar sin cambiar nada; si pasan 2 h, escribir a aws-verification@amazon.com.",
-      "SIGUE SIN RESPUESTA la pregunta que importa: si Bedrock funciona en plan Free. La verificacion corta antes de llegar ahi. Es la incognita que bloquea el orquestador de M3 (5-11 oct).",
-      "Inscripcion en Devpost hecha; formulario de creditos pendiente (requiere Devpost Profile URL)."
+      "Formulario de creditos AWS (150 $) pendiente: requiere la Devpost Profile URL."
     ],
     "proxima_entrega": "M2 - Adaptador de estandares (14 sep - 4 oct)",
     "notas_sprint": "M3 avanzando sin depender de AWS: localizacion hecha y TARJETAS VISUALES hechas (parrilla de ocupacion, plano de planta, ficha de incidencia) como recursos MCP Apps. Se envian solo si el cliente declara la extension io.modelcontextprotocol/ui, y hay un test que comprueba que el texto hablado es IDENTICO con pantalla y sin ella. 264 tests. PENDIENTE de M3: el orquestador sobre Bedrock, que si depende de la verificacion de la cuenta. PENDIENTE de M2: congelar la interfaz el 27-09 — ha ganado listRooms al construir las tarjetas."
@@ -437,7 +435,7 @@
   "alertas": {
     "_doc": "Claude muestra estas alertas al iniciar sesion",
     "activas": [
-      "BEDROCK - Nova 2 Lite no esta disponible in-region: usar us.amazon.nova-2-lite-v1:0 (geo) o global.amazon.nova-2-lite-v1:0. El geo EU (eu.amazon.nova-2-lite-v1:0, desde eu-south-2 o eu-west-1) merece medirse frente a us-east-1: el presupuesto es 500 ms y grabamos desde Espana.",
+      "BEDROCK VERIFICADO (15-09): responde en plan Free con el perfil us.amazon.nova-2-lite-v1:0. M3 desbloqueado. OJO: el playground enciende el razonamiento extendido y dio 5 293 ms; en la API viene apagado por defecto y el orquestador NO lo activa (ADR-010). Queda por mirar en Billing si el consumo sale de los 100 $.",
       "PLAN - M2 adelantado al 14-09. La congelacion de la interfaz de proveedor SIGUE siendo el 27-09 (ADR-006): mover esa fecha es exactamente como la abstraccion se come el calendario.",
       "ORDEN DE ALTAS - 1) Devpost (su Profile URL es obligatorio en el formulario de creditos). 2) Los 150 $ se piden por PERFIL de Devpost, no por proyecto: presupuesto compartido con LREA. 3) Cuenta AWS ya creada en plan Free; el CLI 2.36.44 esta instalado y faltan credenciales. ATAJO: la actividad 'modelo fundacional en el playground de Bedrock' (20 $) ES la verificacion que cierra M0.",
       "AWS - Los 150 $ del hackathon son promotional credits y la pagina de free tier dice que solo los planes de pago son elegibles. Y el free tier no cubre inferencia de Bedrock. Confirmar ambas cosas antes de M3: el orquestador depende de Nova 2 Lite.",

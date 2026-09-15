@@ -132,6 +132,37 @@ codigo abierto.
 
 ---
 
+## ADR-010 · El orquestador no activa el razonamiento extendido
+
+**Fecha** 2026-09-15 · **Estado** Aceptada · **Categoria** Rendimiento
+
+**Contexto** — Nova 2 Lite es un modelo de razonamiento hibrido. El `reasoningConfig` viene
+`disabled` por defecto en la API, pero el playground de la consola lo enciende: una pregunta de 131
+tokens devolvio 361 de salida en **5 293 ms**, mas de diez veces el presupuesto de plataforma.
+
+La documentacion recomienda `maxReasoningEffort: "medium"` precisamente para «agentic workflows that
+coordinate multiple tools», que es exactamente lo que hace nuestro orquestador. Es una recomendacion
+tentadora y la rechazamos a proposito.
+
+**Decision** — El orquestador llama a `converse` **sin** `reasoningConfig`, quedandose en el
+comportamiento por defecto («efficient latent reasoning, optimal for everyday tasks and high-volume
+applications»).
+
+**Razon** — El presupuesto es **500 ms de ida y vuelta** y no es negociable: lo fija la plataforma
+Alexa+. Un turno hablado que tarda cinco segundos no es una respuesta lenta, es una conversacion
+rota. Precision extra no sirve de nada si el altavoz se queda callado mientras tanto.
+
+**Consecuencias**
+
+- Los tokens de razonamiento se facturan como tokens de salida, asi que apagarlo tambien abarata.
+- Si la precision resultara insuficiente, el orden correcto es primero mejorar el prompt y las
+  descripciones de las herramientas, y solo despues plantearse `low` **midiendo** el coste en
+  latencia. Nunca al reves.
+- La medicion de latencia de M1 se extiende al orquestador en M3: es donde este ADR se verifica o
+  se cae.
+
+---
+
 ## Decisiones del entorno de trabajo
 
 | Decision | Razon |
