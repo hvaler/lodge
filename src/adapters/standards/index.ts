@@ -85,6 +85,10 @@ function getRoom(loaded: Loaded) {
   };
 }
 
+function listRooms(loaded: Loaded) {
+  return async (): Promise<readonly Room[]> => loaded.inventory!.rooms.map(toRoom);
+}
+
 function timetable(loaded: Loaded) {
   return async (ctx: RequestContext, query: TimetableQuery): Promise<readonly Session[]> => {
     if (!ctx.principal) throw new UnauthenticatedError('Looking up a timetable');
@@ -182,6 +186,7 @@ export async function createStandardsProvider(
   if (capabilities.includes('rooms')) {
     provider['findFreeRooms'] = findFreeRooms(loaded);
     provider['getRoom'] = getRoom(loaded);
+    provider['listRooms'] = listRooms(loaded);
   }
   if (capabilities.includes('wayfinding')) provider['wayfind'] = wayfind(loaded);
   if (capabilities.includes('deadlines')) provider['deadlines'] = deadlines(loaded);

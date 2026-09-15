@@ -303,7 +303,7 @@
       "Inscripcion en Devpost hecha; falta el formulario de creditos (requiere Devpost Profile URL)."
     ],
     "proxima_entrega": "M2 - Adaptador de estandares (14 sep - 4 oct)",
-    "notas_sprint": "M2 completo. Adelantada la localizacion de M3: catalogo de mensajes es/en, San Telmo responde entero en castellano y Carrigmore en ingles, desde el mismo servidor. La regla: se traduce lo que Lodge posee (tipos de sala, estados, las frases), nunca lo que posee la institucion (equipamiento, etiquetas de plazos, codigos). 248 tests. PENDIENTE: congelar la interfaz el 27-09; despues M3 (orquestador Bedrock, tarjetas visuales)."
+    "notas_sprint": "M3 avanzando sin depender de AWS: localizacion hecha y TARJETAS VISUALES hechas (parrilla de ocupacion, plano de planta, ficha de incidencia) como recursos MCP Apps. Se envian solo si el cliente declara la extension io.modelcontextprotocol/ui, y hay un test que comprueba que el texto hablado es IDENTICO con pantalla y sin ella. 264 tests. PENDIENTE de M3: el orquestador sobre Bedrock, que si depende de la verificacion de la cuenta. PENDIENTE de M2: congelar la interfaz el 27-09 — ha ganado listRooms al construir las tarjetas."
   },
   "evolutivoActivo": "M2",
   "evolutivos": {
@@ -427,7 +427,7 @@
     "notas": "El ecosistema hv asume .NET; Lodge es TypeScript/Node. CLAUDE.md y el Hilo estan adaptados."
   },
   "metricas": {
-    "cobertura_tests": "248 tests, 13 ficheros",
+    "cobertura_tests": "264 tests, 14 ficheros",
     "ultimo_build": "2026-09-14 (local, verde)",
     "ultimo_deploy": null,
     "incidencias_abiertas": 0,

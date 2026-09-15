@@ -58,6 +58,7 @@ describe('assertProviderCoherent', () => {
       descriptor: descriptorFor(['rooms']),
       findFreeRooms: noop,
       getRoom: noop,
+      listRooms: noop,
       reportIssue: noop,
       issueStatus: noop,
     } as unknown as Provider;

@@ -30,7 +30,9 @@ describe('the two catalogues stay in step', () => {
     // the other half: that nothing was translated to the empty string to make it compile.
     for (const [key, value] of Object.entries(es)) {
       if (typeof value === 'function') continue;
-      for (const [kind, word] of Object.entries(value as Record<string, string>)) {
+      // Groups mix plain labels with functions — `card` has both — so only the strings are checked.
+      for (const [kind, word] of Object.entries(value as Record<string, unknown>)) {
+        if (typeof word !== 'string') continue;
         expect(word.trim(), `es.${key}.${kind}`).not.toBe('');
       }
     }

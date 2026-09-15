@@ -61,6 +61,16 @@ export interface Provider {
   /** `rooms` — a single room by id, for validating a fault report against real equipment. */
   getRoom?(ctx: RequestContext, roomId: string): Promise<Room | null>;
 
+  /**
+   * `rooms` — every room the institution has.
+   *
+   * Needed because "free" is only half of occupancy. The spoken answer names two or three free
+   * rooms; the visual card shows the grid, and a grid with no busy rooms in it is a list. Both
+   * adapters already hold this — the synthetic one has its building stock, the standards one has
+   * the table it read — so the cost is a method, not a new source of data.
+   */
+  listRooms?(ctx: RequestContext): Promise<readonly Room[]>;
+
   /** `timetable` — the sessions of `ctx.principal`. Requires an authenticated principal. */
   timetable?(ctx: RequestContext, query: TimetableQuery): Promise<readonly Session[]>;
 
@@ -79,7 +89,7 @@ export interface Provider {
 
 /** Which methods each capability obliges an adapter to implement. */
 export const CAPABILITY_METHODS = {
-  rooms: ['findFreeRooms', 'getRoom'],
+  rooms: ['findFreeRooms', 'getRoom', 'listRooms'],
   timetable: ['timetable'],
   deadlines: ['deadlines'],
   wayfinding: ['wayfind'],

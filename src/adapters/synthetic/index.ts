@@ -98,6 +98,10 @@ export class SyntheticProvider implements Provider {
     return room ? toRoom(room) : null;
   }
 
+  async listRooms(): Promise<readonly Room[]> {
+    return ROOMS.map(toRoom);
+  }
+
   // ── timetable ──────────────────────────────────────────────────────────────
 
   /**

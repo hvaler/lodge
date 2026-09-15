@@ -20,6 +20,7 @@ import {
   UnauthenticatedError,
 } from '../provider/index.ts';
 import type { Capability, Deadline, Provider, RequestContext, Room, Session } from '../provider/index.ts';
+import { asCard, clientShowsCards, floorPlanCard, issueCard, occupancyCard } from '../cards/index.ts';
 import { messagesFor } from './messages.ts';
 import type { Messages } from './messages.ts';
 
@@ -168,7 +169,31 @@ function registerFindRoom(server: McpServer, provider: Provider, resolve: Resolv
 
         // Two or three options, not a list of twenty: this is being read out loud.
         const shortlist = rooms.slice(0, 3).map((room) => describeRoom(room, m));
-        return say(m.freeRooms(timeOf(window.end, provider), shortlist, rooms.length - shortlist.length));
+        const spokenAnswer = say(
+          m.freeRooms(timeOf(window.end, provider), shortlist, rooms.length - shortlist.length),
+        );
+
+        // The card is strictly extra: it shows the rooms that were *not* offered and why. Where
+        // there is no screen the spoken answer above is the whole answer, unchanged.
+        if (!clientShowsCards(server)) return spokenAnswer;
+
+        const all = await provider.listRooms!(ctx);
+        const inScope = building ? all.filter((room) => room.building === building) : all;
+        const freeIds = new Set(rooms.map((room) => room.id));
+        const until = timeOf(window.end, provider);
+
+        return {
+          content: [
+            ...spokenAnswer.content,
+            asCard(
+              `card://rooms/${building ?? 'campus'}`,
+              occupancyCard(inScope, freeIds, m, provider.descriptor.locale, {
+                title: m.card.occupancyTitle(building ?? null),
+                subtitle: m.card.occupancySubtitle(rooms.length, inScope.length, until),
+              }),
+            ),
+          ],
+        };
       } catch (error) {
         return spoken(error, m);
       }
@@ -287,7 +312,28 @@ function registerWayfind(server: McpServer, provider: Provider, resolve: Resolve
         // happen to have a screen, and is not mentioned in the spoken answer.
         // The steps arrive already in the institution's language: the adapter knows its own
         // locale, and half of each step is the institution's own building names.
-        return say(route.steps.join(' '));
+        const spokenAnswer = say(route.steps.join(' '));
+
+        // UC-04 is explicit that the spoken directions must get you there on their own, so the
+        // floor plan is attached only when someone can see it, and never mentioned aloud.
+        if (!clientShowsCards(server) || !provider.listRooms) return spokenAnswer;
+
+        const all = await provider.listRooms(ctx);
+        const destination = all.find((room) => room.id === to);
+        if (!destination) return spokenAnswer;
+
+        return {
+          content: [
+            ...spokenAnswer.content,
+            asCard(
+              `card://floor/${destination.building}/${destination.floor}`,
+              floorPlanCard(all, destination, m, provider.descriptor.locale, {
+                title: m.card.floorTitle(destination.building, destination.floor),
+                subtitle: m.card.floorSubtitle(destination.id),
+              }),
+            ),
+          ],
+        };
       } catch (error) {
         return spoken(error, m);
       }
@@ -350,8 +396,26 @@ function registerReportIssue(server: McpServer, provider: Provider, resolve: Res
           ...(note ? { note } : {}),
         });
 
-        // The number is spoken back so the reporter can chase it later (UC-06).
-        return say(m.faultFiled(ticket.number, ticket.equipment, ticket.roomId));
+        // The number is spoken back so the reporter can chase it later (UC-06) — a reference
+        // that only exists on a screen is useless to someone holding a phone to their ear.
+        const spokenAnswer = say(m.faultFiled(ticket.number, ticket.equipment, ticket.roomId));
+        if (!clientShowsCards(server)) return spokenAnswer;
+
+        return {
+          content: [
+            ...spokenAnswer.content,
+            asCard(
+              `card://issue/${ticket.number}`,
+              issueCard(ticket, m, provider.descriptor.locale, provider.descriptor.timeZone, {
+                title: m.card.issueTitle(),
+                room: m.card.room,
+                equipment: m.card.equipment,
+                status: m.card.status,
+                reported: m.card.reported,
+              }),
+            ),
+          ],
+        };
       } catch (error) {
         return spoken(error, m);
       }

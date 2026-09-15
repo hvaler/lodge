@@ -57,6 +57,19 @@ export interface Messages {
 
   mustSignIn(): string;
   notOnRecord(kind: string, ref: string): string;
+
+  /** Card labels. Cards are an improvement on the spoken answer, never a replacement. */
+  readonly card: {
+    occupancyTitle(building: string | null): string;
+    occupancySubtitle(free: number, total: number, until: string): string;
+    floorTitle(building: string, floor: number): string;
+    floorSubtitle(roomId: string): string;
+    issueTitle(): string;
+    room: string;
+    equipment: string;
+    status: string;
+    reported: string;
+  };
 }
 
 const english: Messages = {
@@ -106,6 +119,20 @@ const english: Messages = {
 
   mustSignIn: () => 'You need to be signed in for that.',
   notOnRecord: (kind, ref) => `I have no ${kind} on record for ${ref}.`,
+
+  card: {
+    occupancyTitle: (building) => (building ? `Rooms in ${building}` : 'Rooms across campus'),
+    occupancySubtitle: (free, total, until) =>
+      `${free} of ${total} free until ${until}`,
+    floorTitle: (building, floor) =>
+      floor === 0 ? `${building}, ground floor` : `${building}, floor ${floor}`,
+    floorSubtitle: (roomId) => `${roomId} is marked`,
+    issueTitle: () => 'Reported fault',
+    room: 'Room',
+    equipment: 'Equipment',
+    status: 'Status',
+    reported: 'Reported',
+  },
 };
 
 const spanish: Messages = {
@@ -159,6 +186,23 @@ const spanish: Messages = {
 
   mustSignIn: () => 'Para eso tienes que identificarte.',
   notOnRecord: (kind, ref) => `No me consta ningún ${kind} con ${ref}.`,
+
+  card: {
+    occupancyTitle: (building) => (building ? `Aulas de ${building}` : 'Aulas del campus'),
+    occupancySubtitle: (free, total, until) =>
+      // "1 libre" / "3 libres": otra concordancia que una plantilla no resuelve.
+      free === 1
+        ? `1 libre de ${total} hasta las ${until}`
+        : `${free} libres de ${total} hasta las ${until}`,
+    floorTitle: (building, floor) =>
+      floor === 0 ? `${building}, planta baja` : `${building}, planta ${floor}`,
+    floorSubtitle: (roomId) => `${roomId} está señalado`,
+    issueTitle: () => 'Aviso registrado',
+    room: 'Aula',
+    equipment: 'Equipo',
+    status: 'Estado',
+    reported: 'Dado de alta',
+  },
 };
 
 const CATALOGUE: Readonly<Record<Language, Messages>> = { en: english, es: spanish };
