@@ -171,7 +171,7 @@ describe('campus.deadlines', () => {
     const answer = await call('campus.deadlines', { topic: 'credit-transfer' });
 
     // Tuesday to Friday is three days to a person, not the 3.3 elapsed days rounded up.
-    expect(answer).toMatch(/Credit-transfer applications closes/);
+    expect(answer).toMatch(/Credit-transfer applications —/);
     expect(answer).toMatch(/3 days left/);
   });
 
@@ -192,7 +192,7 @@ describe('campus.deadlines', () => {
   it('reports a deadline that has already passed as closed, not as upcoming', async () => {
     const answer = await call('campus.deadlines', { topic: 'Ordinary enrolment' });
 
-    expect(answer).toMatch(/closed on/);
+    expect(answer).toMatch(/— closed,/);
   });
 });
 

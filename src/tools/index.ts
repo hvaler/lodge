@@ -237,12 +237,17 @@ function registerDeadlines(server: McpServer, provider: Provider, resolve: Resol
 
         const lines = list.map((d: Deadline) => {
           const when = dayOf(d.closesOn, provider);
-          if (d.closesOn <= ctx.now) return `${d.label} closed on ${when}`;
+
+          // The label is the institution's own prose, read straight from its feed, so the sentence
+          // around it cannot assume its grammar. San Telmo writes noun phrases ("Credit-transfer
+          // applications") and Carrigmore writes clauses ("Registration closes") — gluing a verb
+          // on gave "Registration closes closes Friday". A dash takes whatever it is given.
+          if (d.closesOn <= ctx.now) return `${d.label} — closed, ${when}`;
 
           const days = daysUntil(d.closesOn, ctx.now, provider.descriptor.timeZone);
           // "0 days left" is the most urgent case and the worst phrasing for it.
-          if (days <= 0) return `${d.label} closes today`;
-          return `${d.label} closes ${when}, ${days} day${days === 1 ? '' : 's'} left`;
+          if (days <= 0) return `${d.label} — today`;
+          return `${d.label} — ${when}, ${days} day${days === 1 ? '' : 's'} left`;
         });
 
         return say(`${lines.join('. ')}.`);

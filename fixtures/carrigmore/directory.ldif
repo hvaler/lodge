@@ -1,0 +1,89 @@
+# Carrigmore College — directory fixture.
+#
+# Fictional, like the rest of Carrigmore. Standard schema only: inetOrgPerson for people and
+# groupOfNames for modules. Enrolment is group membership, which is how a directory already models
+# it — there is nothing here for an institution to install.
+#
+# Seeded into the OpenLDAP container by ops/environment/docker-compose.yml.
+
+# The root comes first: this LDIF is self-contained, so it creates the tree it then fills.
+# Without it every entry below is an orphan and the directory refuses the lot.
+dn: dc=carrigmore,dc=ie
+objectClass: dcObject
+objectClass: organization
+dc: carrigmore
+o: Carrigmore College
+
+dn: ou=people,dc=carrigmore,dc=ie
+objectClass: organizationalUnit
+ou: people
+
+dn: ou=modules,dc=carrigmore,dc=ie
+objectClass: organizationalUnit
+ou: modules
+
+# ── People ───────────────────────────────────────────────────────────────────
+# The uid is what arrives as the token subject. Names are generated, never real.
+
+dn: uid=u-1001,ou=people,dc=carrigmore,dc=ie
+objectClass: inetOrgPerson
+uid: u-1001
+cn: Aoife Brennan
+sn: Brennan
+givenName: Aoife
+mail: u-1001@carrigmore.ie
+
+dn: uid=u-1002,ou=people,dc=carrigmore,dc=ie
+objectClass: inetOrgPerson
+uid: u-1002
+cn: Diarmuid Lynch
+sn: Lynch
+givenName: Diarmuid
+mail: u-1002@carrigmore.ie
+
+# Enrolled but taking no modules this term: proves "I have no record of you" and "you have no
+# classes" are different answers.
+dn: uid=u-1003,ou=people,dc=carrigmore,dc=ie
+objectClass: inetOrgPerson
+uid: u-1003
+cn: Niamh Costello
+sn: Costello
+givenName: Niamh
+mail: u-1003@carrigmore.ie
+
+# The exchange student. Enrolled here *and* at San Telmo — the hook UC-07 hangs off.
+dn: uid=u-1042,ou=people,dc=carrigmore,dc=ie
+objectClass: inetOrgPerson
+uid: u-1042
+cn: Erasmus Exchange Student
+sn: Student
+givenName: Erasmus
+mail: u-1042@carrigmore.ie
+
+# ── Modules ──────────────────────────────────────────────────────────────────
+# One groupOfNames per module. The cn matches CATEGORIES in timetable.ics, which is the join.
+
+dn: cn=CS101,ou=modules,dc=carrigmore,dc=ie
+objectClass: groupOfNames
+cn: CS101
+description: Introduction to Programming
+member: uid=u-1001,ou=people,dc=carrigmore,dc=ie
+member: uid=u-1042,ou=people,dc=carrigmore,dc=ie
+
+dn: cn=CS201,ou=modules,dc=carrigmore,dc=ie
+objectClass: groupOfNames
+cn: CS201
+description: Algorithms
+member: uid=u-1001,ou=people,dc=carrigmore,dc=ie
+
+dn: cn=LAW101,ou=modules,dc=carrigmore,dc=ie
+objectClass: groupOfNames
+cn: LAW101
+description: Foundations of Irish Law
+member: uid=u-1002,ou=people,dc=carrigmore,dc=ie
+
+dn: cn=LAW201,ou=modules,dc=carrigmore,dc=ie
+objectClass: groupOfNames
+cn: LAW201
+description: Contract Law
+member: uid=u-1002,ou=people,dc=carrigmore,dc=ie

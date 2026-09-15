@@ -168,11 +168,6 @@ _patron/
 # Configuracion del ecosistema: skills, reglas, schemas, smoke-tests
 .claude/
 
-# Entorno de desarrollo del andamio: SQL Server 2017 con contrasena por defecto.
-# Lodge no usa SQL Server. El contenedor y el fichero de composicion REALES son
-# entregable de M2: cuando lleguen, se retira esta linea.
-ops/environment/
-
 # Runbook en PDF (registro de decision del 14-09-2026): 1,4 MB de binario cada uno.
 # El documento vivo es RUNBOOK.md.
 *.pdf

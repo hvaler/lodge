@@ -1,0 +1,69 @@
+# Lodge serving Carrigmore College from the things an institution already runs.
+#
+# This is the shape of a real deployment, with the institution's own systems stood in for by
+# fixtures: an LDAP directory, iCalendar feeds and a room table. Nothing here is Lodge-specific
+# except Lodge.
+#
+#   docker compose -f ops/environment/docker-compose.yml up --build
+#   curl localhost:3000/health
+#
+# To serve your own institution instead, replace `carrigmore.json` and point it at your feeds.
+
+name: lodge
+
+services:
+  # A stand-in for the institution's directory. In a real deployment this is already running
+  # somewhere and Lodge is given read-only credentials to it.
+  directory:
+    # Pinned by digest, not tag. Bitnami moved its images out of the free namespace during 2025,
+    # so this is the legacy mirror: fine for a fixture that stands in for a directory the
+    # institution already runs, and never part of a real deployment. Noted in DEUDA_TECNICA.md.
+    image: bitnamilegacy/openldap:2.6@sha256:af60d92c71daa493f9e1e8a02ca93b46e2a5569fa6e246b3a8e2f45f5239734c
+    environment:
+      LDAP_ROOT: dc=carrigmore,dc=ie
+      LDAP_ADMIN_USERNAME: admin
+      # Development only. A real deployment binds with a read-only service account whose password
+      # comes from the institution's secret store, never from a compose file.
+      LDAP_ADMIN_PASSWORD: carrigmore-dev
+      LDAP_SKIP_DEFAULT_TREE: "yes"
+      LDAP_CUSTOM_LDIF_DIR: /ldifs
+    volumes:
+      - ../../fixtures/carrigmore/directory.ldif:/ldifs/carrigmore.ldif:ro
+    ports:
+      # Exposed so the integration tests can reach it from the host. Not needed by Lodge itself,
+      # which talks to it over the compose network.
+      - "1389:1389"
+    healthcheck:
+      test: ["CMD", "ldapsearch", "-x", "-H", "ldap://localhost:1389", "-b", "dc=carrigmore,dc=ie", "-D", "cn=admin,dc=carrigmore,dc=ie", "-w", "carrigmore-dev", "-s", "base"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  lodge:
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    environment:
+      LODGE_CONFIG: /etc/lodge/carrigmore.json
+      PORT: "3000"
+      # Until OAuth lands in M4, the demo needs a way to say who is asking. Off unless set to
+      # exactly "1", and never set in a real deployment: it lets any caller name themselves.
+      LODGE_DEV_IDENTITY: "1"
+    volumes:
+      # Everything read-only. Lodge answers questions; it has no business writing to an
+      # institution's data.
+      - ./carrigmore.json:/etc/lodge/carrigmore.json:ro
+      - ../../fixtures/carrigmore:/srv/carrigmore:ro
+    ports:
+      - "3000:3000"
+    depends_on:
+      directory:
+        condition: service_healthy
+    healthcheck:
+      # The image has no shell and no curl, so the probe runs through the Node that is already
+      # there — which is the usual friction with distroless, and worth knowing before you hit it.
+      test: ["CMD", "/nodejs/bin/node", "-e", "fetch('http://localhost:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 5s

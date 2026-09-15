@@ -10,6 +10,7 @@ import { createServer } from 'node:http';
 import { toNodeHandler } from '@modelcontextprotocol/node';
 
 import { createSyntheticProvider } from '../adapters/synthetic/index.ts';
+import { configPathFrom, createProviderFrom, loadLodgeConfig } from './config.ts';
 import type { Provider } from '../provider/index.ts';
 import { createLodgeHandler, describeDeployment } from './index.ts';
 import type { LodgeServerOptions } from './index.ts';
@@ -62,15 +63,21 @@ export function createHttpServer(
 }
 
 /** Only runs when this file is the entrypoint, so importing it in a test starts nothing. */
-if (process.argv[1] && import.meta.url.endsWith(process.argv[1].replace(/\\/g, '/').split('/').pop() ?? '')) {
-  const provider = createSyntheticProvider();
+if (import.meta.main) {
+  // No configuration means the reference institution, so the image answers questions out of the
+  // box. An institution points LODGE_CONFIG at its own file and gets its own sources.
+  const configPath = configPathFrom(process.env);
+  const provider = configPath
+    ? await createProviderFrom(await loadLodgeConfig(configPath))
+    : createSyntheticProvider();
+
   const server = createHttpServer(provider);
   const listenOn = port(process.env);
 
   server.listen(listenOn, () => {
     const { institution, tools } = describeDeployment(provider);
     process.stdout.write(
-      `Lodge listening on :${listenOn}${MCP_PATH} — ${institution}, ${tools.length} tools\n`,
+      `Lodge listening on :${listenOn}${MCP_PATH} — ${institution}, ${tools.length} tools: ${tools.join(', ')}\n`,
     );
     if (devIdentityEnabled()) {
       process.stdout.write(

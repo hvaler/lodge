@@ -131,6 +131,7 @@ Cifras y requisitos leidos de las bases y de la pagina de recursos, no del runbo
 
 | Decision | Por que se asume | Cuando se paga |
 |---|---|---|
+| Imagen LDAP del compose en namespace 'legacy' | Bitnami saco sus imagenes del namespace gratuito en 2025; se usa bitnamilegacy fijada por digest. Es un FIXTURE que sustituye al directorio que la institucion ya tiene, nunca parte de un despliegue real | Si molesta, cambiar a otra imagen OpenLDAP: el adaptador habla LDAP estandar |
 | Solo dos adaptadores | Tres son orfebreria y se comen el calendario | Despues del hackathon: conectores a plataformas docentes |
 | Sin conectores a plataformas docentes | Fuera de alcance explicito | Primer anadido natural post-hackathon |
 | Interfaz congelada tras M1 | Sin congelacion no hay fecha de entrega creible | No se paga: es la pieza reutilizable del proyecto |
