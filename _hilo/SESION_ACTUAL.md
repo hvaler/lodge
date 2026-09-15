@@ -9,71 +9,62 @@
 
 | Campo | Valor |
 |-------|-------|
-| **Fecha** | 2026-09-14 |
+| **Fecha** | 2026-09-15 |
 | **Usuario** | Hugo Carlos Valer Rojas |
-| **Evolutivo activo** | ninguno (M0 arranca el 15-09-2026) |
-| **Trabajo** | `/hv:init` + `/hv:onboarding` |
+| **Evolutivo activo** | M2 (completo salvo congelar) · M3 en curso |
+| **Tests** | 264 en verde · CI verde · tsc limpio |
 
 ---
 
-## Resumen de lo Trabajado
+## Dónde estamos
 
-### Objetivos cumplidos
-- [x] Scaffold del ecosistema con `/hv:init` (`git init` incluido: no era repositorio)
-- [x] Runbook incorporado al repo: `RUNBOOK.md`, `RUNBOOK.es.md`, `docs/use-cases.md`
-- [x] `ecosystem.config.json` creado y validado
-- [x] Hilo contextualizado entero desde el runbook
-- [x] `CLAUDE.md` y `CONTEXTO_TECNICO.md` adaptados de .NET a TypeScript/Node
-- [x] Hitos M0-M6 registrados como evolutivos; reglas de corte como alertas de sesión
+```
+M0  ████████░░  repo ✅ · San Telmo ✅ · Bedrock ⬜ BLOQUEADO
+M1  ██████████  núcleo · interfaz · generador · 6 herramientas · servidor
+M2  ██████████  iCalendar · LDAP · inventario · contenedor · UC-07
+M3  ███████░░░  localización ✅ · tarjetas ✅ · orquestador ⬜
+```
 
-### Archivos modificados
-- `ecosystem.config.json` — nuevo; sin bloque `database` (su enum solo admite motores SQL)
-- `_hilo/ESTADO_PROYECTO.json` — proyecto, equipo, branching, stack, criticidad, calendario,
-  infraestructura, evolutivos M0-M6, alertas, `dominiosExternos`
-- `_hilo/ESTADO_PROYECTO.schema.md` — documentada la sección `stack`, nueva
-- `_hilo/FUNCIONALIDADES.md`, `DEPENDENCIAS.md`, `CONTEXTO_TECNICO.md`, `DECISIONES.md` — reescritos
-- `_hilo/DEUDA_TECNICA.md` — nuevo: riesgos y reglas de corte
-- `_hilo/FEEDBACK_ECOSISTEMA.md` — FB-001 a FB-005
-- `CLAUDE.md` — info del proyecto, glosario, estándares TS, arquitectura, reglas
-- `RUNBOOK.md`, `RUNBOOK.es.md`, `docs/use-cases.md` — copiados al repo
+Vamos ~19 días por delante del runbook. M3 no arrancaba hasta el 5 de octubre.
 
-### Decisiones tomadas
-- **D1**: Adaptación completa a TypeScript — dejar los estándares C# haría que `CLAUDE.md`
-  contradijese al proyecto.
-- **D2**: Los hitos M0-M6 del runbook **son** los evolutivos del Hilo, no una lista paralela.
-- **D3**: Licencia **Apache-2.0** — su concesión expresa de patentes es lo que miran los
-  departamentos jurídicos institucionales, que son el público del proyecto.
-- **D4**: Los criterios de aceptación viven solo en `docs/use-cases.md` (en inglés, junto a los
-  tests). `FUNCIONALIDADES.md` enlaza, no duplica.
+---
+
+## Lo único bloqueado
+
+**Bedrock devuelve `AccessDeniedException` por verificación de cuenta.** La cuenta se creó el
+14-09 y el mensaje dice que la verificación tarda «menos de 2 horas», así que ya está fuera de
+plazo. **Acción: escribir a aws-verification@amazon.com** con el ID de cuenta y el error.
+
+No es plan, ni región, ni perfil de inferencia: Nova 2 Lite con el perfil **US Amazon Nova 2 Lite**
+(`us.amazon.nova-2-lite-v1:0`) estaba correctamente seleccionado.
+
+**Sigue sin respuesta la pregunta de fondo**: si Bedrock funciona en plan Free. La verificación
+corta antes de llegar ahí, y es lo que condiciona el orquestador de M3.
 
 ---
 
 ## Contexto para Próxima Sesión
 
-### Estado
-```
-Modo: desarrollo · Fase: diseño · Versión: 0.0.0
-Evolutivo activo: ninguno
-Próximo hito: M0 — Cimientos (15-17 sep)
-Bloqueadores: ninguno
-```
+### Lo tuyo
+1. [ ] Correo a `aws-verification@amazon.com` (cuanto antes: el reloj corre)
+2. [ ] Cuando se verifique: playground → **Ejecutar** sin cambiar nada → decir **si responde**
+3. [ ] Mirar en Billing si el consumo de Bedrock **sale de los $100** o va aparte
+4. [ ] Formulario de créditos ($150) con la Devpost Profile URL
 
-### Tareas pendientes prioritarias
-1. [ ] **M0**: crear el repositorio público en GitHub con `LICENSE` Apache-2.0 **en el primer commit**
-2. [ ] **M0**: rellenar `proyecto.repositorio` en `ESTADO_PROYECTO.json` (hoy `null` a propósito)
-3. [ ] **M0**: verificar cuenta AWS con acceso a Bedrock en `us-east-1`
-4. [ ] **M0**: generar el dataset de la Universidad de San Telmo
-5. [ ] Abrir M0 con `/hv:continuar M0`
+### Lo que puede hacer Claude sin AWS
+- **Congelar la interfaz de proveedor** (ADR-006, previsto el 27-09). Ha ganado cuatro campos
+  —`timeZone`, `Session.group` opcional, `Route.minutes` opcional, `listRooms`— todos encontrados
+  por el segundo adaptador y por las tarjetas. Dos hitos sin una sola vuelta atrás.
+- **Empezar el orquestador contra una abstracción**, con un doble en los tests, para que enchufar
+  Bedrock sea el último paso y no el primero. Recomendado: saca el bloqueo de la ruta crítica.
 
-### Notas importantes
-- **Fecha inmóvil**: envío 21 oct, cierre oficial 23 oct 21:00 CEST.
-- **Las tres reglas de corte están en `alertas.activas`** y se aplican sin convocar reunión.
-  El 14 de octubre es el punto de no retorno frente a LREA.
-- **La interfaz de proveedor se congela al cerrar M1** (27 sep). Después solo se implementa.
-- El ecosistema hv asume .NET; este proyecto es TypeScript/Node. Lo adaptado está en
-  `_hilo/DECISIONES.md` y lo que rozó, en `FEEDBACK_ECOSISTEMA.md`.
-- Falta el MCP **context7** en scope user y el **MCP Roslyn** (este último es de análisis C#: aquí
-  no aporta).
+### Decisiones vivas que conviene no olvidar
+- **UC-05 depende de que Alexa+ declare `elicitation`.** Si no la declara, `report_issue` no puede
+  confirmar. Verificar en el simulador antes de M3; hay dos salidas pensadas en `DEUDA_TECNICA.md`.
+- **El perfil EU** (`eu.amazon.nova-2-lite-v1:0`) merece medirse frente al US: el presupuesto es
+  500 ms y el vídeo se graba desde España. Va a la guía de adopción de M5.
+- **Nova 2 Sonic** (voz a voz) podría hacer que la simulación de Alexa+ suene a voz de verdad en
+  el vídeo. No es del plan; anotado por si M3 va holgado.
 
 ---
 
@@ -81,7 +72,8 @@ Bloqueadores: ninguno
 
 | Fecha | Usuario | Trabajo principal |
 |-------|---------|-------------------|
-| 2026-09-14 | Hugo | `/hv:init` y `/hv:onboarding`: repo inicializado y Hilo contextualizado desde el runbook |
+| 2026-09-15 | Hugo | M2 completo con UC-07; localización y tarjetas visuales de M3; Bedrock bloqueado por verificación |
+| 2026-09-14 | Hugo | `/hv:init`, `/hv:onboarding`, M0 y M1 completos |
 
 ---
 

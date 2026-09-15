@@ -416,16 +416,16 @@
   "ultimaSesion": {
     "_doc": "Se actualiza con /pausar y se lee con /continuar",
     "fecha": "2026-09-15",
-    "evolutivoActivo": "M0",
+    "evolutivoActivo": "M3",
     "usuario": "Hugo Carlos Valer Rojas",
     "ramaActiva": "main",
-    "proximoPaso": "Verificar acceso a Bedrock en us-east-1 y cerrar M0; despues abrir M1 (nucleo e interfaz de proveedor)",
-    "resumenSesion": "/hv:init, /hv:onboarding y arranque de M0: repositorio publico, licencia, README y dataset de San Telmo.",
+    "proximoPaso": "Escribir a aws-verification@amazon.com; mientras, congelar la interfaz o empezar el orquestador contra una abstraccion",
+    "resumenSesion": "M2 completo incluido UC-07 (un servidor, dos instituciones). De M3: localizacion y tarjetas visuales. 264 tests, CI verde.",
     "archivosModificados": [
       "_hilo/ESTADO_PROYECTO.json",
       "_hilo/METRICAS.json"
     ],
-    "notas": "El ecosistema hv asume .NET; Lodge es TypeScript/Node. CLAUDE.md y el Hilo estan adaptados."
+    "notas": "Bedrock bloqueado por verificacion de cuenta creada el 14-09, ya fuera del plazo de 2 h que indica el propio mensaje."
   },
   "metricas": {
     "cobertura_tests": "264 tests, 14 ficheros",
