@@ -114,7 +114,15 @@ export interface Route {
    * the floor plan an improvement, not a requirement, because most of the surface has no screen.
    */
   readonly steps: readonly string[];
-  readonly minutes: number;
+  /**
+   * Estimated walk, where the institution can say.
+   *
+   * Optional because a distance between buildings is not one of the things institutions already
+   * have: there are iCalendar feeds, a directory and a room table, but no distance matrix. San
+   * Telmo knows its own campus and says "eleven minutes"; Carrigmore can only say which building
+   * and floor. Requiring the number would have made the second adapter invent one.
+   */
+  readonly minutes?: number;
   /** Opaque reference an adapter may supply for a visual card. Optional by design. */
   readonly floorPlanRef?: string;
 }
