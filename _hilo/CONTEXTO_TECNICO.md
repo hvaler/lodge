@@ -65,7 +65,7 @@ devuelve datos de quien pregunta y no almacena expedientes.
 | Directorio LDAP | LDAP | adaptador `standards` (primero en caer, regla de corte 1) |
 | Inventario de espacios | CSV / tabla | adaptador `standards` |
 | Gestor de incidencias | Segun institucion | `campus.report_issue`, `campus.issue_status` |
-| Amazon Bedrock — Nova 2 Lite | AWS SDK | orquestador de demostracion (`us-east-1`) |
+| Amazon Bedrock — Nova 2 Lite | AWS SDK (`bedrock-runtime`) | orquestador de M3. **No disponible in-region en ninguna region**: hay que usar el id geografico `us.amazon.nova-2-lite-v1:0` o el global `global.amazon.nova-2-lite-v1:0`. Soporta tool calling por la Converse API; NO soporta structured outputs |
 | Alexa+ | MCP 2025-11-25 + OAuth 2.1/PKCE | cliente **simulado**: el programa oficial esta restringido a socios seleccionados (verificado 14-09-2026) |
 
 ---

@@ -86,6 +86,19 @@ NO registres: dudas de uso (consultar docs o `/hv:sos`), bugs del codigo del pro
 - **FechaDeteccion**: 2026-09-14
 - **Descripcion**: `CLAUDE.md` (estandares C#, `dotnet build`), `CONTEXTO_TECNICO.md` (placeholders `.csproj`/EF Core), la deteccion de stack de la Fase 2 y el modelo R25 de pipelines por entrypoint asumen .NET. En Lodge (servidor MCP en TypeScript sobre Node 24) hubo que reescribir esas secciones durante el onboarding. Workaround aplicado y documentado en `_hilo/DECISIONES.md`. Sugerencia: parametrizar las plantillas por `stack.lenguaje`, o publicar una variante no-.NET.
 
+### FB-006: La ficha de Nova 2 Lite se contradice sobre la region
+
+- **Categoria**: docs
+- **Severidad**: baja
+- **Estado**: abierto
+- **VersionEcosistema**: n/a (documentacion de AWS, no del ecosistema Ovillo)
+- **FechaDeteccion**: 2026-09-15
+- **Descripcion**: En `model-card-amazon-nova-2-lite`, la tabla de disponibilidad regional marca
+  In-Region como NO para todas las regiones, incluida us-east-1, y solo ofrece inferencia geografica
+  (`us.amazon.nova-2-lite-v1:0`) o global. Pero el codigo de ejemplo de la MISMA pagina usa
+  `modelId='amazon.nova-2-lite-v1:0'` con `region_name='us-east-1'`. Quien siga el ejemplo recibira
+  un error de modelo no disponible. Candidato para el registro de friccion del hackathon.
+
 ### FB-005: `validate-config.js` marca todo el stack AWS como no soportado
 
 - **Categoria**: docs

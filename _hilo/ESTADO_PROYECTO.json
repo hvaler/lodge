@@ -37,7 +37,7 @@
     "sdk": "MCP TypeScript SDK (oficial)",
     "protocolo": "MCP 2025-11-25 (revision objetivo; ADR-009). Handler multi-era para revisiones posteriores",
     "frontend": "Tarjetas visuales (extension MCP Apps) + orquestador web de demostracion",
-    "modelo": "Amazon Nova 2 Lite (Amazon Bedrock)",
+    "modelo": "Amazon Nova 2 Lite. modelId geografico 'us.amazon.nova-2-lite-v1:0' o global 'global.amazon.nova-2-lite-v1:0' — el id plano NO funciona in-region. Converse API con tool calling; 1M de contexto; prompt caching explicito",
     "base_datos": "DynamoDB (solo en el despliegue gestionado)",
     "orm": null,
     "identidad": "OAuth 2.1 authorization code + PKCE (S256), parametro 'resource' al URI canonico. Obligatorio para conectar con Alexa+, no solo identidad de usuario",
@@ -436,6 +436,7 @@
   "alertas": {
     "_doc": "Claude muestra estas alertas al iniciar sesion",
     "activas": [
+      "BEDROCK - Nova 2 Lite no esta disponible in-region: usar us.amazon.nova-2-lite-v1:0 (geo) o global.amazon.nova-2-lite-v1:0. El geo EU (eu.amazon.nova-2-lite-v1:0, desde eu-south-2 o eu-west-1) merece medirse frente a us-east-1: el presupuesto es 500 ms y grabamos desde Espana.",
       "PLAN - M2 adelantado al 14-09. La congelacion de la interfaz de proveedor SIGUE siendo el 27-09 (ADR-006): mover esa fecha es exactamente como la abstraccion se come el calendario.",
       "ORDEN DE ALTAS - 1) Devpost (su Profile URL es obligatorio en el formulario de creditos). 2) Los 150 $ se piden por PERFIL de Devpost, no por proyecto: presupuesto compartido con LREA. 3) Cuenta AWS ya creada en plan Free; el CLI 2.36.44 esta instalado y faltan credenciales. ATAJO: la actividad 'modelo fundacional en el playground de Bedrock' (20 $) ES la verificacion que cierra M0.",
       "AWS - Los 150 $ del hackathon son promotional credits y la pagina de free tier dice que solo los planes de pago son elegibles. Y el free tier no cubre inferencia de Bedrock. Confirmar ambas cosas antes de M3: el orquestador depende de Nova 2 Lite.",
