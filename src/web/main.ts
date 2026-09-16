@@ -22,6 +22,7 @@ import type { Provider } from '../provider/index.ts';
 import { configPathFrom, createProvidersFrom, loadLodgeConfig } from '../server/config.ts';
 import { createHttpServer } from '../server/main.ts';
 import type { ServedInstitutions } from '../server/main.ts';
+import { startTelemetry } from '../telemetry/setup.ts';
 import { createDemoApi, UnknownInstitutionError } from './api.ts';
 import type { AskRequest, DemoInstitution } from './api.ts';
 import { demoPage } from './page.ts';
@@ -111,6 +112,8 @@ async function readJson(req: import('node:http').IncomingMessage): Promise<unkno
   for await (const chunk of req) chunks.push(chunk as Buffer);
   return JSON.parse(Buffer.concat(chunks).toString('utf8'));
 }
+
+await startTelemetry(process.env, 'lodge-demo');
 
 const configPath = configPathFrom(process.env);
 const providers = configPath

@@ -93,7 +93,9 @@ beforeAll(async () => {
 
   const port = new URL(publicUrl).port;
   await new Promise<void>((resolve) => lodge.listen(Number(port), '127.0.0.1', resolve));
-});
+  // Generating an RSA key pair and standing up two servers is not five seconds of work on an idle
+  // machine and can be on a busy one. A setup that times out under load reads as a broken test.
+}, 60_000);
 
 afterAll(async () => {
   await new Promise<void>((resolve) => lodge.close(() => resolve()));

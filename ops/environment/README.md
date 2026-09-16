@@ -91,6 +91,29 @@ Si el `sub` de vuestro IdP es un identificador opaco y el directorio indexa por 
 
 ---
 
+## Trazas
+
+Apagadas mientras no digas dónde mandarlas:
+
+```bash
+OTEL_EXPORTER_OTLP_ENDPOINT=http://collector:4318
+```
+
+Sin esa variable, Lodge no carga el SDK, no abre conexión y no exporta nada. Con ella, cada petición
+MCP produce un tramo, y debajo aparecen los que de verdad van a algún sitio: una consulta al
+directorio o la lectura de un calendario.
+
+Lo que hace esto útil y no mera higiene es que **la traza continúa la del cliente**. Si vuestro
+agente propaga contexto W3C —por la cabecera `traceparent` o por el `_meta` de la petición—, veréis
+un solo dibujo desde la pregunta del estudiante hasta la consulta LDAP que provocó, en vez de dos
+inconexos.
+
+Un detalle del directorio: el tramo envuelve la consulta real, no la caché. Si una traza no lleva
+tramo de directorio, esa respuesta salió de memoria.
+
+Si preferís el camino estándar de OpenTelemetry —arrancar Node con `--import` y vuestro propio
+arranque de SDK—, funciona igual: los tramos encuentran vuestro proveedor y esta variable sobra.
+
 ## Varias instituciones
 
 `demo.json` sirve dos a la vez, cada una en su ruta y con su catálogo, su idioma y su zona horaria.

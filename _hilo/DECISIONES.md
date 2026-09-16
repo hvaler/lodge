@@ -28,6 +28,7 @@ el markdown es **lo que cambia mientras se construye**.
 | ADR-012 | Las tarjetas se adjuntan salvo que el cliente diga que no tiene pantalla | 2026-09-16 | Aceptada | Arquitectura |
 | ADR-013 | Lodge es servidor de recursos, nunca servidor de autorizacion | 2026-09-16 | Aceptada | Seguridad |
 | ADR-014 | En el destino gestionado solo persisten los avisos; el dataset vive en el codigo | 2026-09-16 | Aceptada | Despliegue |
+| ADR-015 | Instrumentar siempre, exportar solo si lo piden | 2026-09-16 | Aceptada | Observabilidad |
 
 ---
 
@@ -380,5 +381,50 @@ por comodidad es uno que nadie vuelve a revisar.
 `src/lambda/handler.ts` construye el proveedor sintetico y ningun otro — no hay camino de
 configuracion desde esta pila hasta los datos de una institucion real, asi que lo peor que puede
 exponer es una universidad ficticia. Esa propiedad es estructural, no una promesa.
+
+---
+
+
+## ADR-015 · Instrumentar siempre, exportar solo si lo piden
+
+**Contexto** — La capa 09 de la arquitectura pide OpenTelemetry. El SDK completo son trece
+paquetes, y Lodge se autoaloja en la infraestructura de otros: cada dependencia es algo que alguien
+tiene que aprobar.
+
+**Decision** — El codigo depende de `@opentelemetry/api`, que **no tiene dependencias** y es un
+no-op mientras nadie registre un proveedor. Los tramos existen siempre y no cuestan nada. El
+exportador se carga con `import()` dinamico y **solo** si hay `OTEL_EXPORTER_OTLP_ENDPOINT`: un
+despliegue sin colector nunca toca esos trece paquetes.
+
+**Razon** — Es el patron idiomatico para una libreria: la libreria instrumenta, la aplicacion
+cablea. Lodge es las dos cosas, asi que hace las dos, pero por separado. Y quien prefiera el camino
+estandar —arrancar Node con `--import` y su propio arranque de SDK— encuentra los tramos sin que
+este fichero intervenga.
+
+**Lo que lo hace valer la pena en un servidor MCP** y no ser higiene generica: **la traza continua
+la del que llama**. Un estudiante pregunta a Alexa+, el agente llama a `campus.find_room`, y la
+institucion ve **un solo dibujo** desde la pregunta hasta la consulta LDAP que provoco. Eso solo
+funciona si se recoge el contexto W3C que trae la peticion en vez de empezar una traza nueva, y un
+tramo con traza nueva se ve identico en el codigo. Hay tres tests sobre eso, y se comprobo que
+fallan al quitar la extraccion.
+
+Dos sitios de donde recogerlo, porque MCP viaja sobre mas de un transporte: la cabecera
+`traceparent` sobre HTTP, y el `_meta` de la peticion para transportes que no tienen cabeceras
+(stdio). Los nombres son los mismos, asi que un solo extractor sirve; gana el `_meta`, porque lo
+puso el cliente del *protocolo* y no el ultimo proxy que toco la conexion.
+
+**Donde hay tramos** — Uno por peticion, en la frontera donde se mide el presupuesto de 500 ms. Y
+debajo, solo lo que de verdad va a algun sitio: la consulta al directorio y la lectura de un
+calendario. El del directorio envuelve la consulta real y no la cache, asi que **que el tramo exista
+significa que la cache fallo**; una traza sin el se respondio de memoria.
+
+**Lo que no se registra** — La URL de un feed iCalendar. Suele llevar dentro el token de
+suscripcion que lo hace funcionar, y una traza es justo donde esas cosas se guardan, se buscan y se
+comparten. Se anota el host y ya.
+
+**Presupuesto** — Exportacion por lotes, nunca sincrona. Esperar a un colector dentro de una
+peticion seria gastar el presupuesto de latencia en telemetria sobre el presupuesto de latencia.
+En Lambda es la excepcion: el contenedor se congela al devolver, asi que ahi se vacia antes de
+retornar — y ese coste solo lo paga quien configuro un colector.
 
 ---

@@ -301,7 +301,7 @@
     "bloqueadores": [
       "Formulario de creditos AWS (150 $) pendiente: requiere la Devpost Profile URL."
     ],
-    "proxima_entrega": "M4 - queda OpenTelemetry y el despliegue real",
+    "proxima_entrega": "M4 - solo queda el despliegue real",
     "notas_sprint": "M0 a M3 cerrados el 16-09, veinticinco dias antes de la fecha de M3. 300 tests, CI verde. El demostrador web (npm run demo) levanta Lodge en :3000 y la simulacion de Alexa+ en :8080, conectada por HTTP como cliente MCP cualquiera. Queda M4: OAuth 2.1 con PKCE esta en la ruta critica y la pila CDK es lo que da al jurado una URL accesible y cierra el mini-reto de AWS."
   },
   "evolutivoActivo": "M4",
@@ -350,7 +350,7 @@
         "fechaEstimada": "2026-10-16",
         "fechaCompletado": null,
         "creadoPor": "hvaler",
-        "notas": "Salida: dos destinos de despliegue funcionando. Funcion gestionada, tabla de estado e identidad; OAuth 2.1 con Client ID Metadata Documents. El registro de friccion se escribe mientras duele, no al final. | Arrancado el 16-09, veintiseis dias antes de su fecha. OAuth 2.1 hecho (ADR-013): Lodge verifica tokens, no los emite, y los liga al URI canonico de cada institucion. Pila CDK hecha (ADR-014): una funcion nodejs24.x en arm64, una tabla con solo la cola de incidencias y una URL sin autorizador. Queda OpenTelemetry y desplegar de verdad."
+        "notas": "Salida: dos destinos de despliegue funcionando. Funcion gestionada, tabla de estado e identidad; OAuth 2.1 con Client ID Metadata Documents. El registro de friccion se escribe mientras duele, no al final. | Arrancado el 16-09, veintiseis dias antes de su fecha. OAuth 2.1 hecho (ADR-013): Lodge verifica tokens, no los emite, y los liga al URI canonico de cada institucion. Pila CDK hecha (ADR-014): una funcion nodejs24.x en arm64, una tabla con solo la cola de incidencias y una URL sin autorizador. OpenTelemetry hecho (ADR-015): se instrumenta siempre con @opentelemetry/api, que no tiene dependencias, y el exportador se carga solo si hay OTEL_EXPORTER_OTLP_ENDPOINT. La traza CONTINUA la del cliente, por cabecera traceparent o por el _meta de la peticion. Verificado contra un colector real: la traza sale por el cable con el id del cliente intacto. QUEDA desplegar de verdad."
       }
     ],
     "completados": [
@@ -435,7 +435,7 @@
     "notas": "Las credenciales de AWS viven en el perfil 'lrea', no en 'default': cualquier script necesita AWS_PROFILE=lrea o no encuentra credenciales."
   },
   "metricas": {
-    "cobertura_tests": "330 tests en src (3,2 s) + 8 de la pila CDK",
+    "cobertura_tests": "338 tests en src (3,4 s) + 8 de la pila CDK",
     "ultimo_build": "2026-09-16 (CI verde: typecheck, test, build)",
     "ultimo_deploy": null,
     "incidencias_abiertas": 0,

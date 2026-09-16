@@ -19,6 +19,7 @@
 import { createSyntheticProvider } from '../adapters/synthetic/index.ts';
 import { DynamoIssueStore, issuesTableFrom } from '../adapters/synthetic/dynamo-issues.ts';
 import { createLodgeHandler, describeDeployment } from '../server/index.ts';
+import { startTelemetry } from '../telemetry/setup.ts';
 
 /** AWS Lambda Function URL, payload format 2.0. Only the fields this uses. */
 export interface FunctionUrlEvent {
@@ -53,6 +54,17 @@ function issueStore(env: NodeJS.ProcessEnv): DynamoIssueStore | undefined {
 // registers six tools, and paying for that on every invocation would be paying for nothing.
 const provider = createSyntheticProvider(issueStore(process.env));
 const mcp = createLodgeHandler(provider);
+
+/**
+ * Started during init, flushed before every return.
+ *
+ * Lambda freezes the container the instant a handler resolves, so a batched exporter would lose
+ * whatever it had not sent — which on a demonstration that gets one request an hour is all of it.
+ * Flushing costs a round trip to the collector on each invocation, and that is the right trade
+ * because it is only paid by a deployment that configured one: with no endpoint set this is `null`
+ * and the whole path disappears.
+ */
+const telemetry = await startTelemetry(process.env);
 const health = JSON.stringify({ status: 'ok', ...describeDeployment(provider) });
 
 /** Turns the event into the web-standard `Request` the MCP handler speaks. */
@@ -91,12 +103,16 @@ async function toResult(response: Response): Promise<FunctionUrlResult> {
 export async function lambdaHandler(event: FunctionUrlEvent): Promise<FunctionUrlResult> {
   const path = event.rawPath ?? '/';
 
-  // A judge with a browser and no MCP client should still be able to see what is running here.
-  if (path === '/health') {
-    return { statusCode: 200, headers: { 'content-type': 'application/json' }, body: health };
-  }
+  try {
+    // A judge with a browser and no MCP client should still be able to see what is running here.
+    if (path === '/health') {
+      return { statusCode: 200, headers: { 'content-type': 'application/json' }, body: health };
+    }
 
-  return toResult(await mcp.fetch(toRequest(event)));
+    return await toResult(await mcp.fetch(toRequest(event)));
+  } finally {
+    await telemetry?.shutdown();
+  }
 }
 
 export { lambdaHandler as handler };

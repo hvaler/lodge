@@ -16,6 +16,7 @@
 
 import { Client } from 'ldapts';
 
+import { traced } from '../../telemetry/index.ts';
 import type { DirectorySource } from './config.ts';
 import type { DirectoryLookup } from './index.ts';
 
@@ -109,6 +110,14 @@ export function createLdapDirectory(
   const cache = new Map<string, { at: number; modules: readonly string[] | null }>();
 
   async function lookUp(subject: string): Promise<readonly string[] | null> {
+    // Traced here and not in `modulesFor`, so the span's *presence* means the cache missed and a
+    // real round trip happened. A trace with no directory span in it answered from memory.
+    return traced('ldap.lookup', { 'lodge.directory.attribute': subjectAttribute }, async () =>
+      lookUpUncached(subject),
+    );
+  }
+
+  async function lookUpUncached(subject: string): Promise<readonly string[] | null> {
     // A fresh connection per lookup. The server is stateless by design and replicas come and go;
     // a pooled connection would be one more thing to reason about for a saving the cache already
     // makes irrelevant.

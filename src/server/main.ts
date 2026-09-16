@@ -22,6 +22,7 @@ import { protect, publicUrlFrom } from './auth.ts';
 import type { ProtectedInstitution } from './auth.ts';
 import { configPathFrom, createProvidersFrom, loadLodgeConfig } from './config.ts';
 import { devIdentityEnabled } from './identity.ts';
+import { startTelemetry } from '../telemetry/setup.ts';
 import { createLodgeHandler, describeDeployment } from './index.ts';
 import type { LodgeServerOptions } from './index.ts';
 
@@ -212,6 +213,10 @@ if (import.meta.main) {
   // box. An institution points LODGE_CONFIG at its own file and gets its own sources.
   const configPath = configPathFrom(process.env);
 
+  // Before anything else, so the spans the first request emits have somewhere to go. Returns null
+  // and costs nothing when no collector is configured, which is the default.
+  const telemetry = await startTelemetry(process.env);
+
   const config = configPath ? await loadLodgeConfig(configPath) : null;
   const publicUrl = publicUrlFrom(process.env);
 
@@ -285,9 +290,33 @@ if (import.meta.main) {
   });
 
   // Finish in-flight requests before exiting: a container stop should not cut a conversation off.
+  /**
+   * Shutting down without cutting a conversation off, and without hanging on one.
+   *
+   * `server.close()` stops accepting and waits for open connections, which is what finishes the
+   * request somebody is mid-way through. On its own that is not enough: a keep-alive connection
+   * that nobody is using will hold it open until it times out, so idle ones are closed explicitly.
+   * And the flush runs alongside rather than inside the close callback — the last trace of a run is
+   * usually the one being looked for, and it should not depend on a socket letting go first.
+   *
+   * The deadline is the backstop. A container stop that never finishes gets killed anyway, and
+   * being killed at a moment of our choosing is tidier than being killed at the platform's.
+   */
+  let stopping = false;
   for (const signal of ['SIGINT', 'SIGTERM'] as const) {
     process.on(signal, () => {
-      server.close(() => process.exit(0));
+      if (stopping) return;
+      stopping = true;
+
+      const deadline = setTimeout(() => process.exit(0), 5_000);
+      deadline.unref();
+
+      server.close();
+      server.closeIdleConnections();
+
+      void Promise.allSettled([telemetry?.shutdown() ?? Promise.resolve()]).then(() =>
+        process.exit(0),
+      );
     });
   }
 }

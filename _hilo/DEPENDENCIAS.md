@@ -19,7 +19,7 @@
 | 06 | Identidad | OAuth 2.1 · **servidor de recursos** (`jose`) | Cada persona ve solo lo suyo. Lodge verifica, no emite: ADR-013 |
 | 07 | Despliegue autonomo | Contenedor · compose | Un fichero de configuracion y credenciales propias |
 | 08 | Despliegue gestionado | AWS Lambda (nodejs24.x, arm64) · DynamoDB · CDK v2 | Una funcion, una tabla y una URL. La tabla guarda **solo** los avisos: ADR-014 |
-| 09 | Observabilidad | OpenTelemetry | Contexto de traza en las cabeceras del protocolo |
+| 09 | Observabilidad | OpenTelemetry (`api` siempre, SDK bajo demanda) | La traza **continua** la del cliente, por cabecera o por `_meta`: ADR-015 |
 
 **El nucleo corre en cualquier sitio; AWS es un destino, no un requisito.** Un proyecto que aspira a
 que lo adopte cualquier institucion no puede exigir una cuenta de nube, porque muchas no la tendran.
@@ -59,6 +59,8 @@ preview.** Es lo que evita el goteo de upgrades a tres semanas del cierre.
 | Cola de incidencias gestionada | `@aws-sdk/client-dynamodb` 3.1133.0 | Solo el cliente base: tres operaciones con seis atributos planos no justifican tambien `lib-dynamodb` |
 | Infraestructura | `aws-cdk-lib` 2.269.0 · `constructs` 10.8.1 · `aws-cdk` 2.1141.0 | Rama 2.x; no existe v3. Solo desarrollo: no viaja en el contenedor |
 | Empaquetado de la funcion | `esbuild` 0.28.2 | Lo usa `NodejsFunction` al sintetizar. Local, sin Docker, 889 kB de artefacto |
+| Instrumentacion | `@opentelemetry/api` 1.9.1 | **Cero dependencias** y no-op sin proveedor. Va en el codigo del servidor y de los adaptadores |
+| Exportacion de trazas | `sdk-trace-node` · `exporter-trace-otlp-http` · `resources` · `semantic-conventions` | Trece paquetes con lo transitivo, cargados con `import()` dinamico y solo si hay `OTEL_EXPORTER_OTLP_ENDPOINT` |
 
 ### Que implica la eleccion de revision
 

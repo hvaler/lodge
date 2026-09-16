@@ -10,6 +10,7 @@ import ical from 'node-ical';
 
 import type { Deadline, Session, TimeWindow } from '../../provider/index.ts';
 import { instantAt, localParts } from '../../shared/time.ts';
+import { traced } from '../../telemetry/index.ts';
 import { readSource } from './source.ts';
 
 export class CalendarError extends Error {
@@ -57,7 +58,27 @@ interface ParsedEvent {
   readonly exdate?: Record<string, Date>;
 }
 
+/**
+ * Where a feed comes from, safe to put in a span.
+ *
+ * The host and not the URL: an iCalendar feed URL routinely carries the subscription token that
+ * makes it work, and a trace is somewhere those get kept, searched and shared.
+ */
+function sourceLabel(location: string): string {
+  try {
+    return new URL(location).host || 'file';
+  } catch {
+    return 'file';
+  }
+}
+
 async function parse(location: string): Promise<ParsedEvent[]> {
+  return traced('icalendar.parse', { 'lodge.calendar.source': sourceLabel(location) }, async () =>
+    parseUncached(location),
+  );
+}
+
+async function parseUncached(location: string): Promise<ParsedEvent[]> {
   const text = await readSource(location);
   let parsed: Record<string, unknown>;
   try {
