@@ -1,9 +1,10 @@
 /**
  * The provider interface.
  *
- * This is the piece that makes Lodge reusable, and the piece that freezes when M1 closes
- * (ADR-006). After that date it is implemented against, not edited: touching it hits both
- * adapters and all six tools at once.
+ * This is the piece that makes Lodge reusable, and as of 16 September 2026 it is **frozen**
+ * (ADR-006): implemented against, not edited. Touching it hits both adapters and all six tools at
+ * once, which is why `frozen.ts` keeps a snapshot the compiler checks on every build. Read that
+ * file before changing anything here.
  */
 
 import type {

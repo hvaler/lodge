@@ -20,7 +20,7 @@ el markdown es **lo que cambia mientras se construye**.
 | ADR-003 | El nucleo corre en cualquier sitio; AWS es un destino | 2026-09-14 | Aceptada | Despliegue |
 | ADR-004 | El catalogo de herramientas se deriva de las capacidades | 2026-09-14 | Aceptada | Arquitectura |
 | ADR-005 | Protocolo sin estado (MCP 2026-07-28) | 2026-09-14 | **Superada por ADR-009** | Protocolo |
-| ADR-006 | La interfaz de proveedor se congela al cerrar M1 | 2026-09-14 | Aceptada | Proceso |
+| ADR-006 | La interfaz de proveedor se congela al cerrar M1 | 2026-09-14 | Aceptada · **congelada el 16-09** | Proceso |
 | ADR-007 | Los criterios de aceptacion viven en ingles, junto a los tests | 2026-09-14 | Aceptada | Documentacion |
 | ADR-008 | Licencia Apache-2.0 | 2026-09-14 | Aceptada | Legal |
 | ADR-009 | MCP 2025-11-25 como revision objetivo, sin estado por transporte | 2026-09-14 | Aceptada | Protocolo |
@@ -103,6 +103,40 @@ A partir de ahi **solo se implementa contra el**.
 **Razon** — Es la pieza que vuelve reutilizable el proyecto, y la que mas caro sale rehacer: tocarla
 impacta a los dos adaptadores y a las seis herramientas a la vez. Sin fecha de congelacion no hay
 fecha de entrega creible.
+
+**Congelada el 16-09-2026**, once dias antes de la fecha limite. Se puede adelantar porque M2 se
+adelanto tambien: la interfaz ya ha sobrevivido a un segundo adaptador (Carrigmore, en-IE,
+Europe/Dublin), a las tarjetas visuales, al enrutado multi-institucion y al orquestador sin una sola
+vuelta atras.
+
+Lo que el segundo adaptador le hizo ganar, y que con uno solo se habria congelado mal:
+
+| Cambio | Lo encontro | Por que |
+|---|---|---|
+| `ProviderDescriptor.timeZone` | Escribir las seis herramientas | El idioma no dice la zona horaria: "tu clase es a las nueve" es falso en la zona de quien escucha |
+| `Session.group?` opcional | Carrigmore | No parte su cohorte en grupos; exigirlo obliga al adaptador a inventarse un valor |
+| `Route.minutes?` opcional | Carrigmore | Una tabla de aulas no trae matriz de distancias |
+| `Provider.listRooms` | Escribir las tarjetas | "Libre" es media ocupacion: una rejilla sin aulas ocupadas es una lista |
+
+**Que la hace cumplir** — `src/provider/frozen.ts` guarda una instantanea que el compilador compara
+con las definiciones vivas en cada `npm run build`. No impide el cambio: lo vuelve ruidoso, que es
+lo que hacia falta. El riesgo nunca fue el cambio, fue el cambio silencioso descubierto tres dias
+despues desde el otro adaptador.
+
+Dos comprobaciones por tipo, porque detectan cosas distintas: igualdad de claves (campo anadido,
+quitado o renombrado) y asignabilidad mutua (campo que cambia de tipo, u opcional que pasa a
+obligatorio). Ninguna basta sola — un campo **opcional** anadido deja los dos tipos mutuamente
+asignables, que es la forma exacta de tres de los cuatro hallazgos de arriba. Verificado rompiendo
+la interfaz a proposito con los tres tipos de deriva antes de dar la congelacion por buena.
+
+`frozen.test.ts` cubre lo que el compilador no ve por ser valores y no tipos: los nombres de las
+capacidades, de los metodos y de las seis herramientas. Renombrar `campus.find_room` no es una
+refactorizacion: ese nombre esta en el video, en la guia de adopcion y en cualquier cliente que una
+institucion ya haya apuntado a su servidor.
+
+**Consecuencia** — Si M4 o M5 necesitan mover el contrato, se actualiza la instantanea a mano y se
+anota aqui. El riesgo se evaluo antes de congelar: OAuth 2.1 vive en la capa de servidor e
+identidad y `RequestContext.principal` existe ya para eso, asi que no deberia tocarla.
 
 ---
 

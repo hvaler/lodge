@@ -19,12 +19,17 @@ fiable de entregar dos cosas a medias.
 prioridad. **El 14 de octubre es el punto de no retorno**: si ese dia no hay demostracion de punta a
 punta, se abandona LREA. Una candidatura terminada vale mas que dos a medias.
 
-### 🔴 ALTO · La abstraccion se come el calendario
+### ✅ CERRADO (16-09) · ALTO · La abstraccion se come el calendario
 
 Disenar "para cualquier institucion" es donde se pierde una semana sin darse cuenta.
 
 **Mitigacion** — Dos adaptadores, ni uno mas. **La interfaz de proveedor se congela al cerrar M1** y
 a partir de ahi solo se implementa.
+
+**Cerrado el 16-09**, once dias antes de la fecha de ADR-006 y sin gastar el margen: la interfaz
+sobrevivio al segundo adaptador, a las tarjetas y al enrutado multi-institucion sin una vuelta
+atras. `src/provider/frozen.ts` la sujeta en cada `npm run build`. Si hay que moverla en M4 o M5,
+el build lo dice y queda anotado en ADR-006 — que es distinto de que se mueva sola.
 
 ### 🟡 MEDIO · Lo generico demuestra peor
 
