@@ -141,6 +141,21 @@ Carrigmore runs from the CSV and iCalendar files in `fixtures/`, with no directo
 it publishes no timetable either. Add LDAP (`ops/environment/docker-compose.yml`) and the tool
 appears, without a rebuild.
 
+### It is running
+
+```
+https://4joapeibeg357e7vyw2dj4pnwa0tmpay.lambda-url.eu-west-1.on.aws/mcp
+```
+
+Point an MCP client at it, or open `/health` in a browser to see what it is serving. It answers in
+**214 ms** from Spain, network included, against the platform's 500 ms budget.
+
+This is a **public sandbox over a fictional university**: the `x-lodge-dev-subject` header lets any
+caller claim any identity, so you can ask for a timetable or file a fault without an identity
+provider in the way. That is only defensible because the Lambda entrypoint builds the generated
+campus and has no path to real institutional data. A real deployment configures an issuer instead
+and the header does nothing.
+
 ### Deploying it
 
 Two first-class targets, and the core does not know which it is running on.
