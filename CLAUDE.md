@@ -62,13 +62,13 @@ Este archivo guía a Claude Code (claude.ai/code) cuando trabaja con código en 
 |---------|------------|----------------|
 | **Lodge** | La *porter's lodge*: la conserjería que no cierra. El servidor MCP del proyecto | "Lodge responde a cualquier hora" |
 | **Adaptador** | Implementación de la interfaz de proveedor contra una fuente de datos institucional | "El adaptador `standards` lee iCalendar" |
-| **Interfaz de proveedor** | El contrato que todo adaptador implementa: capacidades e idioma. **Se congela al cerrar M1** | "Eso toca la interfaz: ya está congelada" |
+| **Interfaz de proveedor** | El contrato que todo adaptador implementa: capacidades e idioma. **Congelada el 16-09-2026** (ADR-006): `src/provider/frozen.ts` la sujeta en cada `npm run build` | "Eso toca la interfaz: ya está congelada" |
 | **Negociación de capacidades** | El catálogo de herramientas se deriva de lo que el adaptador declara soportar | "Sin gestor de incidencias, esas dos herramientas no se publican" |
 | **`synthetic` / `standards`** | Los dos únicos adaptadores del alcance. Ni uno ni tres | — |
 | **Universidad de San Telmo** | Institución **ficticia** del adaptador sintético. Datos generados, no anonimizados | "San Telmo tiene tres edificios" |
 | **Regla de corte** | Recorte de alcance con fecha fija, aplicable sin convocar reunión | "La regla 2 dice que el 11 de octubre caen las tarjetas" |
 | **`essential` / `improvement`** | Prioridad de cada caso en `docs/use-cases.md`. Los `essential` sobreviven a cualquier recorte | "UC-06 es `improvement`: cae primero" |
-| **Multivuelta / `input_required`** | Las herramientas de escritura confirman antes de actuar: devuelven `input_required` y el cliente reintenta | "Sin confirmación no se crea ningún ticket" |
+| **Confirmación en dos vueltas** | Las herramientas de escritura confirman antes de actuar: la primera llamada pregunta y no escribe, la segunda lleva `confirmed` (ADR-011). No usa `input_required`: sobre HTTP sin estado no hay canal del servidor al cliente | "Sin confirmación no se crea ningún ticket" |
 | **Tarjetas visuales** | Extensión MCP Apps: parrilla de ocupación, plano de planta, ficha de incidencia | "Donde hay pantalla, además la tarjeta" |
 | **Registro de fricción** | Bitácora de fricción con las APIs usadas. Se escribe mientras duele, no al final | "Eso va al registro de fricción" |
 | **LREA** | La segunda candidatura del equipo. Lodge tiene prioridad | "Regla de corte 3: el 14 de octubre se abandona LREA" |
@@ -156,7 +156,7 @@ Cliente MCP (Alexa+ / orquestador propio / cualquier agente)
         ↓
 Servidor MCP  ──  Streamable HTTP, sin estado (opción de transporte)
         ↓
-Interfaz de proveedor  ──  capacidades + idioma   [CONGELADA TRAS M1]
+Interfaz de proveedor  ──  capacidades + idioma   [CONGELADA 16-09-2026]
         ↓
    synthetic (San Telmo)  |  standards (iCalendar · LDAP · CSV)
 ```

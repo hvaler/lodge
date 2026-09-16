@@ -33,8 +33,8 @@ its capabilities once and stops picking a client.
 ## Tools
 
 Published according to capabilities — nothing appears if the adapter does not support it. Write tools
-confirm before acting through a multi-turn request: they return `input_required` and the client
-retries with the answer.
+confirm before acting: the first call validates and returns the question to ask, writing nothing;
+the second carries `confirmed` and files it. Two calls, and the first one never writes.
 
 | Tool | Question it answers | Level |
 | :-- | :-- | :-- |

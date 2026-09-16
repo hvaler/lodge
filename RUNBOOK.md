@@ -84,7 +84,7 @@ Generalising is the classic scope trap. The discipline is numeric: one adapter f
 
 ## 6. MCP tools
 
-Published according to capability. Write tools confirm through a multi round-trip request: the tool returns `input_required` and the client retries carrying the answer.
+Published according to capability. Write tools confirm before acting: the first call validates, returns the question to ask and writes nothing; the second carries `confirmed` and files it (ADR-011). This was designed around `input_required`, but per-request Streamable HTTP has no server-to-client channel to deliver one on, so the confirmation travels as an argument and works on any transport.
 
 | Tool | Question it answers | Level |
 | :-- | :-- | :-- |

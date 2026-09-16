@@ -42,8 +42,10 @@ consumirlo. La institucion publica sus capacidades una vez y deja de elegir clie
 Se publican **segun capacidades**: ninguna aparece si el adaptador no la soporta. Una institucion sin
 gestor de incidencias no publica las de incidencias, y el agente nunca ofrece lo que no existe.
 
-Las de escritura confirman antes de actuar por **peticion multivuelta**: la herramienta devuelve
-`input_required` y el cliente reintenta con la respuesta.
+Las de escritura **confirman antes de actuar**: la primera llamada valida, devuelve la pregunta y
+no escribe nada; la segunda lleva `confirmed` y ejecuta (ADR-011). Se penso con `input_required`,
+pero sobre Streamable HTTP servido por peticion no hay canal del servidor al cliente que lo
+entregue, asi que la confirmacion viaja como argumento y funciona en cualquier transporte.
 
 | Herramienta | Pregunta que resuelve | Nivel |
 |---|---|---|

@@ -84,7 +84,7 @@ Generalizar es el agujero de alcance clásico. La disciplina es numérica: un ad
 
 ## 6. Herramientas MCP
 
-Publicadas según capacidades. Las de escritura confirman por petición multivuelta: devuelven `input_required` y el cliente reintenta con la respuesta.
+Publicadas según capacidades. Las de escritura confirman antes de actuar: la primera llamada valida, devuelve la pregunta y no escribe nada; la segunda lleva `confirmed` y la ejecuta (ADR-011). Se diseñó con `input_required`, pero sobre Streamable HTTP servido por petición no hay canal del servidor al cliente que lo entregue, así que la confirmación viaja como argumento y funciona en cualquier transporte.
 
 | Herramienta | Pregunta que resuelve | Nivel |
 | :-- | :-- | :-- |

@@ -294,34 +294,18 @@
     "_campos_existencia_doc": "autenticacion=false y tests_existentes=false porque el codigo aun no existe: OAuth 2.1 llega en M4 y los tests de contrato en M1. documentacion_existente=true por el runbook."
   },
   "desarrollo": {
-    "modulos_en_desarrollo": [
-      "Superficie y localizacion (M3)"
-    ],
+    "modulos_en_desarrollo": [],
     "funcionalidades_en_progreso": [],
     "bloqueadores": [
       "Formulario de creditos AWS (150 $) pendiente: requiere la Devpost Profile URL."
     ],
-    "proxima_entrega": "M2 - Adaptador de estandares (14 sep - 4 oct)",
-    "notas_sprint": "M3 casi completo el 16-09: localizacion, tarjetas visuales y ORQUESTADOR funcionando contra Bedrock real (us.amazon.nova-2-lite-v1:0). 281 tests. El orquestador lee el catalogo del servidor MCP en vivo, asi que ofrece 6 herramientas en San Telmo y 3 en Carrigmore sin saber nada de ninguna. Latencia del turno: 1,5-2 s, que es de nuestra simulacion; el limite de 500 ms de Alexa+ aplica al servidor MCP y ahi sobra margen. PENDIENTE: congelar la interfaz."
+    "proxima_entrega": "M4 - Pila CDK, OAuth 2.1 y trazas OpenTelemetry (previsto 12-16 oct; se puede adelantar)",
+    "notas_sprint": "M0 a M3 cerrados el 16-09, veinticinco dias antes de la fecha de M3. 300 tests, CI verde. El demostrador web (npm run demo) levanta Lodge en :3000 y la simulacion de Alexa+ en :8080, conectada por HTTP como cliente MCP cualquiera. Queda M4: OAuth 2.1 con PKCE esta en la ruta critica y la pila CDK es lo que da al jurado una URL accesible y cierra el mini-reto de AWS."
   },
-  "evolutivoActivo": "M2",
+  "evolutivoActivo": null,
   "evolutivos": {
     "_doc": "Estructura de cada evolutivo (codigo, titulo, estado, asignadoA, rama, prioridad, fechas, creadoPor, notas) en schema.md#evolutivos",
     "pendientes": [
-      {
-        "codigo": "M3",
-        "titulo": "Orquestador, tarjetas, localizacion y confirmacion multivuelta",
-        "estado": "pendiente",
-        "asignadoA": "hvaler",
-        "rama": null,
-        "prioridad": "alta",
-        "fechaCreacion": "2026-09-14",
-        "fechaInicio": "2026-10-05",
-        "fechaEstimada": "2026-10-11",
-        "fechaCompletado": null,
-        "creadoPor": "hvaler",
-        "notas": "Salida: conversacion completa extremo a extremo. Orquestador sobre Bedrock con traza de llamadas visible; tarjetas visuales y respuestas localizadas; input_required en las herramientas de escritura."
-      },
       {
         "codigo": "M4",
         "titulo": "Pila CDK, OAuth 2.1 y trazas OpenTelemetry",
@@ -365,69 +349,91 @@
         "notas": "Salida: enviado 48 h antes del cierre. Formulario con track y ambos mini-retos, registro de friccion, repositorio congelado y demostracion accesible para el jurado. Cierre oficial: 23 oct 21:00 CEST."
       }
     ],
-    "enProgreso": [
+    "enProgreso": [],
+    "completados": [
       {
         "codigo": "M0",
         "titulo": "Cimientos",
-        "estado": "en_progreso",
+        "estado": "completado",
         "asignadoA": "hvaler",
         "rama": "main",
         "prioridad": "alta",
         "fechaCreacion": "2026-09-14",
         "fechaInicio": "2026-09-14",
         "fechaEstimada": "2026-09-17",
-        "fechaCompletado": null,
+        "fechaCompletado": "2026-09-15",
         "creadoPor": "hvaler",
-        "notas": "Salida: conjunto de datos de referencia cerrado. Repositorio publico con licencia abierta desde el primer commit; cuenta AWS con acceso a Bedrock en us-east-1; Universidad de San Telmo definida (edificios, titulaciones, calendario). | Arrancado el 14-09-2026, un dia antes del plan: gana un dia de margen sobre M1. | 14-09: repositorio publico creado con licencia en el primer commit y dataset de San Telmo cerrado en docs/san-telmo.md. Queda la verificacion de Bedrock."
+        "notas": "Salida: conjunto de datos de referencia cerrado. Repositorio publico con licencia abierta desde el primer commit; cuenta AWS con acceso a Bedrock en us-east-1; Universidad de San Telmo definida (edificios, titulaciones, calendario). | Cerrado el 15-09. Repositorio publico con Apache-2.0 en el primer commit, dataset de San Telmo cerrado (36 aulas, 2 066 plazas) y Bedrock verificado respondiendo en plan Free. Dos dias por delante del plan."
       },
       {
         "codigo": "M1",
         "titulo": "Nucleo, interfaz de proveedor, adaptador sintetico y las seis herramientas",
-        "estado": "en_progreso",
+        "estado": "completado",
         "asignadoA": "hvaler",
         "rama": "main",
         "prioridad": "alta",
         "fechaCreacion": "2026-09-14",
         "fechaInicio": "2026-09-14",
         "fechaEstimada": "2026-09-27",
-        "fechaCompletado": null,
+        "fechaCompletado": "2026-09-16",
         "creadoPor": "hvaler",
-        "notas": "Salida: responde a un cliente MCP generico. Servidor sobre Streamable HTTP con server/discover; tests de contrato y medicion de latencia en cada compilacion. LA INTERFAZ DE PROVEEDOR SE CONGELA AL CERRAR EL HITO: a partir de ahi solo se implementa. | Arrancado el 14-09 en paralelo con M0, que sigue abierto por la verificacion de Bedrock. M1 no toca AWS, asi que no depende de ella."
+        "notas": "Salida: responde a un cliente MCP generico. Servidor sobre Streamable HTTP con server/discover; tests de contrato y medicion de latencia en cada compilacion. LA INTERFAZ DE PROVEEDOR SE CONGELA AL CERRAR EL HITO: a partir de ahi solo se implementa. | Cerrado el 16-09, once dias antes de la fecha. Nucleo, interfaz de proveedor, adaptador sintetico, seis herramientas y servidor sobre Streamable HTTP. LA INTERFAZ QUEDA CONGELADA (ADR-006): src/provider/frozen.ts guarda la instantanea y el compilador la compara en cada build."
       },
       {
         "codigo": "M2",
         "titulo": "Adaptador de estandares, catalogo derivado y contenedor",
-        "estado": "en_progreso",
+        "estado": "completado",
         "asignadoA": "hvaler",
         "rama": "main",
         "prioridad": "alta",
         "fechaCreacion": "2026-09-14",
         "fechaInicio": "2026-09-14",
         "fechaEstimada": "2026-10-04",
-        "fechaCompletado": null,
+        "fechaCompletado": "2026-09-15",
         "creadoPor": "hvaler",
-        "notas": "Salida: la costura es real, no una promesa. Calendarios iCalendar, directorio LDAP e inventario en tabla; catalogo de herramientas derivado de las capacidades declaradas; imagen de contenedor y fichero de composicion. | Adelantado al 14-09 con los 13 dias de holgura de M1. Motivo: la interfaz de proveedor solo la ha tocado un adaptador, y la tesis del runbook es que uno solo finge la separacion. Se congela igualmente el 27-09, pero con dos adaptadores de evidencia."
+        "notas": "Salida: la costura es real, no una promesa. Calendarios iCalendar, directorio LDAP e inventario en tabla; catalogo de herramientas derivado de las capacidades declaradas; imagen de contenedor y fichero de composicion. | Cerrado el 15-09, diecinueve dias antes de la fecha. iCalendar, LDAP e inventario CSV; catalogo derivado de capacidades; imagen distroless y compose. UC-07 verificado en contenedores contra LDAP real: un servidor, dos instituciones, catalogos distintos. El segundo adaptador le hizo ganar cuatro campos a la interfaz antes de congelarla."
+      },
+      {
+        "codigo": "M3",
+        "titulo": "Orquestador, tarjetas, localizacion y confirmacion multivuelta",
+        "estado": "completado",
+        "asignadoA": "hvaler",
+        "rama": null,
+        "prioridad": "alta",
+        "fechaCreacion": "2026-09-14",
+        "fechaInicio": "2026-10-05",
+        "fechaEstimada": "2026-10-11",
+        "fechaCompletado": "2026-09-16",
+        "creadoPor": "hvaler",
+        "notas": "Salida: conversacion completa extremo a extremo. Orquestador sobre Bedrock con traza de llamadas visible; tarjetas visuales y respuestas localizadas; input_required en las herramientas de escritura. | Cerrado el 16-09, veinticinco dias antes de la fecha. Localizacion, tarjetas visuales, orquestador sobre Bedrock (Nova 2 Lite, perfil EU por defecto) y demostrador web con voz, traza de llamadas y cambio de institucion. Confirmacion de UC-05 en dos vueltas de conversacion (ADR-011). Al conectar el demostrador por HTTP real aparecieron dos fallos que los tests no veian por usar InMemoryTransport: las tarjetas no se adjuntaban nunca y la elicitacion era imposible. Arreglados (ADR-011, ADR-012) y documentados en L-002."
       }
-    ],
-    "completados": []
+    ]
   },
   "ultimaSesion": {
     "_doc": "Se actualiza con /pausar y se lee con /continuar",
     "fecha": "2026-09-16",
-    "evolutivoActivo": "M3",
+    "evolutivoActivo": "M3 (cerrado)",
     "usuario": "Hugo Carlos Valer Rojas",
     "ramaActiva": "main",
-    "proximoPaso": "Escribir a aws-verification@amazon.com; mientras, congelar la interfaz o empezar el orquestador contra una abstraccion",
-    "resumenSesion": "M2 completo incluido UC-07 (un servidor, dos instituciones). De M3: localizacion y tarjetas visuales. 264 tests, CI verde.",
+    "proximoPaso": "M4: OAuth 2.1 con PKCE (ruta critica) y pila CDK",
+    "resumenSesion": "Congelada la interfaz (ADR-006). Prompt caching: 86 % menos entrada facturable y latencia sin cambios, medido. Demostrador web completo, y con el dos fallos de transporte arreglados (ADR-011, ADR-012, L-002). M0 a M3 cerrados. 300 tests.",
     "archivosModificados": [
-      "_hilo/ESTADO_PROYECTO.json",
-      "_hilo/METRICAS.json"
+      "src/provider/frozen.ts",
+      "src/web/",
+      "src/cards/",
+      "src/tools/",
+      "src/orchestrator/",
+      "_hilo/DECISIONES.md",
+      "_hilo/LECCIONES.md",
+      "_hilo/DEUDA_TECNICA.md",
+      "docs/use-cases.md",
+      "README.md"
     ],
-    "notas": "Bedrock bloqueado por verificacion de cuenta creada el 14-09, ya fuera del plazo de 2 h que indica el propio mensaje."
+    "notas": "Las credenciales de AWS viven en el perfil 'lrea', no en 'default': cualquier script necesita AWS_PROFILE=lrea o no encuentra credenciales."
   },
   "metricas": {
-    "cobertura_tests": "281 tests, 15 ficheros",
-    "ultimo_build": "2026-09-14 (local, verde)",
+    "cobertura_tests": "300 tests, 18 ficheros",
+    "ultimo_build": "2026-09-16 (CI verde: typecheck, test, build)",
     "ultimo_deploy": null,
     "incidencias_abiertas": 0,
     "evolutivos_completados_mes": 0
@@ -437,15 +443,12 @@
     "activas": [
       "BEDROCK VERIFICADO (15-09): responde en plan Free con el perfil us.amazon.nova-2-lite-v1:0. M3 desbloqueado. OJO: el playground enciende el razonamiento extendido y dio 5 293 ms; en la API viene apagado por defecto y el orquestador NO lo activa (ADR-010). Queda por mirar en Billing si el consumo sale de los 100 $.",
       "INTERFAZ CONGELADA (16-09, ADR-006). src/provider/frozen.ts guarda la instantanea y el compilador la compara en cada build; frozen.test.ts fija los nombres de capacidades y herramientas. A partir de aqui la interfaz se implementa, no se edita. Si algo de M4 o M5 obliga a moverla: actualizar la instantanea A MANO, anotarlo en ADR-006 y repasar los dos adaptadores y las seis herramientas.",
-      "ORDEN DE ALTAS - 1) Devpost (su Profile URL es obligatorio en el formulario de creditos). 2) Los 150 $ se piden por PERFIL de Devpost, no por proyecto: presupuesto compartido con LREA. 3) Cuenta AWS ya creada en plan Free; el CLI 2.36.44 esta instalado y faltan credenciales. ATAJO: la actividad 'modelo fundacional en el playground de Bedrock' (20 $) ES la verificacion que cierra M0.",
+      "ALTAS - Devpost hecho y cuenta AWS operativa. QUEDA el formulario de creditos (150 $) en https://forms.gle/GaHFxSbBQNG9Kti6A, que pide la Devpost Profile URL; se piden por PERFIL, no por proyecto, asi que el presupuesto es compartido con LREA. OJO: las credenciales estan en el perfil 'lrea', no en 'default' - cualquier script necesita AWS_PROFILE=lrea.",
       "AWS - Los 150 $ del hackathon son promotional credits y la pagina de free tier dice que solo los planes de pago son elegibles. Y el free tier no cubre inferencia de Bedrock. Confirmar ambas cosas antes de M3: el orquestador depende de Nova 2 Lite.",
       "UC-05 RESUELTO (16-09, ADR-011). No era que el cliente no declarase 'elicitation': sobre Streamable HTTP servido por peticion no hay canal del servidor al cliente, punto. La confirmacion es ahora un argumento 'confirmed' y una segunda llamada, que funciona en cualquier era y transporte. Mismo dia se arreglaron las tarjetas por la misma causa (ADR-012). Ver L-002: los tests usaban InMemoryTransport y por eso no lo vieron.",
       "OAuth 2.1 con PKCE (S256) esta en la RUTA CRITICA, no en M4: sin el no se conecta con Alexa+ (ADR-009). Presupuesto de latencia: < 500 ms ida y vuelta.",
-      "OAuth 2.1 con PKCE (S256) es OBLIGATORIO para conectar con Alexa+, y el runbook lo situaba en M4. Y el presupuesto de latencia tiene numero: < 500 ms ida y vuelta.",
-      "M0 EN CURSO - Falta verificar el acceso a Amazon Bedrock (Nova 2 Lite) en us-east-1. Sin eso, el orquestador de demostracion de M3 no arranca. El AWS CLI no esta instalado.",
-      "REGLA DE CORTE 1 - Si M2 se pasa del 4 de octubre: el adaptador de estandares se recorta a calendarios e inventario, dejando el directorio LDAP fuera.",
-      "REGLA DE CORTE 2 - Si M3 se pasa del 11 de octubre: caen las tarjetas visuales. La voz sola cumple el track.",
       "REGLA DE CORTE 3 - 14 de octubre, punto de no retorno: si no hay demostracion de punta a punta, se abandona LREA y todo el equipo pasa a Lodge. Una candidatura terminada vale mas que dos a medias.",
+      "REGLAS DE CORTE 1 y 2 - VENCIDAS SIN APLICARSE. M2 cerro el 15-09 (fecha limite 4 oct) y M3 el 16-09 (limite 11 oct), asi que ni el LDAP ni las tarjetas llegaron a estar en riesgo. Sigue viva la REGLA 3: 14 de octubre, punto de no retorno.",
       "PRIORIDAD DE RECORTE - Los casos marcados essential en docs/use-cases.md sobreviven a cualquier recorte; los marcados improvement (hoy solo UC-06) caen primero.",
       "Las reglas de corte se aplican sin convocar reunion. Tienen fecha, no criterio."
     ]

@@ -9,62 +9,85 @@
 
 | Campo | Valor |
 |-------|-------|
-| **Fecha** | 2026-09-15 |
+| **Fecha** | 2026-09-16 |
 | **Usuario** | Hugo Carlos Valer Rojas |
-| **Evolutivo activo** | M2 (completo salvo congelar) · M3 en curso |
-| **Tests** | 264 en verde · CI verde · tsc limpio |
+| **Evolutivo activo** | ninguno — M0 a M3 cerrados. Siguiente: **M4** |
+| **Tests** | 300 en verde · CI verde · tsc limpio |
 
 ---
 
 ## Dónde estamos
 
 ```
-M0  ████████░░  repo ✅ · San Telmo ✅ · Bedrock ⬜ BLOQUEADO
-M1  ██████████  núcleo · interfaz · generador · 6 herramientas · servidor
+M0  ██████████  repo ✅ · San Telmo ✅ · Bedrock ✅
+M1  ██████████  núcleo · interfaz CONGELADA · generador · 6 herramientas · servidor
 M2  ██████████  iCalendar · LDAP · inventario · contenedor · UC-07
-M3  ███████░░░  localización ✅ · tarjetas ✅ · orquestador ⬜
+M3  ██████████  localización · tarjetas · orquestador · demostrador web
+M4  ░░░░░░░░░░  pila CDK · OAuth 2.1 · OpenTelemetry
 ```
 
-Vamos ~19 días por delante del runbook. M3 no arrancaba hasta el 5 de octubre.
+M3 cerró el 16-09; el runbook lo situaba el 11 de octubre. **Veinticinco días de margen.**
 
 ---
 
-## Lo único bloqueado
+## Lo que se hizo el 16-09
 
-**Bedrock devuelve `AccessDeniedException` por verificación de cuenta.** La cuenta se creó el
-14-09 y el mensaje dice que la verificación tarda «menos de 2 horas», así que ya está fuera de
-plazo. **Acción: escribir a aws-verification@amazon.com** con el ID de cuenta y el error.
+**Interfaz congelada** (ADR-006). `src/provider/frozen.ts` guarda una instantánea que el compilador
+compara en cada `npm run build`. Dos comprobaciones por tipo: igualdad de claves y asignabilidad
+mutua, porque ninguna basta sola — un campo *opcional* añadido deja los dos tipos mutuamente
+asignables, que es la forma de tres de los cuatro hallazgos que ganó. Verificado rompiendo la
+interfaz a propósito de las tres maneras.
 
-No es plan, ni región, ni perfil de inferencia: Nova 2 Lite con el perfil **US Amazon Nova 2 Lite**
-(`us.amazon.nova-2-lite-v1:0`) estaba correctamente seleccionado.
+**Prompt caching.** Entrada facturable de 57 324 a 8 044 tokens en 18 intercambios (−86 %). La
+latencia **no se mueve**: 1 966 → 1 894 ms de mediana, dentro de una dispersión de 1 343 a 3 105.
+Es una palanca de coste, no de velocidad, y conviene decirlo antes de que alguien la venda como lo
+segundo.
 
-**Sigue sin respuesta la pregunta de fondo**: si Bedrock funciona en plan Free. La verificación
-corta antes de llegar ahí, y es lo que condiciona el orquestador de M3.
+**Demostrador web** (`npm run demo`). Lodge en `:3000` y la simulación de Alexa+ en `:8080`,
+conectada al primero por HTTP como un cliente MCP cualquiera. Voz, traza de llamadas, tarjetas en
+iframes sin permisos, cambio de institución y de identidad.
+
+**Y con él, dos fallos que los tests no veían** — ver `LECCIONES.md` L-002:
+
+- Las tarjetas **no se adjuntaban nunca** en ningún despliegue. `getClientCapabilities()` devuelve
+  `null` en toda llamada a herramienta sobre Streamable HTTP, con estado y sin él. → ADR-012.
+- La confirmación de UC-05 **era imposible**: `input_required` se entrega como petición
+  servidor→cliente y ese canal no existe. No dependía de que Alexa+ declarase `elicitation`. →
+  ADR-011: argumento `confirmed` y una segunda vuelta de conversación.
+
+Los dos tests pasaban porque usaban `InMemoryTransport`, que es un servidor vivo con sesión
+recordada. `src/cards/transport.test.ts` recorre ahora un socket real.
 
 ---
 
 ## Contexto para Próxima Sesión
 
 ### Lo tuyo
-1. [ ] Correo a `aws-verification@amazon.com` (cuanto antes: el reloj corre)
-2. [ ] Cuando se verifique: playground → **Ejecutar** sin cambiar nada → decir **si responde**
-3. [ ] Mirar en Billing si el consumo de Bedrock **sale de los $100** o va aparte
-4. [ ] Formulario de créditos ($150) con la Devpost Profile URL
+1. [ ] Formulario de créditos (150 $): https://forms.gle/GaHFxSbBQNG9Kti6A — pide la Devpost
+       Profile URL. Se piden **por perfil**, no por proyecto: presupuesto compartido con LREA
+2. [ ] Mirar en Billing si el consumo de Bedrock **sale de los $100** o va aparte
 
-### Lo que puede hacer Claude sin AWS
-- **Congelar la interfaz de proveedor** (ADR-006, previsto el 27-09). Ha ganado cuatro campos
-  —`timeZone`, `Session.group` opcional, `Route.minutes` opcional, `listRooms`— todos encontrados
-  por el segundo adaptador y por las tarjetas. Dos hitos sin una sola vuelta atrás.
-- **Empezar el orquestador contra una abstracción**, con un doble en los tests, para que enchufar
-  Bedrock sea el último paso y no el primero. Recomendado: saca el bloqueo de la ruta crítica.
+### Lo siguiente en código: M4
+- **OAuth 2.1 con PKCE (S256)** está en la ruta crítica, no es un extra de M4: sin él no se conecta
+  con Alexa+ (ADR-009). `src/server/identity.ts` ya es la costura — `principalFrom` lee el `sub` que
+  un verificador de tokens haya establecido, y todo lo de arriba es trabajo del verificador
+- **Pila CDK**: es lo que da al jurado una URL accesible y lo que cierra el mini-reto de AWS
+- **OpenTelemetry**: contexto de traza en las cabeceras del protocolo
+
+### Trampas conocidas
+- Las credenciales de AWS viven en el perfil **`lrea`**, no en `default`. Cualquier script necesita
+  `AWS_PROFILE=lrea` o falla con `CredentialsProviderError`
+- **La interfaz está congelada.** Si M4 obliga a moverla: actualizar la instantánea a mano, anotarlo
+  en ADR-006 y repasar los dos adaptadores y las seis herramientas. Se evaluó el riesgo antes de
+  congelar y OAuth no debería tocarla, porque `RequestContext.principal` ya existe para eso
+- Al añadir cualquier entregable nuevo, **al menos un test tiene que recorrer el transporte real**.
+  Es la L-002 y ya ha costado dos fallos
 
 ### Decisiones vivas que conviene no olvidar
-- **UC-05 depende de que Alexa+ declare `elicitation`.** Si no la declara, `report_issue` no puede
-  confirmar. Verificar en el simulador antes de M3; hay dos salidas pensadas en `DEUDA_TECNICA.md`.
-- **El perfil EU** (`eu.amazon.nova-2-lite-v1:0`) merece medirse frente al US: el presupuesto es
-  500 ms y el vídeo se graba desde España. Va a la guía de adopción de M5.
-- **Nova 2 Sonic** (voz a voz) podría hacer que la simulación de Alexa+ suene a voz de verdad en
-  el vídeo. No es del plan; anotado por si M3 va holgado.
+- **Nova 2 Sonic** (voz a voz) haría que el vídeo suene a voz de verdad en vez de a sintetizador del
+  navegador. No es del plan; anotado por si M4 va holgado
+- La guía de adopción de M5 debe documentar `LODGE_BEDROCK_MODEL` y `LODGE_BEDROCK_REGION`: la
+  geografía es configuración, y el argumento de residencia de datos es medio argumento de venta
 
 ---
 
@@ -72,8 +95,9 @@ corta antes de llegar ahí, y es lo que condiciona el orquestador de M3.
 
 | Fecha | Usuario | Trabajo principal |
 |-------|---------|-------------------|
-| 2026-09-15 | Hugo | M2 completo con UC-07; localización y tarjetas visuales de M3; Bedrock bloqueado por verificación |
-| 2026-09-14 | Hugo | `/hv:init`, `/hv:onboarding`, M0 y M1 completos |
+| 2026-09-16 | Hugo | Interfaz congelada; prompt caching medido; demostrador web; dos fallos de transporte (ADR-011, ADR-012, L-002). M0–M3 cerrados |
+| 2026-09-15 | Hugo | M2 completo con UC-07; localización y tarjetas de M3; Bedrock verificado |
+| 2026-09-14 | Hugo | `/hv:init`, `/hv:onboarding`, M0 y M1 |
 
 ---
 
