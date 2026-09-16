@@ -13,7 +13,7 @@
 
 import type { Client } from '@modelcontextprotocol/client';
 
-import type { Model, ToolCall, ToolResult, ToolSpec, Turn } from './model.ts';
+import type { Model, ToolCall, ToolResult, ToolSpec, Turn, Usage } from './model.ts';
 import { modelNameLookup } from './model.ts';
 
 /** One step, as the demo shows it. M3 asks for a visible call trace; this is what it renders. */
@@ -39,7 +39,8 @@ export interface Exchange {
   readonly trace: readonly TraceEntry[];
   /** End to end, against the 500 ms platform budget. */
   readonly ms: number;
-  readonly usage: { readonly inputTokens: number; readonly outputTokens: number };
+  /** Summed over every round of the tool loop, not just the last one. */
+  readonly usage: Usage;
 }
 
 export interface OrchestratorOptions {
@@ -171,12 +172,16 @@ export function createOrchestrator(options: OrchestratorOptions): {
       const cards: Card[] = [];
       let inputTokens = 0;
       let outputTokens = 0;
+      let cacheReadTokens = 0;
+      let cacheWriteTokens = 0;
       let said = '';
 
       for (let round = 0; round < maxRounds; round++) {
         const reply = await model.converse(system, turns, tools);
         inputTokens += reply.usage.inputTokens;
         outputTokens += reply.usage.outputTokens;
+        cacheReadTokens += reply.usage.cacheReadTokens;
+        cacheWriteTokens += reply.usage.cacheWriteTokens;
         said = reply.text || said;
 
         if (reply.toolCalls.length === 0) break;
@@ -219,11 +224,11 @@ export function createOrchestrator(options: OrchestratorOptions): {
         cards,
         trace,
         ms: now() - startedAt,
-        usage: { inputTokens, outputTokens },
+        usage: { inputTokens, outputTokens, cacheReadTokens, cacheWriteTokens },
       };
     },
   };
 }
 
 export { bedrockOptionsFrom, createBedrockModel, DEFAULT_MODEL_ID, DEFAULT_REGION } from './model.ts';
-export type { Model, ToolSpec, Turn } from './model.ts';
+export type { Model, ToolSpec, Turn, Usage } from './model.ts';

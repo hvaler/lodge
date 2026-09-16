@@ -10,7 +10,12 @@ import {
   BedrockRuntimeClient,
   ConverseCommand,
 } from '@aws-sdk/client-bedrock-runtime';
-import type { ContentBlock, Message, Tool } from '@aws-sdk/client-bedrock-runtime';
+import type {
+  ContentBlock,
+  Message,
+  SystemContentBlock,
+  Tool,
+} from '@aws-sdk/client-bedrock-runtime';
 
 /**
  * The SDK types arbitrary JSON as its own recursive `DocumentType`.
@@ -44,7 +49,21 @@ export interface ToolCall {
 export interface ModelTurn {
   readonly text: string;
   readonly toolCalls: readonly ToolCall[];
-  readonly usage: { readonly inputTokens: number; readonly outputTokens: number };
+  readonly usage: Usage;
+}
+
+/**
+ * What the round cost.
+ *
+ * The cache figures are reported rather than hidden because they are the only way to tell a working
+ * cache from a silently broken one: a prefix that changes by one character reads zero and writes
+ * everything, and the answer looks exactly the same.
+ */
+export interface Usage {
+  readonly inputTokens: number;
+  readonly outputTokens: number;
+  readonly cacheReadTokens: number;
+  readonly cacheWriteTokens: number;
 }
 
 /** What the conversation so far looks like. Tool results are answers to the model's own calls. */
@@ -93,6 +112,15 @@ export interface BedrockModelOptions {
   readonly region?: string;
   readonly maxTokens?: number;
   readonly temperature?: number;
+  /**
+   * Whether to mark the system prompt as cacheable. On by default.
+   *
+   * Exists as a switch because support is per-model and not discoverable: the SDK types accept a
+   * `cachePoint` inside `toolConfig.tools`, and Nova 2 Lite rejects it outright with
+   * `extraneous key [cachePoint] is not permitted`. A model that also rejects it in `system` needs
+   * a way to turn this off that is not a code change.
+   */
+  readonly cachePrompt?: boolean;
 }
 
 /**
@@ -156,8 +184,34 @@ function toBedrockMessages(turns: readonly Turn[]): Message[] {
   });
 }
 
+/**
+ * The system prompt and the tool catalogue, marked cacheable.
+ *
+ * One cache point, at the end of `system`, and it covers the tool schemas too: measured against
+ * Nova 2 Lite, a 1 550-token request drops to ~50 billed input tokens with ~1 496 read from cache.
+ * The tool definitions sit between the system prompt and the messages, so they fall inside the
+ * cached prefix without a cache point of their own — which is just as well, because the model
+ * refuses one there.
+ *
+ * What it buys is cost, not speed — measured, because the opposite was assumed. Eighteen exchanges
+ * per configuration, interleaved A/B so network drift hit both equally: billable input fell from
+ * 57 324 tokens to 8 044, and the median moved from 1 966 ms to 1 894 ms. That 72 ms is noise
+ * against a 1 343–3 105 ms spread. Fifteen hundred tokens of prefill on a small model is simply not
+ * where the second goes; the answer is still being decoded token by token and shipped from Ireland.
+ *
+ * Worth keeping anyway: the prefix is identical on every round of the tool loop and on every
+ * question of a demo, so it is paid once per five-minute window rather than once per call, and the
+ * credit budget is shared with another entry.
+ */
+function toBedrockSystem(system: string, cache: boolean): SystemContentBlock[] {
+  return cache
+    ? [{ text: system }, { cachePoint: { type: 'default' } }]
+    : [{ text: system }];
+}
+
 export function createBedrockModel(options: BedrockModelOptions = {}): Model {
   const modelId = options.modelId ?? DEFAULT_MODEL_ID;
+  const cachePrompt = options.cachePrompt ?? true;
   const client = new BedrockRuntimeClient({ region: options.region ?? DEFAULT_REGION });
 
   return {
@@ -167,7 +221,7 @@ export function createBedrockModel(options: BedrockModelOptions = {}): Model {
       const response = await client.send(
         new ConverseCommand({
           modelId,
-          system: [{ text: system }],
+          system: toBedrockSystem(system, cachePrompt),
           messages: toBedrockMessages(turns),
           ...(tools.length > 0 ? { toolConfig: { tools: toBedrockTools(tools) } } : {}),
           inferenceConfig: {
@@ -203,6 +257,8 @@ export function createBedrockModel(options: BedrockModelOptions = {}): Model {
         usage: {
           inputTokens: response.usage?.inputTokens ?? 0,
           outputTokens: response.usage?.outputTokens ?? 0,
+          cacheReadTokens: response.usage?.cacheReadInputTokens ?? 0,
+          cacheWriteTokens: response.usage?.cacheWriteInputTokens ?? 0,
         },
       };
     },

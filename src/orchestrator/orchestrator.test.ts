@@ -50,7 +50,7 @@ function scriptedModel(script: Partial<ModelTurn>[]): Model & {
       return {
         text: step.text ?? '',
         toolCalls: step.toolCalls ?? [],
-        usage: step.usage ?? { inputTokens: 10, outputTokens: 5 },
+        usage: step.usage ?? { inputTokens: 10, outputTokens: 5, cacheReadTokens: 0, cacheWriteTokens: 0 },
       };
     },
   };
@@ -198,15 +198,28 @@ describe('the call trace M3 asks for', () => {
   });
 
   it('adds up the tokens across rounds, which is what the run costs', async () => {
+    // The shape of a real two-round exchange with prompt caching on: the first round writes the
+    // system prompt and the tool schemas, the second reads them back instead of paying again.
     const model = scriptedModel([
-      { toolCalls: [{ id: 'a', name: 'campus_deadlines', input: {} }], usage: { inputTokens: 900, outputTokens: 40 } },
-      { text: 'Listo.', usage: { inputTokens: 1200, outputTokens: 30 } },
+      {
+        toolCalls: [{ id: 'a', name: 'campus_deadlines', input: {} }],
+        usage: { inputTokens: 54, outputTokens: 40, cacheReadTokens: 0, cacheWriteTokens: 1496 },
+      },
+      {
+        text: 'Listo.',
+        usage: { inputTokens: 120, outputTokens: 30, cacheReadTokens: 1496, cacheWriteTokens: 0 },
+      },
     ]);
     const orchestrator = createOrchestrator({ model, client: await sanTelmo() });
 
     const exchange = await orchestrator.ask('¿plazos?', { institution: 'San Telmo', locale: 'es-ES' });
 
-    expect(exchange.usage).toEqual({ inputTokens: 2100, outputTokens: 70 });
+    expect(exchange.usage).toEqual({
+      inputTokens: 174,
+      outputTokens: 70,
+      cacheReadTokens: 1496,
+      cacheWriteTokens: 1496,
+    });
   });
 });
 
