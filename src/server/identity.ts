@@ -1,9 +1,9 @@
 /**
  * Who is calling.
  *
- * Until M4 there is no OAuth, so this is the seam where it will land: {@link principalFrom} reads
- * the subject a token verifier has already established, and everything upstream of it is the
- * verifier's job rather than ours.
+ * This is the seam OAuth landed on, and it did not have to move to receive it:
+ * {@link principalFrom} reads the subject a token verifier has already established, and everything
+ * upstream of it is the verifier's job rather than ours. See `auth.ts` for the verifier.
  */
 
 import type { AuthInfo } from '@modelcontextprotocol/server';

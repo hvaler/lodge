@@ -53,14 +53,29 @@ describe('the MCP endpoint', () => {
   });
 
   it('answers a tool call with the same words the container would use', async () => {
+    // Wayfinding rather than a room search, because this entrypoint builds its own provider with
+    // the real clock and there is no seam to pin it — `find_room` legitimately answers "nothing is
+    // free" once the buildings close, and a test that only passes during office hours is a test
+    // that gets muted. Directions are the same at any hour.
+    const result = await lambdaHandler(
+      event({ body: rpc('tools/call', { name: 'campus.wayfind', arguments: { to: 'FAR-104' } }) }),
+    );
+
+    expect(result.statusCode).toBe(200);
+    expect(result.body).toContain('El Faro');
+    // Spanish, because the adapter declares es-ES — the platform underneath changes nothing.
+    expect(result.body).toContain('planta 1');
+  });
+
+  it('answers a room search in Spanish whatever the hour', async () => {
     const result = await lambdaHandler(
       event({ body: rpc('tools/call', { name: 'campus.find_room', arguments: { building: 'MEN' } }) }),
     );
 
     expect(result.statusCode).toBe(200);
-    expect(result.body).toContain('MEN-');
-    // Spanish, because the adapter declares es-ES — the platform underneath changes nothing.
-    expect(result.body).toContain('Libres de aquí a las');
+    // Either there are rooms or there are not; both answers are the institution's own language,
+    // and which one comes back depends on the time of day rather than on anything being wrong.
+    expect(result.body).toMatch(/Libres de aquí a las|No hay nada libre en MEN/);
   });
 
   it('decodes a base64 body, which is what the runtime sends for anything it thinks is binary', async () => {

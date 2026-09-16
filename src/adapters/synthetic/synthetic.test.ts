@@ -129,6 +129,8 @@ describe('UC-01 · a free room right now', () => {
     samples.sort((a, b) => a - b);
 
     // The budget covers the whole round trip, so the adapter's share must be a small fraction.
+    // Measured at ~17 ms on an idle developer machine, so 50 leaves roughly threefold headroom and
+    // still catches a real regression. If this fails, check what else is running before believing it.
     expect(samples[Math.floor(samples.length / 2)]).toBeLessThan(50);
   });
 });

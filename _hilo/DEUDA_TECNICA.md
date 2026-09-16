@@ -3,8 +3,9 @@
 > **INSTRUCCIONES PARA CLAUDE**: registro de riesgos, deuda y asuntos abiertos. Consultalo antes de
 > proponer trabajo nuevo y anade aqui lo que aparezca.
 >
-> Estado a **14-09-2026** (cierre del onboarding). El codigo aun no existe: M0 arranca el 15 de
-> septiembre. Por eso no hay deuda de implementacion todavia — lo que hay son **riesgos con fecha**.
+> Estado a **16-09-2026**. M0 a M4 cerrados y desplegados; M5 escrito. Los riesgos marcados
+> CERRADO se conservan con lo que acabo pasando, porque lo util de un registro de riesgos es
+> saber cuales se cumplieron y cuales no.
 
 ---
 
