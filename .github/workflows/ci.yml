@@ -61,3 +61,47 @@ jobs:
 
       - name: Build
         run: npm run build
+
+  # A separate job, in parallel: it shares no steps with the one above and it is the slowest thing
+  # here. Nothing else catches a broken image, and the deployment target an institution actually
+  # uses is this one — between M2 and M5 it went unbuilt while five dependencies and three source
+  # directories were added to the project.
+  container:
+    name: the container builds and answers
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Build the image
+        run: docker build -t lodge:ci .
+
+      # Distroless has no shell, so there is nothing to exec into and poke at. The only honest
+      # check is to run it and ask it a question, which is also the only check that matters.
+      - name: Run it
+        run: |
+          docker run -d --name lodge -p 3000:3000 lodge:ci
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:3000/health >/dev/null && exit 0
+            sleep 1
+          done
+          echo "it never became healthy"
+          exit 1
+
+      - name: It knows what it is serving
+        run: curl -sf http://localhost:3000/health | tee /dev/stderr | grep -q 'Universidad de San Telmo'
+
+      - name: It answers a tool call
+        run: |
+          curl -sf -X POST http://localhost:3000/mcp \
+            -H 'content-type: application/json' \
+            -H 'accept: application/json, text/event-stream' \
+            -H 'mcp-protocol-version: 2025-11-25' \
+            -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"campus.wayfind","arguments":{"to":"FAR-104"}}}' \
+            | tee /dev/stderr | grep -q 'El Faro'
+
+      - name: Say what it logged, whatever happened
+        if: always()
+        run: docker logs lodge || true
