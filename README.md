@@ -112,6 +112,31 @@ adopted by any institution cannot demand a cloud account. Two first-class deploy
 > machine by someone outside the project. Until then this section is deliberately empty rather than
 > aspirational.
 
+### Seeing it work
+
+```bash
+npm install
+npm run demo      # needs AWS credentials for Bedrock
+```
+
+Two servers start. **Lodge itself** on `:3000`, serving `/mcp/san-telmo` and `/mcp/carrigmore` —
+point the MCP Inspector or your own client at either. And the **demonstration** on `:8080`, a web
+page that speaks, listens, and shows every tool call it made.
+
+They are separate processes talking over HTTP on purpose: the demonstration is an ordinary MCP
+client, so what you see it do, your own agent can do.
+
+Worth trying, in this order:
+
+1. Ask San Telmo for a free room. Note the card under the answer.
+2. Say a projector is broken. It asks before filing anything; answer **sí** and it files it.
+3. Switch to **Carrigmore** and say a projector is broken there. It cannot — no issue tracker is
+   configured, so `campus.report_issue` was never in the catalogue it was handed.
+
+Carrigmore runs from the CSV and iCalendar files in `fixtures/`, with no directory configured, so
+it publishes no timetable either. Add LDAP (`ops/environment/docker-compose.yml`) and the tool
+appears, without a rebuild.
+
 ## Data and privacy
 
 The **University of San Telmo** is fictional: three buildings, six degree programmes and an academic
