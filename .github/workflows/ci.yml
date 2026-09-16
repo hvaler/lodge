@@ -52,5 +52,12 @@ jobs:
         env:
           TZ: Pacific/Auckland
 
+      # Separate because it invokes esbuild to bundle the function, which takes about twenty
+      # seconds — too slow to live in the loop somebody runs after every edit, and too important to
+      # only run before a deploy. It asserts the CloudFormation, not the constructs: the failure
+      # mode is a permission that was right in the pull request and wrong in the account.
+      - name: Test the deployment stack
+        run: npm run test:infra
+
       - name: Build
         run: npm run build

@@ -18,7 +18,7 @@
 | 05 | Orquestador de demostracion | Amazon Bedrock · Nova 2 Lite | Simulacion propia de Alexa+; se publica |
 | 06 | Identidad | OAuth 2.1 · **servidor de recursos** (`jose`) | Cada persona ve solo lo suyo. Lodge verifica, no emite: ADR-013 |
 | 07 | Despliegue autonomo | Contenedor · compose | Un fichero de configuracion y credenciales propias |
-| 08 | Despliegue gestionado | AWS Lambda · DynamoDB · CDK v2 | El camino documentado para el mini-reto de AWS |
+| 08 | Despliegue gestionado | AWS Lambda (nodejs24.x, arm64) · DynamoDB · CDK v2 | Una funcion, una tabla y una URL. La tabla guarda **solo** los avisos: ADR-014 |
 | 09 | Observabilidad | OpenTelemetry | Contexto de traza en las cabeceras del protocolo |
 
 **El nucleo corre en cualquier sitio; AWS es un destino, no un requisito.** Un proyecto que aspira a
@@ -56,6 +56,9 @@ preview.** Es lo que evita el goteo de upgrades a tres semanas del cierre.
 | Infraestructura | AWS CDK v2 (2.263+) | No existe una v3 |
 | Contenedor | Imagen distroless | Superficie minima dentro de otra institucion |
 | Verificacion de tokens | `jose` 6.2.12 | JWT y JWKS remoto con cache y rotacion de claves. Sin dependencias, mantenido por el autor de la spec. Anadida en M4, dentro de la politica: se fija ahora y se congela al cerrar el hito |
+| Cola de incidencias gestionada | `@aws-sdk/client-dynamodb` 3.1133.0 | Solo el cliente base: tres operaciones con seis atributos planos no justifican tambien `lib-dynamodb` |
+| Infraestructura | `aws-cdk-lib` 2.269.0 · `constructs` 10.8.1 · `aws-cdk` 2.1141.0 | Rama 2.x; no existe v3. Solo desarrollo: no viaja en el contenedor |
+| Empaquetado de la funcion | `esbuild` 0.28.2 | Lo usa `NodejsFunction` al sintetizar. Local, sin Docker, 889 kB de artefacto |
 
 ### Que implica la eleccion de revision
 

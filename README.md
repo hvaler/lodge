@@ -141,6 +141,33 @@ Carrigmore runs from the CSV and iCalendar files in `fixtures/`, with no directo
 it publishes no timetable either. Add LDAP (`ops/environment/docker-compose.yml`) and the tool
 appears, without a rebuild.
 
+### Deploying it
+
+Two first-class targets, and the core does not know which it is running on.
+
+**Your own infrastructure** — a container, a config file and your own credentials.
+`ops/environment/` has both, and nothing in it reaches a cloud.
+
+**AWS** — one function, one table and a URL:
+
+```bash
+cd infra
+npx cdk deploy                    # protected by whatever issuer you configured
+npx cdk deploy -c sandbox=true    # public demonstration over the generated campus
+```
+
+Defaults to `eu-west-1`; `CDK_DEFAULT_REGION` moves it. The table holds the fault queue and nothing
+else — the campus itself is generated at start-up, so there is no dataset to seed and no migration
+to run. `-c sandbox=true` switches on the development identity header, which lets any caller name
+themselves; it is off otherwise, and it is only defensible here because the Lambda entrypoint builds
+the fictional institution and has no path to a real one.
+
+```
+Lambda (nodejs24.x, arm64, 512 MB)   the same six tools, the same answers
+DynamoDB (on demand)                 the fault queue, partitioned by who filed it
+Function URL (no authorizer)         so a client needs an MCP client, not an AWS account
+```
+
 ## Data and privacy
 
 The **University of San Telmo** is fictional: three buildings, six degree programmes and an academic

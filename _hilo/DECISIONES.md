@@ -27,6 +27,7 @@ el markdown es **lo que cambia mientras se construye**.
 | ADR-011 | La confirmacion viaja como argumento, no como peticion al cliente | 2026-09-16 | Aceptada | Protocolo |
 | ADR-012 | Las tarjetas se adjuntan salvo que el cliente diga que no tiene pantalla | 2026-09-16 | Aceptada | Arquitectura |
 | ADR-013 | Lodge es servidor de recursos, nunca servidor de autorizacion | 2026-09-16 | Aceptada | Seguridad |
+| ADR-014 | En el destino gestionado solo persisten los avisos; el dataset vive en el codigo | 2026-09-16 | Aceptada | Despliegue |
 
 ---
 
@@ -343,5 +344,41 @@ el adaptador indexa por lo que reconoce el directorio.
 
 **Lo que queda fuera** — Registro dinamico de clientes y Client ID Metadata Documents. Son cosa del
 servidor de autorizacion, no del de recursos.
+
+---
+
+
+## ADR-014 · En el destino gestionado solo persisten los avisos
+
+**Contexto** — El destino gestionado corre en Lambda, donde "en memoria" significa *la memoria de
+este contenedor*: un aviso dado en una invocacion es invisible para la siguiente. UC-06 —perseguir
+el parte que acabas de dar— funcionaria o no segun que contenedor respondiese, que es peor que no
+funcionar.
+
+**Decision** — Una tabla de DynamoDB con **solo la cola de incidencias**. Los avisos sembrados de la
+Universidad de San Telmo **no entran en la tabla**: viven en el codigo y se mezclan al leer.
+
+**Razon** — El conjunto de datos de San Telmo es generado y determinista, y eso es una promesa del
+proyecto: quien clone el repositorio obtiene las respuestas del video. Sembrar la tabla al desplegar
+introduce un paso que puede quedarse a medias, una migracion que mantener, y la posibilidad de que
+dos despliegues respondan distinto a la misma pregunta. Mezclando al leer no hay paso de siembra, no
+hay migracion y un despliegue recien creado ya contesta UC-06.
+
+**Consecuencia sobre el esquema** — Particionada por quien dio el aviso, que es la unica pregunta
+que se le hace: `campus.issue_status` devuelve lo tuyo y nada mas. Sin indices y sin scans. El
+contador de referencias comparte tabla bajo una clave de particion que ningun `sub` puede ser, y es
+atomico: dos personas dando parte del mismo proyector a la vez tienen que recibir referencias
+distintas.
+
+**Permisos** — `Query`, `PutItem` y `UpdateItem`, y nada mas. `grantReadWriteData` habria concedido
+tambien `Scan` y `DeleteItem`; un parte de averia no es nuestro para borrarlo, y un permiso concedido
+por comodidad es uno que nadie vuelve a revisar.
+
+**El interruptor del sandbox** — `LODGE_DEV_IDENTITY` deja que cualquiera diga quien es, y
+`identity.ts` fija que su unico valor por defecto seguro es apagado. La pila lo respeta: hace falta
+`-c sandbox=true`. Encenderlo es defendible **en este despliegue concreto** porque
+`src/lambda/handler.ts` construye el proveedor sintetico y ningun otro — no hay camino de
+configuracion desde esta pila hasta los datos de una institucion real, asi que lo peor que puede
+exponer es una universidad ficticia. Esa propiedad es estructural, no una promesa.
 
 ---

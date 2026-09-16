@@ -294,32 +294,20 @@
     "_campos_existencia_doc": "autenticacion=false y tests_existentes=false porque el codigo aun no existe: OAuth 2.1 llega en M4 y los tests de contrato en M1. documentacion_existente=true por el runbook."
   },
   "desarrollo": {
-    "modulos_en_desarrollo": [],
+    "modulos_en_desarrollo": [
+      "Identidad y despliegue gestionado (M4)"
+    ],
     "funcionalidades_en_progreso": [],
     "bloqueadores": [
       "Formulario de creditos AWS (150 $) pendiente: requiere la Devpost Profile URL."
     ],
-    "proxima_entrega": "M4 - Pila CDK, OAuth 2.1 y trazas OpenTelemetry (previsto 12-16 oct; se puede adelantar)",
+    "proxima_entrega": "M4 - queda OpenTelemetry y el despliegue real",
     "notas_sprint": "M0 a M3 cerrados el 16-09, veinticinco dias antes de la fecha de M3. 300 tests, CI verde. El demostrador web (npm run demo) levanta Lodge en :3000 y la simulacion de Alexa+ en :8080, conectada por HTTP como cliente MCP cualquiera. Queda M4: OAuth 2.1 con PKCE esta en la ruta critica y la pila CDK es lo que da al jurado una URL accesible y cierra el mini-reto de AWS."
   },
-  "evolutivoActivo": null,
+  "evolutivoActivo": "M4",
   "evolutivos": {
     "_doc": "Estructura de cada evolutivo (codigo, titulo, estado, asignadoA, rama, prioridad, fechas, creadoPor, notas) en schema.md#evolutivos",
     "pendientes": [
-      {
-        "codigo": "M4",
-        "titulo": "Pila CDK, OAuth 2.1 y trazas OpenTelemetry",
-        "estado": "pendiente",
-        "asignadoA": "hvaler",
-        "rama": null,
-        "prioridad": "alta",
-        "fechaCreacion": "2026-09-14",
-        "fechaInicio": "2026-10-12",
-        "fechaEstimada": "2026-10-16",
-        "fechaCompletado": null,
-        "creadoPor": "hvaler",
-        "notas": "Salida: dos destinos de despliegue funcionando. Funcion gestionada, tabla de estado e identidad; OAuth 2.1 con Client ID Metadata Documents. El registro de friccion se escribe mientras duele, no al final."
-      },
       {
         "codigo": "M5",
         "titulo": "Guia de adopcion, documentacion, video y feedback",
@@ -349,7 +337,22 @@
         "notas": "Salida: enviado 48 h antes del cierre. Formulario con track y ambos mini-retos, registro de friccion, repositorio congelado y demostracion accesible para el jurado. Cierre oficial: 23 oct 21:00 CEST."
       }
     ],
-    "enProgreso": [],
+    "enProgreso": [
+      {
+        "codigo": "M4",
+        "titulo": "Pila CDK, OAuth 2.1 y trazas OpenTelemetry",
+        "estado": "en_progreso",
+        "asignadoA": "hvaler",
+        "rama": "main",
+        "prioridad": "alta",
+        "fechaCreacion": "2026-09-14",
+        "fechaInicio": "2026-09-16",
+        "fechaEstimada": "2026-10-16",
+        "fechaCompletado": null,
+        "creadoPor": "hvaler",
+        "notas": "Salida: dos destinos de despliegue funcionando. Funcion gestionada, tabla de estado e identidad; OAuth 2.1 con Client ID Metadata Documents. El registro de friccion se escribe mientras duele, no al final. | Arrancado el 16-09, veintiseis dias antes de su fecha. OAuth 2.1 hecho (ADR-013): Lodge verifica tokens, no los emite, y los liga al URI canonico de cada institucion. Pila CDK hecha (ADR-014): una funcion nodejs24.x en arm64, una tabla con solo la cola de incidencias y una URL sin autorizador. Queda OpenTelemetry y desplegar de verdad."
+      }
+    ],
     "completados": [
       {
         "codigo": "M0",
@@ -432,7 +435,7 @@
     "notas": "Las credenciales de AWS viven en el perfil 'lrea', no en 'default': cualquier script necesita AWS_PROFILE=lrea o no encuentra credenciales."
   },
   "metricas": {
-    "cobertura_tests": "300 tests, 18 ficheros",
+    "cobertura_tests": "330 tests en src (3,2 s) + 8 de la pila CDK",
     "ultimo_build": "2026-09-16 (CI verde: typecheck, test, build)",
     "ultimo_deploy": null,
     "incidencias_abiertas": 0,
@@ -442,6 +445,7 @@
     "_doc": "Claude muestra estas alertas al iniciar sesion",
     "activas": [
       "BEDROCK VERIFICADO (15-09): responde en plan Free con el perfil us.amazon.nova-2-lite-v1:0. M3 desbloqueado. OJO: el playground enciende el razonamiento extendido y dio 5 293 ms; en la API viene apagado por defecto y el orquestador NO lo activa (ADR-010). Queda por mirar en Billing si el consumo sale de los 100 $.",
+      "DESPLIEGUE - 'cd infra && npx cdk deploy -c sandbox=true' levanta la demostracion publica. SIN el -c sandbox=true no se enciende LODGE_DEV_IDENTITY y la mitad de las herramientas rechazan por falta de identidad, que es lo correcto para un despliegue de verdad. Region por defecto eu-west-1. NO se ha desplegado todavia: cuesta creditos.",
       "INTERFAZ CONGELADA (16-09, ADR-006). src/provider/frozen.ts guarda la instantanea y el compilador la compara en cada build; frozen.test.ts fija los nombres de capacidades y herramientas. A partir de aqui la interfaz se implementa, no se edita. Si algo de M4 o M5 obliga a moverla: actualizar la instantanea A MANO, anotarlo en ADR-006 y repasar los dos adaptadores y las seis herramientas.",
       "ALTAS - Devpost hecho y cuenta AWS operativa. QUEDA el formulario de creditos (150 $) en https://forms.gle/GaHFxSbBQNG9Kti6A, que pide la Devpost Profile URL; se piden por PERFIL, no por proyecto, asi que el presupuesto es compartido con LREA. OJO: las credenciales estan en el perfil 'lrea', no en 'default' - cualquier script necesita AWS_PROFILE=lrea.",
       "AWS - Los 150 $ del hackathon son promotional credits y la pagina de free tier dice que solo los planes de pago son elegibles. Y el free tier no cubre inferencia de Bedrock. Confirmar ambas cosas antes de M3: el orquestador depende de Nova 2 Lite.",
