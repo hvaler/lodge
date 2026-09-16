@@ -117,12 +117,19 @@ describe('UC-01 · a free room right now', () => {
   });
 
   it('answers well inside the 500 ms platform budget', async () => {
-    const started = performance.now();
-    await provider.findFreeRooms(ctx(), { window: peakWindow });
-    const elapsed = performance.now() - started;
+    // A median of several runs rather than one stopwatch reading. A single sample on a machine
+    // running the rest of this suite in parallel measures the scheduler as much as the adapter,
+    // and a latency test that fails when the laptop is busy gets muted rather than believed.
+    const samples: number[] = [];
+    for (let run = 0; run < 11; run++) {
+      const started = performance.now();
+      await provider.findFreeRooms(ctx(), { window: peakWindow });
+      samples.push(performance.now() - started);
+    }
+    samples.sort((a, b) => a - b);
 
     // The budget covers the whole round trip, so the adapter's share must be a small fraction.
-    expect(elapsed).toBeLessThan(50);
+    expect(samples[Math.floor(samples.length / 2)]).toBeLessThan(50);
   });
 });
 
