@@ -87,8 +87,8 @@ Opens a page on `:8080` that speaks and listens, shows every tool call it made, 
 institution. Lodge itself stays on `:3000` — the page is an ordinary MCP client talking to it over
 HTTP, which is why switching institution changes what the agent can do.
 
-There is also one running that needs nothing at all:
-`https://4joapeibeg357e7vyw2dj4pnwa0tmpay.lambda-url.eu-west-1.on.aws/mcp`
+There is also one running that needs nothing at all — **[open it](https://5fugfo2nx7ajeymmf62fjqssou0bgdvq.lambda-url.eu-west-1.on.aws/)**. It serves
+San Telmo only and answers a bounded number of questions a day; the local one has neither limit.
 
 ---
 
@@ -190,7 +190,9 @@ npx cdk deploy
 > **Expected:** about a minute, ending in a function URL. One Lambda, one DynamoDB table for the
 > fault queue, one log group.
 
-Defaults to `eu-west-1`; `CDK_DEFAULT_REGION` moves it.
+It goes where your AWS profile points, `eu-west-1` if it says nothing, and `LODGE_REGION`
+overrides both. The model profile has to match the region's geography — the stack refuses to
+synthesise otherwise rather than deploying something that fails on the first question.
 
 ### Protecting it
 

@@ -116,10 +116,20 @@ describe('UC-01 · a free room right now', () => {
     await expect(provider.findFreeRooms(ctx(), { window: backwards })).rejects.toThrow(InvalidRequestError);
   });
 
-  it('answers well inside the 500 ms platform budget', async () => {
-    // A median of several runs rather than one stopwatch reading. A single sample on a machine
-    // running the rest of this suite in parallel measures the scheduler as much as the adapter,
-    // and a latency test that fails when the laptop is busy gets muted rather than believed.
+  it('does not get slower by an order of magnitude', async () => {
+    // A regression guard, not the proof of the 500 ms budget — those are two different claims and
+    // this test used to conflate them.
+    //
+    // It cannot be the proof. This file runs alongside twenty-one other workers, so a stopwatch
+    // here measures the scheduler as much as the adapter: ~17 ms alone, ~56 ms under the suite's
+    // own parallelism. CPU time instead of wall time does not rescue it either, because Windows
+    // reports it in ~15 ms steps. Nudging the threshold until it stops going red would be tuning
+    // the number until it stops meaning anything.
+    //
+    // So the threshold is set where it catches what a unit test *can* catch — an accidental O(n²),
+    // a synchronous read slipped into the hot path — and never fires because a laptop is busy.
+    // The budget itself is evidenced where it is actually spent: **214 ms end to end from Spain,
+    // network included**, measured against the deployed server. That number is in use-cases.md.
     const samples: number[] = [];
     for (let run = 0; run < 11; run++) {
       const started = performance.now();
@@ -128,10 +138,7 @@ describe('UC-01 · a free room right now', () => {
     }
     samples.sort((a, b) => a - b);
 
-    // The budget covers the whole round trip, so the adapter's share must be a small fraction.
-    // Measured at ~17 ms on an idle developer machine, so 50 leaves roughly threefold headroom and
-    // still catches a real regression. If this fails, check what else is running before believing it.
-    expect(samples[Math.floor(samples.length / 2)]).toBeLessThan(50);
+    expect(samples[Math.floor(samples.length / 2)]).toBeLessThan(200);
   });
 });
 

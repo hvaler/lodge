@@ -17,14 +17,17 @@
 import { createServer } from 'node:http';
 import { resolve } from 'node:path';
 
+import { nodeToRequest, writeWebResponse } from '../shared/http.ts';
+
 import { createBedrockModel, bedrockOptionsFrom } from '../orchestrator/index.ts';
 import type { Provider } from '../provider/index.ts';
 import { configPathFrom, createProvidersFrom, loadLodgeConfig } from '../server/config.ts';
 import { createHttpServer } from '../server/main.ts';
 import type { ServedInstitutions } from '../server/main.ts';
 import { startTelemetry } from '../telemetry/setup.ts';
-import { createDemoApi, UnknownInstitutionError } from './api.ts';
-import type { AskRequest, DemoInstitution } from './api.ts';
+import { createDemoApi } from './api.ts';
+import { createDemoHandler } from './handler.ts';
+import type { DemoInstitution } from './api.ts';
 import { demoPage } from './page.ts';
 
 const MCP_PORT = Number(process.env['LODGE_MCP_PORT'] ?? 3000);
@@ -102,17 +105,6 @@ async function defaultInstitutions(): Promise<Map<string, Provider>> {
   });
 }
 
-function json(res: import('node:http').ServerResponse, status: number, body: unknown): void {
-  res.writeHead(status, { 'content-type': 'application/json; charset=utf-8' });
-  res.end(JSON.stringify(body));
-}
-
-async function readJson(req: import('node:http').IncomingMessage): Promise<unknown> {
-  const chunks: Buffer[] = [];
-  for await (const chunk of req) chunks.push(chunk as Buffer);
-  return JSON.parse(Buffer.concat(chunks).toString('utf8'));
-}
-
 await startTelemetry(process.env, 'lodge-demo');
 
 const configPath = configPathFrom(process.env);
@@ -143,39 +135,17 @@ const api = createDemoApi({
   model: createBedrockModel(bedrockOptionsFrom(process.env)),
 });
 
-const page = demoPage();
+const handle = createDemoHandler({ api, page: demoPage() });
 
 const ui = createServer((req, res) => {
-  const path = (req.url ?? '/').split('?')[0] ?? '/';
-
-  if (req.method === 'GET' && (path === '/' || path === '/index.html')) {
-    res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
-    res.end(page);
-    return;
-  }
-
-  if (req.method === 'GET' && path === '/api/institutions') {
-    api
-      .catalogues()
-      .then((catalogues) => json(res, 200, catalogues))
-      .catch((error: Error) => json(res, 502, { error: `Lodge did not answer: ${error.message}` }));
-    return;
-  }
-
-  if (req.method === 'POST' && path === '/api/ask') {
-    readJson(req)
-      .then((body) => api.ask(body as AskRequest))
-      .then((answer) => json(res, 200, answer))
-      .catch((error: Error) => {
-        // An unknown institution is the caller's mistake; anything else is ours, and saying which
-        // saves somebody reading the wrong logs.
-        const status = error instanceof UnknownInstitutionError ? 400 : 500;
-        json(res, status, { error: error.message });
-      });
-    return;
-  }
-
-  json(res, 404, { error: 'not found' });
+  void (async () => {
+    // `http://localhost` only so the URL is absolute; nothing routes on the host.
+    const response = await handle(await nodeToRequest(req, `http://localhost:${UI_PORT}`));
+    await writeWebResponse(res, response);
+  })().catch(() => {
+    res.writeHead(500, { 'content-type': 'application/json' });
+    res.end('{"error":"the demonstration failed"}');
+  });
 });
 
 lodge.listen(MCP_PORT, '127.0.0.1', () => {

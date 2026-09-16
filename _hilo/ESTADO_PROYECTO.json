@@ -200,12 +200,12 @@
         "tipo": "produccion",
         "servidor_app": "AWS Lambda (URL de funcion)",
         "servidor_servicios": "Amazon DynamoDB",
-        "url_app": "https://4joapeibeg357e7vyw2dj4pnwa0tmpay.lambda-url.eu-west-1.on.aws",
+        "url_app": "https://5fugfo2nx7ajeymmf62fjqssou0bgdvq.lambda-url.eu-west-1.on.aws/",
         "url_servicios": null,
         "deploy_automatico": false,
         "balanceo": false,
         "estrategia_deploy": "cdk deploy",
-        "notas": "Desplegado el 16-09 en eu-west-1, cuenta 401157843883. Lambda nodejs24.x en arm64 con URL de funcion, y DynamoDB para la cola de avisos. Modo sandbox (-c sandbox=true): LODGE_DEV_IDENTITY encendido para poder cambiar de identidad sin IdP, defendible porque el punto de entrada de Lambda construye SOLO el proveedor sintetico y no hay camino hasta datos reales. Mediana medida desde Espana: 214 ms ida y vuelta con red incluida, contra un presupuesto de 500."
+        "notas": "Desplegado el 16-09 en eu-west-1, cuenta 401157843883. Lambda nodejs24.x en arm64 con URL de funcion, y DynamoDB para la cola de avisos. Modo sandbox (-c sandbox=true): LODGE_DEV_IDENTITY encendido para poder cambiar de identidad sin IdP, defendible porque el punto de entrada de Lambda construye SOLO el proveedor sintetico y no hay camino hasta datos reales. Mediana medida desde Espana: 214 ms ida y vuelta con red incluida, contra un presupuesto de 500. AMPLIADO el 16-09 con la pagina publica (ADR-016): una SEGUNDA Lambda que habla con la primera por HTTP, con tope de 500 preguntas al dia contado en DynamoDB antes de responder. Es la unica parte que gasta dinero por pregunta. Sirve solo San Telmo."
       }
     ],
     "cicd": {
@@ -435,9 +435,9 @@
     "notas": "Las credenciales de AWS viven en el perfil 'lrea', no en 'default': cualquier script necesita AWS_PROFILE=lrea o no encuentra credenciales."
   },
   "metricas": {
-    "cobertura_tests": "338 tests en src (3,4 s) + 8 de la pila CDK",
+    "cobertura_tests": "352 tests en src + 15 de la pila CDK",
     "ultimo_build": "2026-09-16 (CI verde: typecheck, test, build)",
-    "ultimo_deploy": "2026-09-16 (eu-west-1, sandbox)",
+    "ultimo_deploy": "2026-09-16 (eu-west-1, sandbox, con la pagina publica)",
     "incidencias_abiertas": 0,
     "evolutivos_completados_mes": 0
   },
@@ -446,7 +446,7 @@
     "activas": [
       "BEDROCK VERIFICADO (15-09): responde en plan Free con el perfil us.amazon.nova-2-lite-v1:0. M3 desbloqueado. OJO: el playground enciende el razonamiento extendido y dio 5 293 ms; en la API viene apagado por defecto y el orquestador NO lo activa (ADR-010). Queda por mirar en Billing si el consumo sale de los 100 $.",
       "M5 ESCRITO, FALTA LO HUMANO - El guion del video esta en docs/management/video-script.md presupuestado a 2:55, con lista de comprobacion. La guia de adopcion necesita que la recorra ALGUIEN AJENO al desarrollo y rellene la tabla del cronometro al final: validarla desde dentro no vale, y el entregable lo pide explicitamente.",
-      "DEMOSTRACION VIVA en https://4joapeibeg357e7vyw2dj4pnwa0tmpay.lambda-url.eu-west-1.on.aws (eu-west-1, cuenta 401157843883). Es modo sandbox: cualquiera puede decir quien es con la cabecera x-lodge-dev-subject, sobre datos ficticios. Cuesta creditos solo cuando alguien pregunta. Para tirarla: cd infra && AWS_PROFILE=lrea npx cdk destroy.",
+      "DEMOSTRACION VIVA - Pagina: https://5fugfo2nx7ajeymmf62fjqssou0bgdvq.lambda-url.eu-west-1.on.aws/ · Servidor MCP: https://4joapeibeg357e7vyw2dj4pnwa0tmpay.lambda-url.eu-west-1.on.aws/mcp (eu-west-1, cuenta 401157843883). La pagina gasta Bedrock por pregunta y tiene tope de 500 al dia; el contador esta en la tabla DemoQuota. Modo sandbox sobre datos ficticios. Para tirarlo todo: cd infra && AWS_PROFILE=lrea npx cdk destroy.",
       "INTERFAZ CONGELADA (16-09, ADR-006). src/provider/frozen.ts guarda la instantanea y el compilador la compara en cada build; frozen.test.ts fija los nombres de capacidades y herramientas. A partir de aqui la interfaz se implementa, no se edita. Si algo de M4 o M5 obliga a moverla: actualizar la instantanea A MANO, anotarlo en ADR-006 y repasar los dos adaptadores y las seis herramientas.",
       "ALTAS - Devpost hecho y cuenta AWS operativa. QUEDA el formulario de creditos (150 $) en https://forms.gle/GaHFxSbBQNG9Kti6A, que pide la Devpost Profile URL; se piden por PERFIL, no por proyecto, asi que el presupuesto es compartido con LREA. OJO: las credenciales estan en el perfil 'lrea', no en 'default' - cualquier script necesita AWS_PROFILE=lrea.",
       "AWS - Los 150 $ del hackathon son promotional credits y la pagina de free tier dice que solo los planes de pago son elegibles. Y el free tier no cubre inferencia de Bedrock. Confirmar ambas cosas antes de M3: el orquestador depende de Nova 2 Lite.",

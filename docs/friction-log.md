@@ -228,6 +228,35 @@ had two functions in it.
 
 **What would help.** Mentioning the custom resource in the deprecation warning.
 
+### 🟡 `CDK_DEFAULT_REGION` cannot be used to give an app its own default
+
+**What happened.** Our CDK app read `process.env.CDK_DEFAULT_REGION` and fell back to a region of
+our choosing. It never took: the CLI **sets** that variable in the app's environment from the
+resolved AWS config before running it, so whatever the shell exported is gone by the time the app
+reads it.
+
+**What it cost.** A wrong claim in two documents and a comment — "defaults to `eu-west-1`" — that
+happened to be true only because the profile we used said so. Found by synthesising without the
+profile and seeing a US region in an ARN that should have been European.
+
+**What would have prevented it.** Saying in the `CDK_DEFAULT_*` documentation that the CLI owns
+those variables and an app cannot use them to express a preference. We now read our own.
+
+### 🟡 `this.region` is a string sometimes and a token the rest of the time
+
+**What happened.** We added a guard comparing `this.region` against the model's geography, to stop
+somebody deploying a European inference profile into a US region — a stack that synthesises,
+deploys, and then fails on the first question. It broke every environment-agnostic stack, where the
+region is an unresolved token and the comparison is against `${Token[AWS.Region.7]}`.
+
+**What it cost.** Little — a test caught it immediately, which is the argument for testing the
+synthesised template. But the failure mode is worth naming: a guard that reads a possibly-token
+value as a string causes exactly the class of problem it was added to prevent.
+
+**What would have prevented it.** `Token.isUnresolved` is the answer and it is easy to find once you
+know it exists. A type that distinguished "string" from "string or token" would have made it
+impossible to miss; today they are both `string`.
+
 ### 🟡 Function URL response streaming needs a non-standard global
 
 **What happened.** Streaming responses from a Function URL requires wrapping the handler in

@@ -29,6 +29,7 @@ el markdown es **lo que cambia mientras se construye**.
 | ADR-013 | Lodge es servidor de recursos, nunca servidor de autorizacion | 2026-09-16 | Aceptada | Seguridad |
 | ADR-014 | En el destino gestionado solo persisten los avisos; el dataset vive en el codigo | 2026-09-16 | Aceptada | Despliegue |
 | ADR-015 | Instrumentar siempre, exportar solo si lo piden | 2026-09-16 | Aceptada | Observabilidad |
+| ADR-016 | La demostracion publica es una segunda funcion, con tope diario duro | 2026-09-16 | Aceptada | Despliegue |
 
 ---
 
@@ -426,5 +427,39 @@ comparten. Se anota el host y ya.
 peticion seria gastar el presupuesto de latencia en telemetria sobre el presupuesto de latencia.
 En Lambda es la excepcion: el contenedor se congela al devolver, asi que ahi se vacia antes de
 retornar — y ese coste solo lo paga quien configuro un colector.
+
+---
+
+
+## ADR-016 · La demostracion publica es una segunda funcion, con tope diario duro
+
+**Contexto** — El endpoint MCP desplegado lo puede usar entero quien tenga un cliente MCP. Quien no
+lo tenga ve JSON y tiene que fiarse del video. Un jurado no deberia tener que instalar nada.
+
+**Decision** — Desplegar tambien la pagina, como **una segunda Lambda que habla con la primera por
+HTTP**, y ponerle un **tope diario** de preguntas respaldado por DynamoDB.
+
+**Por que dos funciones y no una** — Porque lo que se demuestra es que Lodge es un servidor con el
+que puede hablar el agente de cualquiera. Una demostracion que metiera la mano en el proceso
+demostraria otra cosa. Cuesta una ida y vuelta y es exactamente lo que hace `npm run demo` en local,
+asi que ademas las dos disposiciones son la misma y no divergen.
+
+**Por que un tope y no un limite por IP** — Limitar por direccion tiene la forma equivocada aqui:
+una sala llena de jurados detras de un NAT es justo quien no debe ser estrangulado, y quien quiera
+agotar el presupuesto usara mas de una direccion. Lo que importa es que el total este acotado. Son
+500 preguntas al dia, contadas **antes** de responder: contarlas despues dejaria pasar una rafaga
+entera, que es el unico caso para el que existe el tope.
+
+Al agotarse devuelve `429` con una frase util — el video ensena lo mismo y `npm run demo` lo corre
+en local sin limite — en vez de una pagina rota. La pagina y el catalogo se siguen sirviendo, porque
+no cuestan nada.
+
+**Permisos** — La funcion puede invocar **un** modelo, nombrado por ARN de perfil de inferencia, e
+incrementar **un** contador. Nada mas.
+
+**Consecuencia** — Es la unica parte de Lodge que gasta dinero por pregunta, y por eso la unica que
+vive detras de `-c sandbox=true`. La pagina desplegada sirve solo San Telmo: los ficheros de
+Carrigmore no estan en el paquete de esa funcion, y ofrecer el cambio de institucion seria ofrecer
+un boton que falla. Ese momento esta en el video y en `npm run demo`, donde es real.
 
 ---

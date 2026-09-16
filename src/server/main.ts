@@ -18,6 +18,7 @@ import type { AuthInfo } from '@modelcontextprotocol/server';
 
 import { createSyntheticProvider } from '../adapters/synthetic/index.ts';
 import type { Provider } from '../provider/index.ts';
+import { writeWebResponse } from '../shared/http.ts';
 import { protect, publicUrlFrom } from './auth.ts';
 import type { ProtectedInstitution } from './auth.ts';
 import { configPathFrom, createProvidersFrom, loadLodgeConfig } from './config.ts';
@@ -56,16 +57,6 @@ export interface ServedInstitutions {
 function json(res: ServerResponse, status: number, body: unknown): void {
   res.writeHead(status, { 'content-type': 'application/json' });
   res.end(JSON.stringify(body));
-}
-
-/** Writes a web-standard `Response` — what the SDK's auth helpers build — to a Node response. */
-async function writeWebResponse(res: ServerResponse, response: Response): Promise<void> {
-  const headers: Record<string, string> = {};
-  response.headers.forEach((value, key) => {
-    headers[key] = value;
-  });
-  res.writeHead(response.status, headers);
-  res.end(await response.text());
 }
 
 /**

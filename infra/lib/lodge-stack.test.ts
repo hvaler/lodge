@@ -18,9 +18,13 @@ import { LodgeStack } from './lodge-stack.ts';
 let plain: Template;
 let sandboxed: Template;
 
+const ENV = { account: '123456789012', region: 'eu-west-1' };
+
 beforeAll(() => {
-  plain = Template.fromStack(new LodgeStack(new App(), 'Test', { sandbox: false }));
-  sandboxed = Template.fromStack(new LodgeStack(new App(), 'Sandbox', { sandbox: true }));
+  // A concrete environment, because that is what gets deployed and because the ARNs below are only
+  // meaningful once a region is known.
+  plain = Template.fromStack(new LodgeStack(new App(), 'Test', { sandbox: false, env: ENV }));
+  sandboxed = Template.fromStack(new LodgeStack(new App(), 'Sandbox', { sandbox: true, env: ENV }));
 }, 120_000);
 
 function templateOf(sandbox = false): Template {
@@ -33,6 +37,16 @@ describe('the shape of the bill', () => {
 
     template.resourceCountIs('AWS::Lambda::Function', 1);
     template.resourceCountIs('AWS::DynamoDB::GlobalTable', 1);
+  });
+
+  it('grows by exactly one function and one table when the demonstration is added', () => {
+    // The page is a *second* function reaching the first over HTTP, which is the arrangement the
+    // submission claims: what you watch it do, your own agent can do.
+    const template = templateOf(true);
+
+    template.resourceCountIs('AWS::Lambda::Function', 2);
+    template.resourceCountIs('AWS::DynamoDB::GlobalTable', 2);
+    template.resourceCountIs('AWS::Lambda::Url', 2);
   });
 
   it('bills the table on demand, because campus load is a spike at nine and nothing at three', () => {
@@ -79,6 +93,59 @@ describe('the function', () => {
       }),
     });
   });
+});
+
+describe('the demonstration, which is the only part that spends money per question', () => {
+  it('exists only in a sandbox', () => {
+    // Without the flag there is no page, no model permission and nothing to meter.
+    templateOf().resourceCountIs('AWS::Lambda::Function', 1);
+    expect(JSON.stringify(templateOf().toJSON())).not.toContain('bedrock');
+  });
+
+  it('carries a daily ceiling, because an open page with none eventually spends the budget', () => {
+    templateOf(true).hasResourceProperties('AWS::Lambda::Function', {
+      Environment: { Variables: Match.objectLike({ LODGE_DEMO_DAILY_LIMIT: '500' }) },
+    });
+  });
+
+  it('may invoke one model and no others', () => {
+    templateOf(true).hasResourceProperties('AWS::IAM::Policy', {
+      PolicyDocument: Match.objectLike({
+        Statement: Match.arrayWith([
+          Match.objectLike({
+            Action: 'bedrock:InvokeModel',
+            Resource: Match.arrayWith([Match.stringLikeRegexp('nova-2-lite')]),
+          }),
+        ]),
+      }),
+    });
+  });
+
+  it('may only increment the counter, not read or delete it', () => {
+    templateOf(true).hasResourceProperties('AWS::IAM::Policy', {
+      PolicyDocument: Match.objectLike({
+        Statement: Match.arrayWith([Match.objectLike({ Action: 'dynamodb:UpdateItem' })]),
+      }),
+    });
+  });
+
+  it('still synthesises when the region is only known at deploy time', () => {
+    // No `env`: the region is a token, the check cannot be made, and that must not be fatal.
+    expect(() =>
+      Template.fromStack(new LodgeStack(new App(), 'Agnostic', { sandbox: true })),
+    ).not.toThrow();
+    // Generous, because building another stack means bundling the functions again.
+  }, 120_000);
+
+  it('refuses to synthesise a model profile from the wrong continent', () => {
+    // Deploying an `eu.` profile into a US region gives a stack that deploys and then fails on the
+    // first question. Better to fail here, where somebody is watching.
+    expect(() =>
+      Template.fromStack(
+        new LodgeStack(new App(), 'Wrong', { sandbox: true, env: { ...ENV, region: 'us-east-1' } }),
+      ),
+    ).toThrow(/is eu-only, but this stack deploys to us-east-1/);
+  }, 120_000);
 });
 
 describe('the development identity header', () => {

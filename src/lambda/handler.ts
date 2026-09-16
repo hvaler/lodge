@@ -2,8 +2,8 @@
  * Lodge on AWS Lambda, behind a Function URL.
  *
  * The managed target from ADR-003: AWS is *a* destination, not a requirement. Everything below the
- * server layer is the same code the container runs — same adapter, same six tools, same answers —
- * and this file is only the shape change from a Lambda event to a web `Request` and back.
+ * server layer is the same code the container runs — same adapter, same six tools, same answers.
+ * The event-to-`Request` translation lives in `event.ts`, shared with the demonstration function.
  *
  * It is short because the server is stateless (ADR-009). There is no session to rebuild, nothing to
  * hand off between invocations, and no sticky routing to arrange: each request is answered on its
@@ -20,23 +20,8 @@ import { createSyntheticProvider } from '../adapters/synthetic/index.ts';
 import { DynamoIssueStore, issuesTableFrom } from '../adapters/synthetic/dynamo-issues.ts';
 import { createLodgeHandler, describeDeployment } from '../server/index.ts';
 import { startTelemetry } from '../telemetry/setup.ts';
-
-/** AWS Lambda Function URL, payload format 2.0. Only the fields this uses. */
-export interface FunctionUrlEvent {
-  readonly rawPath?: string;
-  readonly rawQueryString?: string;
-  readonly headers?: Record<string, string | undefined>;
-  readonly body?: string;
-  readonly isBase64Encoded?: boolean;
-  readonly requestContext?: { readonly http?: { readonly method?: string } };
-}
-
-export interface FunctionUrlResult {
-  readonly statusCode: number;
-  readonly headers: Record<string, string>;
-  readonly body: string;
-  readonly isBase64Encoded?: boolean;
-}
+import { toRequest, toResult } from './event.ts';
+import type { FunctionUrlEvent, FunctionUrlResult } from './event.ts';
 
 /**
  * The fault queue this deployment uses.
@@ -67,39 +52,6 @@ const mcp = createLodgeHandler(provider);
 const telemetry = await startTelemetry(process.env);
 const health = JSON.stringify({ status: 'ok', ...describeDeployment(provider) });
 
-/** Turns the event into the web-standard `Request` the MCP handler speaks. */
-function toRequest(event: FunctionUrlEvent): Request {
-  const query = event.rawQueryString ? `?${event.rawQueryString}` : '';
-  // The host is cosmetic here — the handler routes on path and method — but a real URL keeps
-  // anything downstream that parses it from having to special-case us.
-  const url = new URL(`${event.rawPath ?? '/'}${query}`, 'https://lodge.invalid');
-
-  const headers = new Headers();
-  for (const [name, value] of Object.entries(event.headers ?? {})) {
-    if (value !== undefined) headers.set(name, value);
-  }
-
-  const method = event.requestContext?.http?.method ?? 'GET';
-  const hasBody = event.body !== undefined && method !== 'GET' && method !== 'HEAD';
-
-  return new Request(url, {
-    method,
-    headers,
-    ...(hasBody
-      ? { body: event.isBase64Encoded ? Buffer.from(event.body!, 'base64') : event.body! }
-      : {}),
-  });
-}
-
-async function toResult(response: Response): Promise<FunctionUrlResult> {
-  const headers: Record<string, string> = {};
-  response.headers.forEach((value, key) => {
-    headers[key] = value;
-  });
-
-  return { statusCode: response.status, headers, body: await response.text() };
-}
-
 export async function lambdaHandler(event: FunctionUrlEvent): Promise<FunctionUrlResult> {
   const path = event.rawPath ?? '/';
 
@@ -116,3 +68,4 @@ export async function lambdaHandler(event: FunctionUrlEvent): Promise<FunctionUr
 }
 
 export { lambdaHandler as handler };
+export type { FunctionUrlEvent, FunctionUrlResult } from './event.ts';

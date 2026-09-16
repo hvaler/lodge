@@ -148,12 +148,22 @@ appears, without a rebuild.
 
 ### It is running
 
+**[Talk to it in a browser →](https://5fugfo2nx7ajeymmf62fjqssou0bgdvq.lambda-url.eu-west-1.on.aws/)** — no client to install, nothing to sign up for.
+
+Or point an MCP client at the server itself:
+
 ```
 https://4joapeibeg357e7vyw2dj4pnwa0tmpay.lambda-url.eu-west-1.on.aws/mcp
 ```
 
-Point an MCP client at it, or open `/health` in a browser to see what it is serving. It answers in
-**214 ms** from Spain, network included, against the platform's 500 ms budget.
+It answers in **214 ms** from Spain, network included, against the platform's 500 ms budget.
+`/health` says what it is serving.
+
+The page and the server are **two separate functions**, and the page reaches the server over HTTP
+like any other client would. That is the point of it: what you watch the page do, your own agent
+can do. The page answers a bounded number of questions a day, because each one calls a model —
+`npm run demo` runs the same thing locally with no limit, and switches between two institutions,
+which the deployed one does not.
 
 This is a **public sandbox over a fictional university**: the `x-lodge-dev-subject` header lets any
 caller claim any identity, so you can ask for a timetable or file a fault without an identity
@@ -176,7 +186,8 @@ npx cdk deploy                    # protected by whatever issuer you configured
 npx cdk deploy -c sandbox=true    # public demonstration over the generated campus
 ```
 
-Defaults to `eu-west-1`; `CDK_DEFAULT_REGION` moves it. The table holds the fault queue and nothing
+Goes where your AWS profile points, `eu-west-1` if it says nothing, and `LODGE_REGION` overrides
+both. The table holds the fault queue and nothing
 else — the campus itself is generated at start-up, so there is no dataset to seed and no migration
 to run. `-c sandbox=true` switches on the development identity header, which lets any caller name
 themselves; it is off otherwise, and it is only defensible here because the Lambda entrypoint builds
