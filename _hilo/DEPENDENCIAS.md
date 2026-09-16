@@ -12,11 +12,11 @@
 | # | Capa | Stack | Nota |
 |---|---|---|---|
 | 01 | Servidor MCP | TypeScript · Node 24 LTS · SDK oficial | Streamable HTTP, `server/discover`, **sin estado** |
-| 02 | Interfaz de proveedor | Nucleo del proyecto | Capacidades e idioma. **Se congela al cerrar M1** |
+| 02 | Interfaz de proveedor | Nucleo del proyecto | Capacidades e idioma. **Congelada el 16-09** (ADR-006) |
 | 03 | Adaptadores | `synthetic` · `standards` | Mismo contrato, distinto origen |
 | 04 | Tarjetas visuales | Extension MCP Apps | Parrilla, plano de planta, ficha de incidencia |
 | 05 | Orquestador de demostracion | Amazon Bedrock · Nova 2 Lite | Simulacion propia de Alexa+; se publica |
-| 06 | Identidad | OAuth 2.1 · Client ID Metadata Documents | Cada persona ve solo lo suyo |
+| 06 | Identidad | OAuth 2.1 · **servidor de recursos** (`jose`) | Cada persona ve solo lo suyo. Lodge verifica, no emite: ADR-013 |
 | 07 | Despliegue autonomo | Contenedor · compose | Un fichero de configuracion y credenciales propias |
 | 08 | Despliegue gestionado | AWS Lambda · DynamoDB · CDK v2 | El camino documentado para el mini-reto de AWS |
 | 09 | Observabilidad | OpenTelemetry | Contexto de traza en las cabeceras del protocolo |
@@ -55,6 +55,7 @@ preview.** Es lo que evita el goteo de upgrades a tres semanas del cierre.
 | Modelo del orquestador | Amazon Nova 2 Lite | Latencia en el turno hablado |
 | Infraestructura | AWS CDK v2 (2.263+) | No existe una v3 |
 | Contenedor | Imagen distroless | Superficie minima dentro de otra institucion |
+| Verificacion de tokens | `jose` 6.2.12 | JWT y JWKS remoto con cache y rotacion de claves. Sin dependencias, mantenido por el autor de la spec. Anadida en M4, dentro de la politica: se fija ahora y se congela al cerrar el hito |
 
 ### Que implica la eleccion de revision
 

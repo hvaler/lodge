@@ -104,7 +104,11 @@ adopted by any institution cannot demand a cloud account. Two first-class deploy
 
 - Node 24 LTS
 - An MCP client speaking MCP revision 2025-11-25 over Streamable HTTP
-- For the managed target only: an AWS account with Bedrock access in `us-east-1`
+- An OAuth 2.1 authorization server, if you want the endpoint protected. Lodge verifies tokens; it
+  does not issue them, and it is not somewhere for your students' passwords to live. Name your own
+  issuer in the config file (`ops/environment/README.md`)
+- For the demonstration orchestrator only: an AWS account with Bedrock access. Defaults to Nova 2
+  Lite in `eu-west-1`; `LODGE_BEDROCK_REGION` moves it
 
 ## Getting started
 

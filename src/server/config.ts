@@ -45,10 +45,29 @@ const standardsSchema = z.object({
   directory: directorySchema.optional(),
 });
 
-/** One institution: which adapter, and where its sources live. */
+/**
+ * Who signs this institution's tokens.
+ *
+ * Optional, and its absence means the endpoint is unauthenticated — which several tools then
+ * refuse on their own, because they ask `ctx.principal` rather than trusting the caller. That is a
+ * legitimate way to run Lodge behind something else that authenticates, and it is announced loudly
+ * at start-up rather than assumed.
+ */
+const authSchema = z.object({
+  issuer: z.url().describe('The `iss` its tokens carry, e.g. https://login.example.ie'),
+  jwksUri: z.url().describe('Where its signing keys are published'),
+  scopes: z.array(z.string()).optional().describe('Scopes a token must carry to be accepted'),
+  subjectClaim: z
+    .string()
+    .optional()
+    .describe('Claim naming the person. Defaults to sub; set it when the directory keys on another'),
+});
+
+/** One institution: which adapter, where its sources live, and who vouches for its people. */
 const institutionSchema = z.object({
   adapter: z.enum(['synthetic', 'standards']),
   standards: standardsSchema.optional(),
+  auth: authSchema.optional(),
 });
 
 export type InstitutionConfig = z.infer<typeof institutionSchema>;

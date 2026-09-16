@@ -26,6 +26,7 @@ el markdown es **lo que cambia mientras se construye**.
 | ADR-009 | MCP 2025-11-25 como revision objetivo, sin estado por transporte | 2026-09-14 | Aceptada | Protocolo |
 | ADR-011 | La confirmacion viaja como argumento, no como peticion al cliente | 2026-09-16 | Aceptada | Protocolo |
 | ADR-012 | Las tarjetas se adjuntan salvo que el cliente diga que no tiene pantalla | 2026-09-16 | Aceptada | Arquitectura |
+| ADR-013 | Lodge es servidor de recursos, nunca servidor de autorizacion | 2026-09-16 | Aceptada | Seguridad |
 
 ---
 
@@ -307,5 +308,40 @@ una tarjeta.
 **Consecuencia** — El sobre `_meta` por peticion se lee primero y es la respuesta del protocolo a
 esto, pero hoy solo se auto-emite en conexiones 2026-07-28 y este SDK negocia 2025-11-25 como
 maximo. Queda puesto para cuando eso cambie.
+
+---
+
+
+## ADR-013 · Lodge es servidor de recursos, nunca servidor de autorizacion
+
+**Contexto** — Alexa+ exige OAuth 2.1 con authorization code + PKCE (S256) para conectar. La
+pregunta no es si hay OAuth, sino **quien emite los tokens**.
+
+**Decision** — Lodge no emite ninguno. Publica un documento RFC 9728 en
+`/.well-known/oauth-protected-resource/...` que dice cual es su URI canonico y en que servidor de
+autorizacion confia, y verifica las firmas de ese servidor. El PKCE ocurre entre el cliente y ese
+servidor; Lodge no lo ve. La institucion escribe dos lineas en su fichero de configuracion:
+`issuer` y `jwksUri`.
+
+**Razon** — Es la tesis del runbook aplicada a la identidad. Una institucion que tiene directorio
+casi seguro tiene un proveedor OIDC delante, y lo que nadie quiere desplegar es **un segundo sitio
+donde vivan las contrasenas de sus estudiantes**. Nombrar un emisor es una tarde; operar un
+proveedor de identidad es un proyecto. Un servidor MCP que ademas fuera IdP dejaria de ser algo que
+se instala en una tarde, que es la promesa entera.
+
+**La parte que se gana el sueldo** — El token se verifica contra el **URI canonico de esa
+institucion** (RFC 8707), no solo contra la firma y el emisor. Un mismo proceso responde por varias
+instituciones (UC-07), asi que sin esa comprobacion un token de Carrigmore valdria en San Telmo:
+firma buena, emisor bueno, institucion equivocada. Hay un test que lo comprueba, y se verifico que
+falla al quitar la comprobacion antes de darlo por bueno.
+
+**Consecuencia** — El `jwksUri` se exige en la configuracion en vez de descubrirse desde el emisor.
+Descubrirlo significaria una llamada de red al IdP de la institucion antes de que Lodge pueda
+responder nada, convirtiendo una caida breve suya en una nuestra. Y el claim del sujeto es
+configurable (`subjectClaim`), porque `sub` suele ser un identificador opaco del proveedor mientras
+el adaptador indexa por lo que reconoce el directorio.
+
+**Lo que queda fuera** — Registro dinamico de clientes y Client ID Metadata Documents. Son cosa del
+servidor de autorizacion, no del de recursos.
 
 ---
