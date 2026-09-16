@@ -37,7 +37,7 @@
     "sdk": "MCP TypeScript SDK (oficial)",
     "protocolo": "MCP 2025-11-25 (revision objetivo; ADR-009). Handler multi-era para revisiones posteriores",
     "frontend": "Tarjetas visuales (extension MCP Apps) + orquestador web de demostracion",
-    "modelo": "Amazon Nova 2 Lite via us.amazon.nova-2-lite-v1:0 (perfil geografico US; no hay disponibilidad in-region). Converse API con tool calling, sin reasoningConfig (ADR-010). Verificado funcionando el 15-09-2026.",
+    "modelo": "Amazon Nova 2 Lite. Por defecto eu.amazon.nova-2-lite-v1:0 en eu-west-1 (mediana 1 437 ms desde Espana frente a 1 669 ms en US, y mejor argumento de residencia de datos). Configurable con LODGE_BEDROCK_MODEL y LODGE_BEDROCK_REGION. Converse API, sin reasoningConfig (ADR-010).",
     "base_datos": "DynamoDB (solo en el despliegue gestionado)",
     "orm": null,
     "identidad": "OAuth 2.1 authorization code + PKCE (S256), parametro 'resource' al URI canonico. Obligatorio para conectar con Alexa+, no solo identidad de usuario",
@@ -153,7 +153,7 @@
     ],
     "sprint_actual": null,
     "version_actual": "0.0.0",
-    "ultima_actualizacion": "2026-09-15",
+    "ultima_actualizacion": "2026-09-16",
     "actualizado_por": "Hugo Carlos Valer Rojas"
   },
   "acceso_bd": {
@@ -413,7 +413,7 @@
   },
   "ultimaSesion": {
     "_doc": "Se actualiza con /pausar y se lee con /continuar",
-    "fecha": "2026-09-15",
+    "fecha": "2026-09-16",
     "evolutivoActivo": "M3",
     "usuario": "Hugo Carlos Valer Rojas",
     "ramaActiva": "main",
@@ -435,7 +435,6 @@
   "alertas": {
     "_doc": "Claude muestra estas alertas al iniciar sesion",
     "activas": [
-      "EU BLOQUEADO: eu-west-1 sigue dando AccessDeniedException por verificacion cuando us-east-1 ya funciona. La verificacion parece ir por regiones. Reintentar: el perfil EU ahorraria el salto atlantico en el video.",
       "BEDROCK VERIFICADO (15-09): responde en plan Free con el perfil us.amazon.nova-2-lite-v1:0. M3 desbloqueado. OJO: el playground enciende el razonamiento extendido y dio 5 293 ms; en la API viene apagado por defecto y el orquestador NO lo activa (ADR-010). Queda por mirar en Billing si el consumo sale de los 100 $.",
       "PLAN - M2 adelantado al 14-09. La congelacion de la interfaz de proveedor SIGUE siendo el 27-09 (ADR-006): mover esa fecha es exactamente como la abstraccion se come el calendario.",
       "ORDEN DE ALTAS - 1) Devpost (su Profile URL es obligatorio en el formulario de creditos). 2) Los 150 $ se piden por PERFIL de Devpost, no por proyecto: presupuesto compartido con LREA. 3) Cuenta AWS ya creada en plan Free; el CLI 2.36.44 esta instalado y faltan credenciales. ATAJO: la actividad 'modelo fundacional en el playground de Bedrock' (20 $) ES la verificacion que cierra M0.",

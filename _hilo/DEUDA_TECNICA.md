@@ -92,9 +92,18 @@ entrada que se reenvían en cada vuelta.
 
 1. **Prompt caching** (soportado, 5 min, mínimo 1K tokens). El prompt de sistema y las seis
    definiciones de herramienta son idénticos en cada vuelta: es exactamente el caso de uso.
-2. **Perfil EU** (`eu.amazon.nova-2-lite-v1:0` desde `eu-west-1`). Ahorraría el salto atlántico.
-   Bloqueado hoy: esa región seguía dando `AccessDeniedException` por verificación cuando US ya
-   funcionaba, así que la verificación parece ir por regiones.
+2. ~~**Perfil EU**~~ — **hecho el 16-09**. Se desbloqueó solo; la verificación iba por regiones y
+   EU tardó más. Medido con el orquestador completo, seis turnos por configuración desde España:
+
+   | Configuración | Mediana | Mín | Máx |
+   |---|---|---|---|
+   | **EU · perfil EU** | **1 437 ms** | 1 203 | 1 840 |
+   | EU · perfil GLOBAL | 1 479 ms | 1 345 | 1 573 |
+   | US · perfil US | 1 669 ms | 1 489 | 2 378 |
+
+   EU gana ~230 ms, un 14 %. Es el nuevo defecto, y no solo por velocidad: nombrar seis regiones
+   europeas es una conversación más corta con una oficina de protección de datos que «en algún
+   sitio de Estados Unidos». Un despliegue en US cambia una variable de entorno.
 
 ---
 

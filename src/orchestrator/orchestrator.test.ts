@@ -304,3 +304,30 @@ describe('the instruction the model works under', () => {
     expect(systemPrompt('Minimal College', 'en-IE', [])).toMatch(/no tools here/);
   });
 });
+
+describe('where the model runs', () => {
+  it('defaults to the EU geography', async () => {
+    const { DEFAULT_MODEL_ID, DEFAULT_REGION, bedrockOptionsFrom } = await import('./model.ts');
+
+    // Measured from Spain: EU 1 437 ms median against US 1 669 ms. But the deciding half is that
+    // Lodge is pitched at European institutions, and naming six European regions is a shorter
+    // conversation with their data-protection office than "somewhere in the United States".
+    expect(DEFAULT_MODEL_ID).toBe('eu.amazon.nova-2-lite-v1:0');
+    expect(DEFAULT_REGION).toBe('eu-west-1');
+    expect(bedrockOptionsFrom({})).toEqual({
+      modelId: 'eu.amazon.nova-2-lite-v1:0',
+      region: 'eu-west-1',
+    });
+  });
+
+  it('is one environment variable away from anywhere else', async () => {
+    const { bedrockOptionsFrom } = await import('./model.ts');
+
+    expect(
+      bedrockOptionsFrom({
+        LODGE_BEDROCK_MODEL: 'us.amazon.nova-2-lite-v1:0',
+        LODGE_BEDROCK_REGION: 'us-east-1',
+      }),
+    ).toEqual({ modelId: 'us.amazon.nova-2-lite-v1:0', region: 'us-east-1' });
+  });
+});

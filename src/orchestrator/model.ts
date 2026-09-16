@@ -95,7 +95,27 @@ export interface BedrockModelOptions {
   readonly temperature?: number;
 }
 
-export const DEFAULT_MODEL_ID = 'us.amazon.nova-2-lite-v1:0';
+/**
+ * Geography defaults to EU, and the reason is not only speed.
+ *
+ * Measured from Spain with the full orchestrator, six turns each: EU 1 437 ms median against US
+ * 1 669 ms — about 14 % and worth having, though not the big lever. What settles it is the other
+ * half: Lodge is pitched at European institutions whose data-protection office asks where requests
+ * are processed, and "Ireland, Frankfurt, Milan, Spain, Paris or Stockholm" is a shorter
+ * conversation than "somewhere in the United States".
+ *
+ * A US deployment changes one environment variable. Nothing else moves.
+ */
+export const DEFAULT_MODEL_ID = 'eu.amazon.nova-2-lite-v1:0';
+export const DEFAULT_REGION = 'eu-west-1';
+
+/** Reads the geography from the environment, so a deployment is configuration and not a rebuild. */
+export function bedrockOptionsFrom(env: NodeJS.ProcessEnv): BedrockModelOptions {
+  return {
+    modelId: env['LODGE_BEDROCK_MODEL'] ?? DEFAULT_MODEL_ID,
+    region: env['LODGE_BEDROCK_REGION'] ?? DEFAULT_REGION,
+  };
+}
 
 function toBedrockTools(tools: readonly ToolSpec[]): Tool[] {
   return tools.map((tool) => ({
@@ -138,7 +158,7 @@ function toBedrockMessages(turns: readonly Turn[]): Message[] {
 
 export function createBedrockModel(options: BedrockModelOptions = {}): Model {
   const modelId = options.modelId ?? DEFAULT_MODEL_ID;
-  const client = new BedrockRuntimeClient(options.region ? { region: options.region } : {});
+  const client = new BedrockRuntimeClient({ region: options.region ?? DEFAULT_REGION });
 
   return {
     id: modelId,

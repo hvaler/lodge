@@ -225,5 +225,5 @@ export function createOrchestrator(options: OrchestratorOptions): {
   };
 }
 
-export { createBedrockModel, DEFAULT_MODEL_ID } from './model.ts';
+export { bedrockOptionsFrom, createBedrockModel, DEFAULT_MODEL_ID, DEFAULT_REGION } from './model.ts';
 export type { Model, ToolSpec, Turn } from './model.ts';
