@@ -50,7 +50,7 @@ Every case ends in a **checkable condition**. That condition is the contract tes
 
 - **Actor:** Lecturer
 - **Trigger:** The room projector won't start and the class begins in five minutes
-- **Flow:** `campus.report_issue` returns `input_required` to confirm room and equipment; the client retries with the answer and the ticket is filed.
+- **Flow:** `campus.report_issue` validates the room and its equipment, then returns the question to ask and files nothing. The agent asks it out loud; once the person says yes it calls again with `confirmed`, and the ticket is filed. Two tool calls, and the first one never writes (ADR-011).
 - **Acceptance:** No ticket exists without confirmation, and the one created appears in the adapter's queue with its number spoken back.
 - **Priority:** essential
 

@@ -20,19 +20,64 @@ export const CARD_MIME = 'text/html;profile=mcp-app';
 
 const UI_EXTENSION = 'io.modelcontextprotocol/ui';
 
-/**
- * Whether this client said it can render a card.
- *
- * Asked per call rather than assumed per deployment: the same server answers a speaker with no
- * screen and a tablet in the same corridor.
- */
-export function clientShowsCards(server: McpServer): boolean {
-  const capabilities = server.server.getClientCapabilities() as
-    | { extensions?: Record<string, { mimeTypes?: string[] }> }
-    | undefined;
+/** Only the part of a client's capabilities that decides whether a card is worth attaching. */
+interface ScreenCapabilities {
+  readonly extensions?: Record<string, { mimeTypes?: string[] }>;
+}
 
-  const mimeTypes = capabilities?.extensions?.[UI_EXTENSION]?.mimeTypes;
+/** What the tool callback is handed. Structural, so nothing here depends on the SDK's shape. */
+export interface ToolRequest {
+  readonly mcpReq?: { readonly envelope?: Record<string, unknown> } | unknown;
+}
+
+const CLIENT_CAPABILITIES_META = 'io.modelcontextprotocol/clientCapabilities';
+
+/** What this one request declared. The only source a server built per request could have. */
+function perRequest(request: ToolRequest | undefined): ScreenCapabilities | undefined {
+  const envelope = (request?.mcpReq as { envelope?: Record<string, unknown> } | undefined)?.envelope;
+  return envelope?.[CLIENT_CAPABILITIES_META] as ScreenCapabilities | undefined;
+}
+
+function declaresScreen(capabilities: ScreenCapabilities): boolean {
+  const mimeTypes = capabilities.extensions?.[UI_EXTENSION]?.mimeTypes;
   return Array.isArray(mimeTypes) && mimeTypes.some((type) => type.startsWith('text/html'));
+}
+
+/**
+ * Whether to attach a card to this answer.
+ *
+ * The rule reads "attach unless we know the client has no screen", and the inversion is deliberate.
+ * The original rule was the opposite — attach only when the client says it has a screen — and it
+ * meant cards rendered in every test and in no deployment. Over Streamable HTTP the handler builds
+ * a fresh {@link McpServer} per request, so `getClientCapabilities()` is `null` on every tool call,
+ * stateless or not; the capabilities are known only to the `initialize` that happened on some other
+ * request. The tests missed it because an in-memory transport is one long-lived server, which is
+ * the one shape where the old rule worked.
+ *
+ * The per-request `_meta` envelope is the protocol's answer to this and is read first, but it is
+ * auto-emitted only on a 2026-07-28 connection, and this SDK negotiates 2025-11-25 at the newest
+ * (ADR-009). So for now it is almost always absent, and the question becomes what to do when the
+ * client has not said either way.
+ *
+ * Attaching is the right default, on the extension's own terms: a card is an additional resource
+ * block that a client which cannot render `text/html;profile=mcp-app` ignores. The spoken answer is
+ * unchanged and complete on its own — there is a test that asserts exactly that, word for word,
+ * with and without a screen — so a speaker that receives one loses nothing but bytes.
+ *
+ * The three cases, and why each is decided the way it is:
+ *
+ *  - The client declared a screen → attach. It asked.
+ *  - The client declared its capabilities and no screen among them → suppress. It answered the
+ *    question, and the answer was no.
+ *  - No capabilities reached us at all → attach. Not knowing is not the same as being told no, and
+ *    of the two ways to be wrong, sending bytes to a speaker is the cheap one.
+ */
+export function clientShowsCards(server: McpServer, request?: ToolRequest): boolean {
+  const declared =
+    perRequest(request) ??
+    (server.server.getClientCapabilities() as ScreenCapabilities | undefined);
+
+  return declared === undefined || declared === null ? true : declaresScreen(declared);
 }
 
 /** Wraps a rendered card as the resource content block a tool result carries. */

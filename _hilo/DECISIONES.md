@@ -24,6 +24,8 @@ el markdown es **lo que cambia mientras se construye**.
 | ADR-007 | Los criterios de aceptacion viven en ingles, junto a los tests | 2026-09-14 | Aceptada | Documentacion |
 | ADR-008 | Licencia Apache-2.0 | 2026-09-14 | Aceptada | Legal |
 | ADR-009 | MCP 2025-11-25 como revision objetivo, sin estado por transporte | 2026-09-14 | Aceptada | Protocolo |
+| ADR-011 | La confirmacion viaja como argumento, no como peticion al cliente | 2026-09-16 | Aceptada | Protocolo |
+| ADR-012 | Las tarjetas se adjuntan salvo que el cliente diga que no tiene pantalla | 2026-09-16 | Aceptada | Arquitectura |
 
 ---
 
@@ -241,3 +243,69 @@ es lo que necesita algo pensado para desplegarse en infraestructura ajena.
   no una mejora de identidad. El parametro `resource` apunta al URI canonico del servidor.
 - El presupuesto de latencia deja de ser cualitativo: **< 500 ms ida y vuelta**, limite de plataforma.
 - En desarrollo local hace falta un tunel (p. ej. `cloudflared`): Alexa+ exige URL remota.
+
+
+---
+
+## ADR-011 · La confirmacion viaja como argumento, no como peticion al cliente
+
+**Contexto** — UC-05 es `essential` y exige que no exista ningun parte sin confirmacion. Estaba
+implementado con `input_required`, que era la eleccion correcta frente a `elicitInput` porque no
+bloquea (ADR-009). Al conectar el demostrador por HTTP real aparecio esto:
+
+> `Cannot request input 'confirm' (elicitation/create): ... per-request legacy serving cannot
+> receive server-to-client requests`
+
+En una conexion de era 2025 el SDK entrega un `input_required` **como una peticion
+`elicitation/create` del servidor al cliente**, y sobre Streamable HTTP servido por peticion ese
+canal no existe. UC-05 funcionaba en los tests y en ningun contenedor.
+
+**Decision** — `campus.report_issue` recibe un argumento `confirmed`. La primera llamada valida el
+aula y el equipo, devuelve la pregunta hablada y **no escribe nada**. La segunda, con
+`confirmed: true`, abre el parte y dice la referencia.
+
+**Razon** — Funciona en cualquier era del protocolo y sobre cualquier transporte, porque son
+argumentos y resultados de herramienta y nada mas. Y es, literalmente, lo que hace un altavoz:
+pregunta, la persona dice que si, y entonces actua. El criterio de aceptacion de UC-05 no habla de
+`input_required` sino de que no exista parte sin confirmacion, y eso se cumple: la primera llamada
+no escribe.
+
+**Lo que se pierde** — La elicitacion permite al cliente dibujar un dialogo de confirmacion de
+confianza, ajeno al modelo. Con un argumento, quien decide que la persona dijo que si es el modelo.
+Se acepta porque la alternativa no es un dialogo mejor: es que no haya confirmacion ninguna.
+
+**Consecuencia** — Un solo camino, no dos. Mantener la elicitacion "para cuando haya sesion" seria
+mantener un camino que solo recorren los tests, que es exactamente como se colo este fallo. Si una
+revision futura del SDK permite negociar 2026-07-28, el sobre `_meta` vuelve a estar disponible y
+`input_required` vuelve a ser el mecanismo preferible; entonces se revisa esta decision.
+
+---
+
+## ADR-012 · Las tarjetas se adjuntan salvo que el cliente diga que no tiene pantalla
+
+**Contexto** — La regla era la contraria: adjuntar solo si el cliente declara la extension de UI.
+Sobre Streamable HTTP `createMcpHandler` construye un `McpServer` por peticion, asi que
+`getClientCapabilities()` devuelve `null` en toda llamada a herramienta — con estado o sin el. Las
+capacidades solo las conoce el `initialize`, que ocurrio en otra peticion y en otra instancia. Las
+tarjetas se dibujaban en todos los tests y en ningun despliegue, porque los tests usan un transporte
+en memoria, que es la unica forma en la que la regla vieja funcionaba.
+
+**Decision** — Adjuntar salvo que sepamos que no hay pantalla. Tres casos:
+
+| Lo que llega | Que se hace | Por que |
+|---|---|---|
+| El cliente declara pantalla | Adjuntar | La ha pedido |
+| Declara sus capacidades y ninguna es pantalla | No adjuntar | Contesto, y la respuesta fue no |
+| No llega ninguna capacidad | Adjuntar | No saber no es lo mismo que que te digan que no |
+
+**Razon** — La extension de MCP Apps esta disenada para que un cliente que no sepa representar
+`text/html;profile=mcp-app` **ignore** el bloque. Y la respuesta hablada es completa por si sola —
+hay un test que lo comprueba palabra por palabra, con pantalla y sin ella. De las dos formas de
+equivocarse, mandarle bytes de mas a un altavoz es la barata; la cara es que una tablet no vea nunca
+una tarjeta.
+
+**Consecuencia** — El sobre `_meta` por peticion se lee primero y es la respuesta del protocolo a
+esto, pero hoy solo se auto-emite en conexiones 2026-07-28 y este SDK negocia 2025-11-25 como
+maximo. Queda puesto para cuando eso cambie.
+
+---

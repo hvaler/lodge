@@ -9,8 +9,7 @@
  * cards arrive in M3 and are an improvement, not the answer.
  */
 
-import { acceptedContent, inputRequired } from '@modelcontextprotocol/server';
-import type { CallToolResult, InputRequiredResult, McpServer } from '@modelcontextprotocol/server';
+import type { CallToolResult, McpServer } from '@modelcontextprotocol/server';
 import * as z from 'zod/v4';
 
 import {
@@ -175,7 +174,7 @@ function registerFindRoom(server: McpServer, provider: Provider, resolve: Resolv
 
         // The card is strictly extra: it shows the rooms that were *not* offered and why. Where
         // there is no screen the spoken answer above is the whole answer, unchanged.
-        if (!clientShowsCards(server)) return spokenAnswer;
+        if (!clientShowsCards(server, toolCtx)) return spokenAnswer;
 
         const all = await provider.listRooms!(ctx);
         const inScope = building ? all.filter((room) => room.building === building) : all;
@@ -316,7 +315,7 @@ function registerWayfind(server: McpServer, provider: Provider, resolve: Resolve
 
         // UC-04 is explicit that the spoken directions must get you there on their own, so the
         // floor plan is attached only when someone can see it, and never mentioned aloud.
-        if (!clientShowsCards(server) || !provider.listRooms) return spokenAnswer;
+        if (!clientShowsCards(server, toolCtx) || !provider.listRooms) return spokenAnswer;
 
         const all = await provider.listRooms(ctx);
         const destination = all.find((room) => room.id === to);
@@ -343,29 +342,36 @@ function registerWayfind(server: McpServer, provider: Provider, resolve: Resolve
 
 // ── campus.report_issue ──────────────────────────────────────────────────────
 
-const confirmationSchema = z.object({
-  confirm: z.boolean().meta({ title: 'Yes, file it' }),
-});
-
 function registerReportIssue(server: McpServer, provider: Provider, resolve: ResolveContext): void {
   server.registerTool(
     'campus.report_issue',
     {
-      description: 'Report faulty equipment in a room. Confirms with you before filing anything.',
+      description:
+        'Report faulty equipment in a room. Call it once to get the question to ask, then again ' +
+        'with confirmed=true once the person has said yes. Nothing is filed until then.',
       inputSchema: z.object({
         room: z.string().describe('Room id, e.g. MEN-203.'),
         equipment: z.string().describe('What is broken, e.g. projector.'),
         note: z.string().optional().describe('Anything else worth passing on.'),
+        confirmed: z
+          .boolean()
+          .optional()
+          .describe(
+            'Only true once the person has answered yes to the question this tool returned. ' +
+              'Never set it on the first call, and never to act on an assumption.',
+          ),
       }),
     },
-    async ({ room, equipment, note }, toolCtx): Promise<CallToolResult | InputRequiredResult> => {
+    async ({ room, equipment, note, confirmed }, toolCtx): Promise<CallToolResult> => {
       const ctx = resolve(toolCtx);
       const m = wordsFor(provider);
 
       try {
-        // Check the room and its kit BEFORE asking for confirmation. Confirming "the projector in
-        // 301" and only then discovering 301 has no projector wastes the person's turn and makes
-        // the confirmation look like a formality.
+        // Everything that can refuse comes BEFORE the question. Confirming "the projector in 301"
+        // and only then hearing that 301 has no projector — or that you were never signed in —
+        // wastes the person's turn and makes the confirmation look like a formality.
+        if (!ctx.principal) return say(m.mustSignIn());
+
         const target = await provider.getRoom!(ctx, room);
         if (!target) return say(m.noSuchRoom(room));
 
@@ -374,21 +380,9 @@ function registerReportIssue(server: McpServer, provider: Provider, resolve: Res
           return say(m.roomHasNoSuch(target.id, equipment, target.equipment));
         }
 
-        const responses = (toolCtx as { mcpReq?: { inputResponses?: unknown } }).mcpReq?.inputResponses;
-        const answer = acceptedContent(responses as never, 'confirm', confirmationSchema);
-
-        if (answer?.confirm !== true) {
-          // Returning rather than blocking: the client answers and retries the call. A server that
-          // is stateless by protocol cannot park an in-flight request across replicas (ADR-009).
-          return inputRequired({
-            inputRequests: {
-              confirm: inputRequired.elicit({
-                message: m.confirmFault(equipment, target.id),
-                requestedSchema: confirmationSchema,
-              }),
-            },
-          });
-        }
+        // The confirmation is an argument and a second call, not a server-to-client request
+        // (ADR-011). Nothing is filed on this branch, which is the whole of UC-05's guarantee.
+        if (confirmed !== true) return say(m.confirmFault(equipment, target.id));
 
         const ticket = await provider.reportIssue!(ctx, {
           roomId: target.id,
@@ -399,7 +393,7 @@ function registerReportIssue(server: McpServer, provider: Provider, resolve: Res
         // The number is spoken back so the reporter can chase it later (UC-06) — a reference
         // that only exists on a screen is useless to someone holding a phone to their ear.
         const spokenAnswer = say(m.faultFiled(ticket.number, ticket.equipment, ticket.roomId));
-        if (!clientShowsCards(server)) return spokenAnswer;
+        if (!clientShowsCards(server, toolCtx)) return spokenAnswer;
 
         return {
           content: [

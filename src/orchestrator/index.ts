@@ -75,9 +75,11 @@ export function systemPrompt(institution: string, locale: string, toolNames: rea
     '   the tools. If a tool returns nothing, say plainly that it is not on record and suggest asking',
     '   the registry. A confidently wrong deadline is how somebody misses the real one.',
     '2. Keep it to one or two sentences. This is spoken aloud, not read.',
-    '3. Use the tools available to you and nothing else. If what is asked needs a tool you do not',
+    '3. Plain sentences only. No markdown, no asterisks, no bullet points, no headings: a speech',
+    '   synthesiser reads the symbols out, so "**INC-2026-0032**" becomes "asterisk asterisk".',
+    '4. Use the tools available to you and nothing else. If what is asked needs a tool you do not',
     '   have, say this institution cannot answer that here.',
-    '4. Repeat back reference numbers exactly as the tool gave them.',
+    '5. Repeat back reference numbers exactly as the tool gave them.',
     '',
     toolNames.length > 0
       ? `Tools available at this institution: ${toolNames.join(', ')}.`
@@ -152,22 +154,46 @@ async function runTool(
   }
 }
 
+/**
+ * What was said before, as the page remembers it.
+ *
+ * Only the spoken halves: the model's own earlier tool calls and their results are not replayed.
+ * That keeps a long conversation from growing without bound, and it is enough for the case that
+ * needs it — a confirmation works because the room and the equipment are in the question the model
+ * itself asked, not in the tool result behind it.
+ */
+export interface PriorTurn {
+  readonly role: 'user' | 'assistant';
+  readonly text: string;
+}
+
 export function createOrchestrator(options: OrchestratorOptions): {
-  ask(utterance: string, context: { institution: string; locale: string }): Promise<Exchange>;
+  ask(
+    utterance: string,
+    context: { institution: string; locale: string },
+    history?: readonly PriorTurn[],
+  ): Promise<Exchange>;
 } {
   const { model, client } = options;
   const maxRounds = options.maxRounds ?? 4;
   const now = options.now ?? ((): number => performance.now());
 
   return {
-    async ask(utterance, context) {
+    async ask(utterance, context, history = []) {
       const startedAt = now();
 
       const tools = await readCatalogue(client);
       const byModelName = modelNameLookup(tools.map((tool) => tool.name));
       const system = systemPrompt(context.institution, context.locale, tools.map((t) => t.name));
 
-      const turns: Turn[] = [{ role: 'user', text: utterance }];
+      const turns: Turn[] = [
+        ...history.map((turn): Turn =>
+          turn.role === 'user'
+            ? { role: 'user', text: turn.text }
+            : { role: 'assistant', text: turn.text, toolCalls: [] },
+        ),
+        { role: 'user', text: utterance },
+      ];
       const trace: TraceEntry[] = [];
       const cards: Card[] = [];
       let inputTokens = 0;

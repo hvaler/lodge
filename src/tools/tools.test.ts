@@ -22,8 +22,6 @@ const NOW = campusInstant('2026-10-06', '16:30');
 let client: Client;
 let provider: Provider;
 let principal: string | null;
-/** How the test client answers a confirmation prompt. Set per test. */
-let onConfirm: () => { action: 'accept'; content: { confirm: boolean } } | { action: 'decline' };
 
 async function connect(p: Provider = createSyntheticProvider(new InMemoryIssueStore())): Promise<void> {
   provider = p;
@@ -38,14 +36,10 @@ async function connect(p: Provider = createSyntheticProvider(new InMemoryIssueSt
   registerTools(server, p, resolveContext);
 
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
-  // The client must declare `elicitation`: on a 2025-era connection an input_required
-  // result is delivered as an `elicitation/create` request, and a client that cannot
-  // receive one gets an error instead of a confirmation prompt.
-  client = new Client(
-    { name: 'test-client', version: '0.0.0' },
-    { capabilities: { elicitation: {} } },
-  );
-  client.setRequestHandler('elicitation/create', async () => onConfirm());
+  // No `elicitation`, deliberately. Confirmation is an argument and a second call (ADR-011), so
+  // a client with no server-to-client channel at all must still be able to complete UC-05 —
+  // which is the shape every Streamable HTTP client has.
+  client = new Client({ name: 'test-client', version: '0.0.0' }, { capabilities: {} });
   await Promise.all([client.connect(clientTransport), server.connect(serverTransport)]);
 }
 
@@ -61,7 +55,6 @@ async function call(name: string, args: Record<string, unknown> = {}): Promise<s
 
 beforeEach(async () => {
   principal = null;
-  onConfirm = () => ({ action: 'decline' });
   await connect();
 });
 
@@ -225,28 +218,29 @@ describe('campus.report_issue', () => {
     principal = 'doc-0007';
   });
 
-  it('files nothing when the confirmation is declined', async () => {
-    onConfirm = () => ({ action: 'decline' });
+  it('asks before filing, and files nothing while it is asking', async () => {
+    const answer = await call('campus.report_issue', { room: 'MEN-203', equipment: 'proyector' });
 
-    await call('campus.report_issue', { room: 'MEN-203', equipment: 'proyector' });
-
+    expect(answer).toBe('¿Abro un aviso por proyector en MEN-203?');
     // UC-05: no ticket exists without confirmation. doc-0007 already has the seeded
     // INC-2026-0031, so the check is that no NEW one appeared.
     expect(await call('campus.issue_status')).not.toContain('INC-2026-0032');
   });
 
-  it('files nothing when the box is left unchecked', async () => {
-    onConfirm = () => ({ action: 'accept', content: { confirm: false } });
-
-    await call('campus.report_issue', { room: 'MEN-203', equipment: 'proyector' });
+  it('files nothing when the answer was no', async () => {
+    // A declined confirmation is the caller simply not making the second call. Nothing to
+    // roll back, nothing parked server-side waiting to time out.
+    await call('campus.report_issue', { room: 'MEN-203', equipment: 'proyector', confirmed: false });
 
     expect(await call('campus.issue_status')).not.toContain('INC-2026-0032');
   });
 
   it('files the fault once confirmed, and speaks the reference back', async () => {
-    onConfirm = () => ({ action: 'accept', content: { confirm: true } });
-
-    const answer = await call('campus.report_issue', { room: 'MEN-203', equipment: 'proyector' });
+    const answer = await call('campus.report_issue', {
+      room: 'MEN-203',
+      equipment: 'proyector',
+      confirmed: true,
+    });
 
     expect(answer).toMatch(/Hecho\. La referencia es INC-2026-0032/);
     expect(answer).toContain('proyector');
@@ -256,14 +250,10 @@ describe('campus.report_issue', () => {
   });
 
   it('asks about the room the person actually named', async () => {
-    let asked = '';
-    onConfirm = () => ({ action: 'decline' });
-    client.setRequestHandler('elicitation/create', async (request) => {
-      asked = (request.params as { message?: string }).message ?? '';
-      return { action: 'decline' as const };
+    const asked = await call('campus.report_issue', {
+      room: 'FAR-104',
+      equipment: 'pantalla táctil',
     });
-
-    await call('campus.report_issue', { room: 'FAR-104', equipment: 'pantalla táctil' });
 
     expect(asked).toBe('¿Abro un aviso por pantalla táctil en FAR-104?');
   });
@@ -283,13 +273,26 @@ describe('campus.report_issue', () => {
     );
   });
 
-  it('refuses an unauthenticated reporter, even after they confirm', async () => {
+  it('refuses an unauthenticated reporter, even with the confirmation set', async () => {
     principal = null;
-    onConfirm = () => ({ action: 'accept', content: { confirm: true } });
 
-    expect(await call('campus.report_issue', { room: 'MEN-203', equipment: 'proyector' })).toMatch(
-      /tienes que identificarte/,
-    );
+    expect(
+      await call('campus.report_issue', {
+        room: 'MEN-203',
+        equipment: 'proyector',
+        confirmed: true,
+      }),
+    ).toMatch(/tienes que identificarte/);
+  });
+
+  it('says you are not signed in before asking, not after you have answered', async () => {
+    principal = null;
+
+    // The first call is the one a person hears. Being asked to confirm and only then told you
+    // were never signed in costs a turn and makes the confirmation look like theatre.
+    expect(
+      await call('campus.report_issue', { room: 'MEN-203', equipment: 'proyector' }),
+    ).toMatch(/tienes que identificarte/);
   });
 });
 

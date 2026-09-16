@@ -47,7 +47,7 @@ oficial.
 aplicacion web propia. Ese orquestador se construye una vez, **se publica**, y suma en el mini-reto
 de codigo abierto.
 
-### 🟡 MEDIO · UC-05 depende de que el cliente soporte elicitation
+### ✅ CERRADO (16-09) · MEDIO · UC-05 depende de que el cliente soporte elicitation
 
 Descubierto el 14-09-2026 al probar las herramientas contra un cliente MCP real. En una conexion de
 **era 2025** —la que habla Alexa+ (ADR-009)— un resultado `input_required` se entrega como peticion
@@ -65,6 +65,17 @@ tal como esta escrito.
 `elicitation`. Si no lo hace hay dos salidas, y conviene decidir cual antes de que apremie:
 confirmar en dos llamadas de herramienta (una que devuelve lo que se va a hacer y otra que lo
 ejecuta), o que el orquestador propio —que es nuestro— declare la capacidad y confirme el.
+
+**Cerrado el 16-09 con la primera de las dos salidas** (ADR-011), y resulto ser peor de lo que esta
+entrada suponia. No hace falta que Alexa+ no declare `elicitation`: sobre Streamable HTTP servido
+por peticion **no existe canal del servidor al cliente**, asi que la peticion no se puede enviar
+aunque el cliente la soporte. El error real, con el demostrador conectado por HTTP:
+
+> «... per-request legacy serving cannot receive server-to-client requests»
+
+Ya no depende de lo que declare ningun cliente: la confirmacion es un argumento y una segunda
+llamada. Queda de aqui que la segunda salida —"que nuestro orquestador declare la capacidad"— no
+habria servido, porque el problema no estaba en el cliente. Ver tambien L-002.
 
 ### 🟢 BAJO · Datos y privacidad
 

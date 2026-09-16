@@ -22,7 +22,6 @@ const NOW = campusInstant('2026-10-06', '16:30');
 
 let client: Client;
 let principal: string | null;
-let onConfirm: () => { action: 'accept'; content: { confirm: boolean } } | { action: 'decline' };
 
 /** `withScreen` decides whether the client declares the MCP Apps UI extension. */
 async function connect(withScreen: boolean): Promise<void> {
@@ -49,7 +48,6 @@ async function connect(withScreen: boolean): Promise<void> {
       },
     },
   );
-  client.setRequestHandler('elicitation/create', async () => onConfirm());
   await Promise.all([client.connect(clientTransport), server.connect(serverTransport)]);
 }
 
@@ -71,7 +69,6 @@ const card = (blocks: Block[]): Block['resource'] =>
 
 beforeEach(() => {
   principal = null;
-  onConfirm = () => ({ action: 'accept', content: { confirm: true } });
 });
 
 afterEach(async () => {
@@ -181,7 +178,7 @@ describe('the fault card', () => {
     // A reference that only exists on a screen is useless to someone holding a phone to their ear.
     await connect(true);
     principal = 'doc-0007';
-    const blocks = await call('campus.report_issue', { room: 'MEN-203', equipment: 'proyector' });
+    const blocks = await call('campus.report_issue', { room: 'MEN-203', equipment: 'proyector', confirmed: true });
 
     expect(spoken(blocks)).toContain('INC-2026-0032');
     expect(card(blocks)!.text).toContain('INC-2026-0032');
@@ -191,7 +188,7 @@ describe('the fault card', () => {
   it('labels its fields in Spanish and keeps the institution’s own words', async () => {
     await connect(true);
     principal = 'doc-0007';
-    const html = card(await call('campus.report_issue', { room: 'MEN-203', equipment: 'proyector' }))!.text;
+    const html = card(await call('campus.report_issue', { room: 'MEN-203', equipment: 'proyector', confirmed: true }))!.text;
 
     // The number is the heading, not a labelled row: that is what reads from a lectern.
     expect(html).toContain('<h1>INC-2026-0032</h1>');
@@ -203,8 +200,8 @@ describe('the fault card', () => {
   it('sends nothing when the fault was never filed', async () => {
     await connect(true);
     principal = 'doc-0007';
-    onConfirm = () => ({ action: 'decline' });
 
+    // The first call only asks. There is no ticket yet, so there is nothing to put on a card.
     expect(card(await call('campus.report_issue', { room: 'MEN-203', equipment: 'proyector' }))).toBeUndefined();
   });
 });
@@ -219,7 +216,7 @@ describe('every card stands alone', () => {
     const cards = [
       card(await call('campus.find_room', {}))!.text,
       card(await call('campus.wayfind', { to: 'MEN-203' }))!.text,
-      card(await call('campus.report_issue', { room: 'MEN-203', equipment: 'proyector' }))!.text,
+      card(await call('campus.report_issue', { room: 'MEN-203', equipment: 'proyector', confirmed: true }))!.text,
     ];
 
     for (const html of cards) {
