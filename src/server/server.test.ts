@@ -97,7 +97,7 @@ describe('a generic MCP client can use it over HTTP', () => {
     const result = await client.callTool({ name: 'campus.find_room', arguments: { building: 'MEN' } });
     const text = ((result.content ?? []) as { text?: string }[]).map((b) => b.text).join(' ');
 
-    expect(text).toMatch(/Libres hasta las/);
+    expect(text).toMatch(/Libres de aquí a las/);
     await client.close();
   });
 
@@ -126,7 +126,7 @@ describe('a generic MCP client can use it over HTTP', () => {
 
       const { tools } = await client.listTools();
       expect(tools).toHaveLength(6);
-      expect(await textOf(client, 'campus.find_room')).toMatch(/Libres hasta las/);
+      expect(await textOf(client, 'campus.find_room')).toMatch(/Libres de aquí a las/);
 
       await client.close();
     },

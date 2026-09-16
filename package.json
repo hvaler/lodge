@@ -21,6 +21,7 @@
     "dev": "node --watch src/server/main.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-bedrock-runtime": "3.1133.0",
     "@modelcontextprotocol/node": "2.0.0",
     "@modelcontextprotocol/server": "2.0.0",
     "csv-parse": "7.0.2",

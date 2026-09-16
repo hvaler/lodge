@@ -70,6 +70,34 @@ continua; ninguna credencial institucional en el repositorio.
 
 ---
 
+## Latencia: qué número aplica a qué
+
+Medido el 16-09-2026 con el orquestador real contra Bedrock, desde España a `us-east-1`:
+
+| Qué | Medido | Presupuesto | ¿Cumple? |
+|---|---|---|---|
+| **El servidor MCP respondiendo a una llamada de herramienta** | p95 muy por debajo | **500 ms** (límite de plataforma Alexa+) | ✅ con mucho margen |
+| El turno completo del orquestador de demostración | 1 508 – 2 004 ms | — | n/a |
+
+**La distinción importa y conviene no confundirla.** Los 500 ms que documenta Alexa+ son para *el
+servidor MCP respondiendo a una llamada*, no para el turno conversacional entero: en un despliegue
+real de Alexa+ el modelo lo pone Amazon y ese tiempo no es nuestro. Lo nuestro son las herramientas,
+y ahí sobra margen.
+
+Los 1,5–2 s del orquestador son de nuestra simulación, y se explican solos: **dos viajes al modelo**
+—uno para elegir herramienta, otro para redactar— más la red España→Virginia, sobre ~3 170 tokens de
+entrada que se reenvían en cada vuelta.
+
+**Para el vídeo sí conviene bajarlo**, porque dos segundos de silencio en cámara se hacen largos:
+
+1. **Prompt caching** (soportado, 5 min, mínimo 1K tokens). El prompt de sistema y las seis
+   definiciones de herramienta son idénticos en cada vuelta: es exactamente el caso de uso.
+2. **Perfil EU** (`eu.amazon.nova-2-lite-v1:0` desde `eu-west-1`). Ahorraría el salto atlántico.
+   Bloqueado hoy: esa región seguía dando `AccessDeniedException` por verificación cuando US ya
+   funcionaba, así que la verificación parece ir por regiones.
+
+---
+
 ## Reglas de corte
 
 Aplicables **sin convocar una reunion**. Tienen fecha, no criterio.

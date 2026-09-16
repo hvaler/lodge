@@ -302,7 +302,7 @@
       "Formulario de creditos AWS (150 $) pendiente: requiere la Devpost Profile URL."
     ],
     "proxima_entrega": "M2 - Adaptador de estandares (14 sep - 4 oct)",
-    "notas_sprint": "M3 avanzando sin depender de AWS: localizacion hecha y TARJETAS VISUALES hechas (parrilla de ocupacion, plano de planta, ficha de incidencia) como recursos MCP Apps. Se envian solo si el cliente declara la extension io.modelcontextprotocol/ui, y hay un test que comprueba que el texto hablado es IDENTICO con pantalla y sin ella. 264 tests. PENDIENTE de M3: el orquestador sobre Bedrock, que si depende de la verificacion de la cuenta. PENDIENTE de M2: congelar la interfaz el 27-09 — ha ganado listRooms al construir las tarjetas."
+    "notas_sprint": "M3 casi completo el 16-09: localizacion, tarjetas visuales y ORQUESTADOR funcionando contra Bedrock real (us.amazon.nova-2-lite-v1:0). 281 tests. El orquestador lee el catalogo del servidor MCP en vivo, asi que ofrece 6 herramientas en San Telmo y 3 en Carrigmore sin saber nada de ninguna. Latencia del turno: 1,5-2 s, que es de nuestra simulacion; el limite de 500 ms de Alexa+ aplica al servidor MCP y ahi sobra margen. PENDIENTE: congelar la interfaz."
   },
   "evolutivoActivo": "M2",
   "evolutivos": {
@@ -426,7 +426,7 @@
     "notas": "Bedrock bloqueado por verificacion de cuenta creada el 14-09, ya fuera del plazo de 2 h que indica el propio mensaje."
   },
   "metricas": {
-    "cobertura_tests": "264 tests, 14 ficheros",
+    "cobertura_tests": "281 tests, 15 ficheros",
     "ultimo_build": "2026-09-14 (local, verde)",
     "ultimo_deploy": null,
     "incidencias_abiertas": 0,
@@ -435,6 +435,7 @@
   "alertas": {
     "_doc": "Claude muestra estas alertas al iniciar sesion",
     "activas": [
+      "EU BLOQUEADO: eu-west-1 sigue dando AccessDeniedException por verificacion cuando us-east-1 ya funciona. La verificacion parece ir por regiones. Reintentar: el perfil EU ahorraria el salto atlantico en el video.",
       "BEDROCK VERIFICADO (15-09): responde en plan Free con el perfil us.amazon.nova-2-lite-v1:0. M3 desbloqueado. OJO: el playground enciende el razonamiento extendido y dio 5 293 ms; en la API viene apagado por defecto y el orquestador NO lo activa (ADR-010). Queda por mirar en Billing si el consumo sale de los 100 $.",
       "PLAN - M2 adelantado al 14-09. La congelacion de la interfaz de proveedor SIGUE siendo el 27-09 (ADR-006): mover esa fecha es exactamente como la abstraccion se come el calendario.",
       "ORDEN DE ALTAS - 1) Devpost (su Profile URL es obligatorio en el formulario de creditos). 2) Los 150 $ se piden por PERFIL de Devpost, no por proyecto: presupuesto compartido con LREA. 3) Cuenta AWS ya creada en plan Free; el CLI 2.36.44 esta instalado y faltan credenciales. ATAJO: la actividad 'modelo fundacional en el playground de Bedrock' (20 $) ES la verificacion que cierra M0.",

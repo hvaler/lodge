@@ -117,7 +117,7 @@ describe('campus.find_room', () => {
     const answer = await call('campus.find_room');
 
     // San Telmo answers in Spanish, which is what it declares.
-    expect(answer).toMatch(/Libres hasta las/);
+    expect(answer).toMatch(/Libres de aquí a las/);
     expect(answer.match(/\d+ plazas/g)?.length).toBeLessThanOrEqual(3);
   });
 

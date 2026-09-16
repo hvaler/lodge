@@ -84,7 +84,7 @@ describe('a card is an improvement, never the answer', () => {
     const blocks = await call('campus.find_room', { building: 'MEN' });
 
     expect(card(blocks)).toBeUndefined();
-    expect(spoken(blocks)).toMatch(/Libres hasta las|No hay nada libre/);
+    expect(spoken(blocks)).toMatch(/Libres de aquí a las|No hay nada libre/);
   });
 
   it('gives the speaker and the tablet the identical spoken answer', async () => {

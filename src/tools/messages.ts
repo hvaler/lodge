@@ -85,10 +85,15 @@ const english: Messages = {
 
   describeRoom: (id, kind, capacity) => `${id}, ${kind}, seats ${capacity}`,
   freeRooms: (until, shortlist, more) =>
-    `Free until ${until}: ${shortlist.join('; ')}.` +
+    `Free from now until ${until}: ${shortlist.join('; ')}.` +
     (more > 0 ? ` And ${more} more.` : ''),
+  // "until 18:00" reads two ways: nothing free in that window, or nothing free *before* then.
+  // A real model read it the second way and told a student the room frees up at a time it does
+  // not. Naming both ends of the window removes the reading that is wrong.
   noFreeRooms: (building, until) =>
-    building ? `Nothing free in ${building} until ${until}.` : `Nothing free until ${until}.`,
+    building
+      ? `Nothing free in ${building} between now and ${until}.`
+      : `Nothing free between now and ${until}.`,
   windowBackwards: () => 'That time window ends before it starts.',
 
   timetableEmpty: (day) => `Nothing on ${day}.`,
@@ -148,13 +153,15 @@ const spanish: Messages = {
 
   describeRoom: (id, kind, capacity) => `${id}, ${kind}, ${capacity} plazas`,
   freeRooms: (until, shortlist, more) =>
-    `Libres hasta las ${until}: ${shortlist.join('; ')}.` +
+    `Libres de aquí a las ${until}: ${shortlist.join('; ')}.` +
     // "y una más" / "y 3 más": the number is not always a number in Spanish.
     (more === 1 ? ' Y una más.' : more > 1 ? ` Y ${more} más.` : ''),
+  // Ver la nota en la version inglesa: "hasta las 08:15" se leyo como "libre a partir de las
+  // 08:15", que es justo lo contrario de lo que queriamos decir.
   noFreeRooms: (building, until) =>
     building
-      ? `No hay nada libre en ${building} hasta las ${until}.`
-      : `No hay nada libre hasta las ${until}.`,
+      ? `No hay nada libre en ${building} de aquí a las ${until}.`
+      : `No hay nada libre de aquí a las ${until}.`,
   windowBackwards: () => 'Ese intervalo termina antes de empezar.',
 
   timetableEmpty: (day) => `No tienes nada el ${day}.`,
