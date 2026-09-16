@@ -160,6 +160,7 @@ lo cierra escribiendo codigo.
 - [x] Guia de adopcion escrita y cronometrable — `docs/adopting.md`
 - [x] Documentacion de como escribir un tercer adaptador — `docs/writing-an-adapter.md`
 - [x] Guion del video presupuestado a 2:55 — `docs/management/video-script.md`
+- [x] Texto de envio de Devpost redactado — `docs/management/devpost-submission.md`, con la lista de campos del formulario al final
 - [ ] **HUGO** · Grabar y publicar el video (< 3 min, publico, YouTube o Vimeo)
 - [ ] **HUGO** · Que alguien ajeno al desarrollo recorra `docs/adopting.md` y rellene el cronometro
 - [ ] **HUGO** · Declarar el track y ambos mini-retos en el formulario de Devpost

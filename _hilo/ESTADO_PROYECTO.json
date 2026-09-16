@@ -302,7 +302,7 @@
       "Formulario de creditos AWS (150 $) pendiente: requiere la Devpost Profile URL."
     ],
     "proxima_entrega": "M6 - envio en Devpost (21 oct)",
-    "notas_sprint": "M0 a M4 cerrados y M5 escrito el 16-09. Todo lo que queda hasta el envio es trabajo humano: grabar el video con el guion ya presupuestado, conseguir que alguien ajeno valide la guia de adopcion, y rellenar el formulario de Devpost. El codigo esta terminado."
+    "notas_sprint": "M0 a M4 cerrados y M5 escrito el 16-09. El codigo esta terminado: lo ultimo que faltaba era que NADIE construia el contenedor desde M2, y ahora CI lo construye y le hace una pregunta en cada push. Todo lo demas hasta el envio es trabajo humano: grabar el video (guion a 2:55), que alguien AJENO valide la guia de adopcion, y pegar el texto ya redactado en Devpost."
   },
   "evolutivoActivo": "M5",
   "evolutivos": {
@@ -421,21 +421,12 @@
     "proximoPaso": "M4: OAuth 2.1 con PKCE (ruta critica) y pila CDK",
     "resumenSesion": "Congelada la interfaz (ADR-006). Prompt caching: 86 % menos entrada facturable y latencia sin cambios, medido. Demostrador web completo, y con el dos fallos de transporte arreglados (ADR-011, ADR-012, L-002). M0 a M3 cerrados. 300 tests.",
     "archivosModificados": [
-      "src/provider/frozen.ts",
-      "src/web/",
-      "src/cards/",
-      "src/tools/",
-      "src/orchestrator/",
-      "_hilo/DECISIONES.md",
-      "_hilo/LECCIONES.md",
-      "_hilo/DEUDA_TECNICA.md",
-      "docs/use-cases.md",
-      "README.md"
+      "_hilo/METRICAS.json"
     ],
     "notas": "Las credenciales de AWS viven en el perfil 'lrea', no en 'default': cualquier script necesita AWS_PROFILE=lrea o no encuentra credenciales."
   },
   "metricas": {
-    "cobertura_tests": "352 tests en src + 15 de la pila CDK",
+    "cobertura_tests": "352 tests en src + 15 de la pila CDK · CI construye ademas el contenedor",
     "ultimo_build": "2026-09-16 (CI verde: typecheck, test, build)",
     "ultimo_deploy": "2026-09-16 (eu-west-1, sandbox, con la pagina publica)",
     "incidencias_abiertas": 0,
@@ -445,6 +436,7 @@
     "_doc": "Claude muestra estas alertas al iniciar sesion",
     "activas": [
       "BEDROCK VERIFICADO (15-09): responde en plan Free con el perfil us.amazon.nova-2-lite-v1:0. M3 desbloqueado. OJO: el playground enciende el razonamiento extendido y dio 5 293 ms; en la API viene apagado por defecto y el orquestador NO lo activa (ADR-010). Queda por mirar en Billing si el consumo sale de los 100 $.",
+      "M6 - El texto de envio esta redactado en docs/management/devpost-submission.md, con la lista de campos al final: track Alexa+/MCP, mini-retos AWS Builder y Open Source. REVISARLO antes de enviar: lo escribio Claude y va con tu nombre. Y comprobar que las dos URL responden el dia del envio.",
       "M5 ESCRITO, FALTA LO HUMANO - El guion del video esta en docs/management/video-script.md presupuestado a 2:55, con lista de comprobacion. La guia de adopcion necesita que la recorra ALGUIEN AJENO al desarrollo y rellene la tabla del cronometro al final: validarla desde dentro no vale, y el entregable lo pide explicitamente.",
       "DEMOSTRACION VIVA - Pagina: https://5fugfo2nx7ajeymmf62fjqssou0bgdvq.lambda-url.eu-west-1.on.aws/ · Servidor MCP: https://4joapeibeg357e7vyw2dj4pnwa0tmpay.lambda-url.eu-west-1.on.aws/mcp (eu-west-1, cuenta 401157843883). La pagina gasta Bedrock por pregunta y tiene tope de 500 al dia; el contador esta en la tabla DemoQuota. Modo sandbox sobre datos ficticios. Para tirarlo todo: cd infra && AWS_PROFILE=lrea npx cdk destroy.",
       "INTERFAZ CONGELADA (16-09, ADR-006). src/provider/frozen.ts guarda la instantanea y el compilador la compara en cada build; frozen.test.ts fija los nombres de capacidades y herramientas. A partir de aqui la interfaz se implementa, no se edita. Si algo de M4 o M5 obliga a moverla: actualizar la instantanea A MANO, anotarlo en ADR-006 y repasar los dos adaptadores y las seis herramientas.",
