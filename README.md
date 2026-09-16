@@ -62,17 +62,22 @@ addition *after* the hackathon.
 
 ## Status
 
-🚧 **Under construction.** Milestone M0 (foundations) — the code lands from M1 on.
+**The code is finished and deployed.** What remains is a video to record and a stranger to walk
+through the adoption guide.
 
-| Milestone | Dates | Output |
-| :-- | :-- | :-- |
-| M0 | 15–17 Sep | Reference dataset closed |
-| M1 | 18–27 Sep | Answers a generic MCP client |
-| M2 | 28 Sep–4 Oct | The seam is real, not a promise |
-| M3 | 5–11 Oct | Full end-to-end conversation |
-| M4 | 12–16 Oct | Two deployment targets working |
-| M5 | 17–20 Oct | Installable by a stranger |
-| M6 | 21 Oct | Submitted |
+| Milestone | Output | Planned | Done |
+| :-- | :-- | :-- | :-- |
+| M0 | Reference dataset closed | 17 Sep | ✅ 15 Sep |
+| M1 | Answers a generic MCP client | 27 Sep | ✅ 16 Sep |
+| M2 | The seam is real, not a promise | 4 Oct | ✅ 15 Sep |
+| M3 | Full end-to-end conversation | 11 Oct | ✅ 16 Sep |
+| M4 | Two deployment targets working | 16 Oct | ✅ 16 Sep |
+| M5 | Installable by a stranger | 20 Oct | 🚧 written, not yet validated from outside |
+| M6 | Submitted | 21 Oct | |
+
+338 tests over the source and 8 over the deployment stack, run on every build — including the
+contract tests derived from [`docs/use-cases.md`](docs/use-cases.md) and the latency measurement
+against the platform's 500 ms budget.
 
 Full plan, architecture, pinned versions and cut rules: **[`RUNBOOK.md`](RUNBOOK.md)**
 ([versión en español](RUNBOOK.es.md)).
@@ -182,6 +187,17 @@ Lambda (nodejs24.x, arm64, 512 MB)   the same six tools, the same answers
 DynamoDB (on demand)                 the fault queue, partitioned by who filed it
 Function URL (no authorizer)         so a client needs an MCP client, not an AWS account
 ```
+
+## Documentation
+
+| | |
+|---|---|
+| [Adopting Lodge](docs/adopting.md) | Running it against **your** campus. Timed, so you can tell us if it lies |
+| [Writing an adapter](docs/writing-an-adapter.md) | When your sources are not CSV, iCalendar and LDAP |
+| [Use cases](docs/use-cases.md) | The acceptance criteria. Each one is a contract test |
+| [Friction log](docs/friction-log.md) | What every API we used did to us, and what worked |
+| [The University of San Telmo](docs/san-telmo.md) | The generated campus, in detail |
+| [Deployment reference](ops/environment/README.md) | Config file, OAuth, tracing, several institutions |
 
 ## Data and privacy
 

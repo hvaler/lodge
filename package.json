@@ -18,6 +18,7 @@
     "test": "vitest run --dir src",
     "test:watch": "vitest --dir src",
     "test:infra": "vitest run --dir infra",
+    "prestart": "npm run build",
     "start": "node dist/server/main.js",
     "dev": "node --watch src/server/main.ts",
     "demo": "node src/web/main.ts"

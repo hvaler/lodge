@@ -49,8 +49,10 @@ services:
       # switch happens with no restart and no recompile.
       LODGE_CONFIG: /etc/lodge/demo.json
       PORT: "3000"
-      # Until OAuth lands in M4, the demo needs a way to say who is asking. Off unless set to
+      # This compose file is a demonstration over generated data, so it lets a caller say who
+      # they are with a header instead of standing up an identity provider. Off unless set to
       # exactly "1", and never set in a real deployment: it lets any caller name themselves.
+      # A real deployment configures `auth` in its config file instead — see the README here.
       LODGE_DEV_IDENTITY: "1"
     volumes:
       # Everything read-only. Lodge answers questions; it has no business writing to an

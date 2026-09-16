@@ -294,32 +294,20 @@
     "_campos_existencia_doc": "autenticacion=false y tests_existentes=false porque el codigo aun no existe: OAuth 2.1 llega en M4 y los tests de contrato en M1. documentacion_existente=true por el runbook."
   },
   "desarrollo": {
-    "modulos_en_desarrollo": [],
+    "modulos_en_desarrollo": [
+      "Adopcion y entrega (M5)"
+    ],
     "funcionalidades_en_progreso": [],
     "bloqueadores": [
       "Formulario de creditos AWS (150 $) pendiente: requiere la Devpost Profile URL."
     ],
-    "proxima_entrega": "M5 - guia de adopcion, documentacion, video y feedback (17-20 oct previsto)",
-    "notas_sprint": "M0 a M4 cerrados el 16-09. La demostracion gestionada esta viva en https://4joapeibeg357e7vyw2dj4pnwa0tmpay.lambda-url.eu-west-1.on.aws y responde en 214 ms de mediana desde Espana. 338 tests en src mas 8 de la pila. Queda M5: guia de adopcion cronometrada en maquina limpia por alguien ajeno, documentacion de como escribir un tercer adaptador, video de tres minutos y el registro de friccion."
+    "proxima_entrega": "M6 - envio en Devpost (21 oct)",
+    "notas_sprint": "M0 a M4 cerrados y M5 escrito el 16-09. Todo lo que queda hasta el envio es trabajo humano: grabar el video con el guion ya presupuestado, conseguir que alguien ajeno valide la guia de adopcion, y rellenar el formulario de Devpost. El codigo esta terminado."
   },
-  "evolutivoActivo": null,
+  "evolutivoActivo": "M5",
   "evolutivos": {
     "_doc": "Estructura de cada evolutivo (codigo, titulo, estado, asignadoA, rama, prioridad, fechas, creadoPor, notas) en schema.md#evolutivos",
     "pendientes": [
-      {
-        "codigo": "M5",
-        "titulo": "Guia de adopcion, documentacion, video y feedback",
-        "estado": "pendiente",
-        "asignadoA": "hvaler",
-        "rama": null,
-        "prioridad": "alta",
-        "fechaCreacion": "2026-09-14",
-        "fechaInicio": "2026-10-17",
-        "fechaEstimada": "2026-10-20",
-        "fechaCompletado": null,
-        "creadoPor": "hvaler",
-        "notas": "Salida: instalable por un desconocido. Guia cronometrada en maquina limpia por alguien ajeno al proyecto; documentacion de como escribir un tercer adaptador; video con limite duro de tres minutos; feedback de producto sobre cada API usada."
-      },
       {
         "codigo": "M6",
         "titulo": "Envio en Devpost",
@@ -335,7 +323,22 @@
         "notas": "Salida: enviado 48 h antes del cierre. Formulario con track y ambos mini-retos, registro de friccion, repositorio congelado y demostracion accesible para el jurado. Cierre oficial: 23 oct 21:00 CEST."
       }
     ],
-    "enProgreso": [],
+    "enProgreso": [
+      {
+        "codigo": "M5",
+        "titulo": "Guia de adopcion, documentacion, video y feedback",
+        "estado": "en_progreso",
+        "asignadoA": "hvaler",
+        "rama": "main",
+        "prioridad": "alta",
+        "fechaCreacion": "2026-09-14",
+        "fechaInicio": "2026-09-16",
+        "fechaEstimada": "2026-10-20",
+        "fechaCompletado": null,
+        "creadoPor": "hvaler",
+        "notas": "Salida: instalable por un desconocido. Guia cronometrada en maquina limpia por alguien ajeno al proyecto; documentacion de como escribir un tercer adaptador; video con limite duro de tres minutos; feedback de producto sobre cada API usada. | Arrancado y casi cerrado el 16-09, treinta y un dias antes de su fecha. ESCRITO: guia de adopcion cronometrable (docs/adopting.md, con camino A verificado de punta a punta desde un clon limpio), documentacion del tercer adaptador (docs/writing-an-adapter.md), registro de friccion por API que sirve tambien de feedback de producto (docs/friction-log.md) y guion de video presupuestado a 2:55 (docs/management/video-script.md). QUEDA, y no es codigo: grabar el video, y que alguien AJENO al desarrollo recorra la guia y rellene el cronometro. Esa validacion no la puede hacer quien la escribio."
+      }
+    ],
     "completados": [
       {
         "codigo": "M0",
@@ -442,6 +445,7 @@
     "_doc": "Claude muestra estas alertas al iniciar sesion",
     "activas": [
       "BEDROCK VERIFICADO (15-09): responde en plan Free con el perfil us.amazon.nova-2-lite-v1:0. M3 desbloqueado. OJO: el playground enciende el razonamiento extendido y dio 5 293 ms; en la API viene apagado por defecto y el orquestador NO lo activa (ADR-010). Queda por mirar en Billing si el consumo sale de los 100 $.",
+      "M5 ESCRITO, FALTA LO HUMANO - El guion del video esta en docs/management/video-script.md presupuestado a 2:55, con lista de comprobacion. La guia de adopcion necesita que la recorra ALGUIEN AJENO al desarrollo y rellene la tabla del cronometro al final: validarla desde dentro no vale, y el entregable lo pide explicitamente.",
       "DEMOSTRACION VIVA en https://4joapeibeg357e7vyw2dj4pnwa0tmpay.lambda-url.eu-west-1.on.aws (eu-west-1, cuenta 401157843883). Es modo sandbox: cualquiera puede decir quien es con la cabecera x-lodge-dev-subject, sobre datos ficticios. Cuesta creditos solo cuando alguien pregunta. Para tirarla: cd infra && AWS_PROFILE=lrea npx cdk destroy.",
       "INTERFAZ CONGELADA (16-09, ADR-006). src/provider/frozen.ts guarda la instantanea y el compilador la compara en cada build; frozen.test.ts fija los nombres de capacidades y herramientas. A partir de aqui la interfaz se implementa, no se edita. Si algo de M4 o M5 obliga a moverla: actualizar la instantanea A MANO, anotarlo en ADR-006 y repasar los dos adaptadores y las seis herramientas.",
       "ALTAS - Devpost hecho y cuenta AWS operativa. QUEDA el formulario de creditos (150 $) en https://forms.gle/GaHFxSbBQNG9Kti6A, que pide la Devpost Profile URL; se piden por PERFIL, no por proyecto, asi que el presupuesto es compartido con LREA. OJO: las credenciales estan en el perfil 'lrea', no en 'default' - cualquier script necesita AWS_PROFILE=lrea.",
