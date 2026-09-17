@@ -111,7 +111,12 @@ export function registerTools(
 
   for (const capability of provider.descriptor.capabilities) {
     switch (capability) {
-      case 'rooms':
+      // `room-inventory` registers nothing: it is what the other two are built on. The occupancy
+      // card and the fault check read `listRooms` and `getRoom` through the provider they are
+      // given, and neither is a question anybody asks a speaker on its own.
+      case 'room-inventory':
+        break;
+      case 'room-availability':
         registerFindRoom(server, provider, resolveContext);
         break;
       case 'timetable':

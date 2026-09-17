@@ -81,11 +81,15 @@ compiler failed, the snapshot was updated by hand, both adapters and all six too
 and six contract tests went red and had to be decided one at a time. The freeze date did not reset;
 `frozen.ts` carries `AMENDED_ON` beside `FROZEN_ON`.
 
-**What it left behind.** `issue-reporting` depends on the `rooms` capability, which in turn needs an
-inventory *and* a timetable feed. So an institution with a ticketing system and a room list but no
-timetable still cannot file faults. The dependency is at capability level rather than method level,
-which is the simpler model to keep honest; if it bites somebody, splitting `rooms` is the next
-amendment, and the freeze will make that deliberate too.
+**What it left behind, and what was done about it.** `issue-reporting` first depended on `rooms`,
+which needed an inventory *and* a timetable feed — so an institution that could not export its
+timetable could not report a broken projector either. That connection is indefensible once you say
+it out loud, so `rooms` was split too, the same day: `room-inventory` (the table, publishes no tool
+of its own) and `room-availability` (the table plus occupancy, publishes `campus.find_room`).
+ADR-019, and the second amendment to the freeze in one afternoon.
+
+A room list and an email address are now enough to file faults, which is what the runbook promised:
+deploy with what the institution already has, and what it does not have simply is not published.
 
 **Doing more with a fault once filed.** Separately and more cheaply: `issues` files and lists.
 Updating, closing, or adding a note are the obvious next three, and UC-06 is already marked

@@ -71,7 +71,9 @@ beforeAll(async () => {
       suggestions: ['¿Qué aula está libre?'],
     },
   ];
-});
+  // Generating the campus and standing up a server is not five seconds of work on an idle machine
+  // and can be on a busy one. A setup that times out under load reads as a broken test.
+}, 60_000);
 
 afterAll(async () => {
   await new Promise<void>((resolve) => server.close(() => resolve()));

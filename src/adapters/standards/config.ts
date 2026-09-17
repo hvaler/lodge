@@ -89,28 +89,31 @@ export function capabilitiesFor(config: StandardsConfig, available: Available = 
   const capabilities: Capability[] = [];
   const hasDirectory = available.directory ?? Boolean(config.directory);
 
-  // Directions need only the table: a room knows its building and its floor.
+  // Knowing what rooms exist is the table and nothing else. It publishes no tool of its own; it is
+  // what searching for a free one and filing a fault are both built on.
+  if (config.inventory) capabilities.push('room-inventory');
+
+  // Directions need only the table too: a room knows its building and its floor.
   if (config.inventory) capabilities.push('wayfinding');
 
   // Finding a *free* room needs occupancy too. With the table alone we would know what rooms
   // exist and when the building opens, but not what is teaching in them — and UC-01 accepts no
   // occupied room in the answer. Publishing the tool anyway would mean confidently sending someone
   // to a room with a class in it, which is worse than not offering the tool at all.
-  if (config.inventory && config.calendars?.timetable) capabilities.push('rooms');
+  if (config.inventory && config.calendars?.timetable) capabilities.push('room-availability');
   if (config.calendars?.deadlines) capabilities.push('deadlines');
   if (config.calendars?.timetable && hasDirectory) capabilities.push('timetable');
 
   // Filing a fault checks the room and its equipment before asking anyone to confirm, so it needs
-  // `rooms` — which in turn needs the inventory *and* the timetable feed. That is stricter than it
-  // sounds: an institution with a ticketing system and a room list but no timetable cannot publish
-  // this. The alternative was a dependency on a single method rather than a capability, and
-  // capabilities depending on capabilities is the simpler model to keep honest. Noted in
-  // docs/roadmap.md as the next thing to split if it bites somebody.
-  if (config.issues && capabilities.includes('rooms')) capabilities.push('issue-reporting');
+  // the room table — and only that. It used to need occupancy as well, which meant an institution
+  // that could not export its timetable could not report a broken projector either (ADR-019).
+  if (config.issues && capabilities.includes('room-inventory')) capabilities.push('issue-reporting');
 
   // Only a tracker that can be read back. A webhook is write-only by nature, and publishing
   // `campus.issue_status` against one would mean offering a tool that answers nothing.
-  if (config.issues?.jira && capabilities.includes('rooms')) capabilities.push('issue-tracking');
+  if (config.issues?.jira && capabilities.includes('room-inventory')) {
+    capabilities.push('issue-tracking');
+  }
 
   return capabilities;
 }
@@ -151,8 +154,8 @@ export function assertConfigUsable(config: StandardsConfig): void {
   if (config.issues && !capabilitiesFor(config).includes('issue-reporting')) {
     throw new ConfigurationError(
       `'${config.institution}' configures where faults go, but reporting one also needs an ` +
-        `'inventory' CSV and a 'calendars.timetable' feed: the tool checks that the room exists ` +
-        `and has the equipment before asking anyone to confirm.`,
+        `'inventory' CSV: the tool checks that the room exists and has the equipment before ` +
+        `asking anyone to confirm.`,
     );
   }
 

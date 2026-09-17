@@ -49,8 +49,10 @@ falle la primera pregunta de un estudiante.
 ```
 
 **El catálogo sale de lo que configures.** Sin `directory` no se publica `campus.timetable`, porque
-sin saber quién pregunta no hay horario que dar. Sin `inventory` no se publica `campus.find_room`.
-Nada se ofrece a medias.
+sin saber quién pregunta no hay horario que dar. Sin `inventory` no se publica nada sobre aulas. Y
+con `inventory` pero sin feed de horario tampoco se publica `campus.find_room`, porque sin ocupación
+decir que un aula está libre sería adivinar — pero sí las indicaciones y los partes de avería. Nada
+se ofrece a medias.
 
 ---
 
@@ -175,8 +177,9 @@ que cada proyecto renombra a su gusto.
 El correo y el webhook reciben y no se les puede preguntar, así que no publican
 `campus.issue_status`. Eso no es una carencia que disimular: es el catálogo diciendo la verdad.
 
-Dar un parte comprueba el aula y su equipo antes de pedir confirmación, así que también necesita el
-inventario **y** el feed de horario. Sin ellos el servidor se niega a arrancar y lo dice.
+Dar un parte comprueba el aula y su equipo antes de pedir confirmación, así que necesita el
+**inventario** — y solo eso. No hace falta feed de horario: si no podéis exportarlo, seguís pudiendo
+dar partes. Sin el inventario el servidor se niega a arrancar y lo dice.
 
 ---
 

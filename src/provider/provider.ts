@@ -27,7 +27,8 @@ import type {
  * the agent offer to file a fault.
  */
 export const CAPABILITIES = [
-  'rooms',
+  'room-inventory',
+  'room-availability',
   'timetable',
   'deadlines',
   'wayfinding',
@@ -63,14 +64,17 @@ export interface ProviderDescriptor {
 export interface Provider {
   readonly descriptor: ProviderDescriptor;
 
-  /** `rooms` — rooms free for the whole window. Never returns booked, closed or supervised rooms. */
+  /**
+   * `room-availability` — rooms free for the whole window. Never returns booked, closed or
+   * supervised rooms.
+   */
   findFreeRooms?(ctx: RequestContext, query: FreeRoomQuery): Promise<readonly Room[]>;
 
-  /** `rooms` — a single room by id, for validating a fault report against real equipment. */
+  /** `room-inventory` — a single room by id, for validating a fault report against real equipment. */
   getRoom?(ctx: RequestContext, roomId: string): Promise<Room | null>;
 
   /**
-   * `rooms` — every room the institution has.
+   * `room-inventory` — every room the institution has.
    *
    * Needed because "free" is only half of occupancy. The spoken answer names two or three free
    * rooms; the visual card shows the grid, and a grid with no busy rooms in it is a list. Both
@@ -104,7 +108,8 @@ export interface Provider {
 
 /** Which methods each capability obliges an adapter to implement. */
 export const CAPABILITY_METHODS = {
-  rooms: ['findFreeRooms', 'getRoom', 'listRooms'],
+  'room-inventory': ['getRoom', 'listRooms'],
+  'room-availability': ['findFreeRooms'],
   timetable: ['timetable'],
   deadlines: ['deadlines'],
   wayfinding: ['wayfind'],
@@ -115,22 +120,33 @@ export const CAPABILITY_METHODS = {
 /**
  * Capabilities that only make sense alongside another.
  *
- * Filing a fault needs {@link Provider.getRoom}: the tool checks that the room exists and that it
- * has the equipment somebody is reporting **before** asking them to confirm, because confirming
- * and only then hearing that 301 has no projector wastes the person's turn. An institution that
- * declared `issue-reporting` without `rooms` would get a tool that throws on its first call.
+ * `room-inventory` is the odd one here: it publishes **no tool of its own**. What it says is that
+ * the institution knows what rooms it has, which two other things need and neither of which is
+ * about listing rooms. Searching for a free one shows the occupancy grid on its card, and filing a
+ * fault checks that the room exists and has the equipment somebody is reporting **before** asking
+ * them to confirm — because confirming and only then hearing that 301 has no projector wastes the
+ * person's turn.
  *
- * Checked at load with everything else. The alternative — letting the tool degrade and file a
- * report against a room nobody can find — turns a configuration mistake into a maintenance ticket
- * for a room that does not exist.
+ * That last one is why `rooms` was split (ADR-019). A room list and a service desk are enough to
+ * take a fault report; requiring occupancy as well meant an institution that could not export its
+ * timetable could not report a broken projector either, which is a connection nobody would defend
+ * out loud.
+ *
+ * Checked at load with everything else. The alternative — letting a tool degrade and file a report
+ * against a room nobody can find — turns a configuration mistake into a maintenance ticket for a
+ * room that does not exist.
  */
 export const CAPABILITY_REQUIRES = {
-  'issue-reporting': ['rooms'],
+  'room-availability': ['room-inventory'],
+  'issue-reporting': ['room-inventory'],
 } as const satisfies Partial<Record<Capability, readonly Capability[]>>;
 
 /** Which MCP tools each capability publishes. The catalogue is the union over declared ones. */
 export const CAPABILITY_TOOLS = {
-  rooms: ['campus.find_room'],
+  // Deliberately empty: knowing what rooms exist is what *other* capabilities are built on, and
+  // "list every room out loud" is not a question anybody asks a speaker.
+  'room-inventory': [],
+  'room-availability': ['campus.find_room'],
   timetable: ['campus.timetable'],
   deadlines: ['campus.deadlines'],
   wayfinding: ['campus.wayfind'],

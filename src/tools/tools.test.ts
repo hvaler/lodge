@@ -81,7 +81,10 @@ describe('the catalogue is derived from capabilities', () => {
     const limited = createSyntheticProvider();
     const narrowed: Provider = {
       ...limited,
-      descriptor: { ...limited.descriptor, capabilities: ['rooms', 'deadlines'] },
+      descriptor: {
+        ...limited.descriptor,
+        capabilities: ['room-inventory', 'room-availability', 'deadlines'],
+      },
       findFreeRooms: limited.findFreeRooms.bind(limited),
       getRoom: limited.getRoom.bind(limited),
       deadlines: limited.deadlines.bind(limited),

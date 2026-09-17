@@ -47,9 +47,12 @@ export const FROZEN_ON = '2026-09-16';
 /**
  * Amendments since, newest first. Each one was deliberate and is recorded in ADR-006.
  *
+ * - **2026-09-17** — `rooms` split into `room-inventory` and `room-availability`. Filing a fault
+ *   needs to know what rooms exist; requiring occupancy as well meant an institution that could not
+ *   export its timetable could not report a broken projector either (ADR-019).
  * - **2026-09-17** — `issues` split into `issue-reporting` and `issue-tracking`. A service desk
  *   reached by email can receive a fault report and cannot answer "how is mine going", and the
- *   single capability forced such an institution to publish a tool that could not work.
+ *   single capability forced such an institution to publish a tool that could not work (ADR-017).
  */
 export const AMENDED_ON: readonly string[] = ['2026-09-17'];
 
@@ -166,7 +169,8 @@ interface FrozenReportIssueQuery {
 }
 
 type FrozenCapability =
-  | 'rooms'
+  | 'room-inventory'
+  | 'room-availability'
   | 'timetable'
   | 'deadlines'
   | 'wayfinding'

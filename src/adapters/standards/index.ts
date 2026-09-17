@@ -218,7 +218,8 @@ export async function createStandardsProvider(
 
   const available = { directory: Boolean(directory) };
   const capabilities = capabilitiesFor(config, available);
-  const needsInventory = capabilities.includes('rooms') || capabilities.includes('wayfinding');
+  const needsInventory =
+    capabilities.includes('room-inventory') || capabilities.includes('wayfinding');
 
   const loaded: Loaded = {
     config,
@@ -252,14 +253,13 @@ export async function createStandardsProvider(
   // Assembled from the capabilities, so what is declared and what exists cannot diverge.
   const provider: Record<string, unknown> = { descriptor: descriptorFor(config, available) };
 
-  // `rooms` obliges both methods; wayfinding reads the inventory directly rather than through
-  // `getRoom`, because a method the catalogue never calls is the drift assertProviderCoherent
-  // rejects.
-  if (capabilities.includes('rooms')) {
-    provider['findFreeRooms'] = findFreeRooms(loaded);
+  // Wayfinding reads the inventory directly rather than through `getRoom`, because a method the
+  // catalogue never calls is the drift assertProviderCoherent rejects.
+  if (capabilities.includes('room-inventory')) {
     provider['getRoom'] = getRoom(loaded);
     provider['listRooms'] = listRooms(loaded);
   }
+  if (capabilities.includes('room-availability')) provider['findFreeRooms'] = findFreeRooms(loaded);
   if (capabilities.includes('wayfinding')) provider['wayfind'] = wayfind(loaded);
   if (capabilities.includes('deadlines')) provider['deadlines'] = deadlines(loaded);
   if (capabilities.includes('timetable')) provider['timetable'] = timetable(loaded);

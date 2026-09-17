@@ -33,7 +33,7 @@ export function createExampleProvider(): Provider {
       institution: 'Example University',
       locale: 'en-GB',
       timeZone: 'Europe/London',
-      capabilities: ['rooms', 'deadlines'],
+      capabilities: ['room-inventory', 'room-availability', 'deadlines'],
     },
 
     async findFreeRooms(ctx: RequestContext, query: FreeRoomQuery): Promise<readonly Room[]> { … },
@@ -53,11 +53,12 @@ you declared its capability.** Both directions are checked when the adapter load
 
 | Capability | Obliges |
 |---|---|
-| `rooms` | `findFreeRooms`, `getRoom`, `listRooms` |
+| `room-inventory` | `getRoom`, `listRooms` — **publishes no tool of its own**; it is what the two below stand on |
+| `room-availability` | `findFreeRooms` — **also needs `room-inventory`**, because the card shows the whole grid |
 | `timetable` | `timetable` |
 | `deadlines` | `deadlines` |
 | `wayfinding` | `wayfind` |
-| `issue-reporting` | `reportIssue` — **also needs `rooms`**, because filing checks the room and its equipment first |
+| `issue-reporting` | `reportIssue` — **also needs `room-inventory`**, because filing checks the room and its equipment first |
 | `issue-tracking` | `issueStatus` |
 
 Get it wrong and the process refuses to start, naming what is missing:
@@ -77,10 +78,12 @@ the model is asked to follow.
 
 ### Half a capability is worth declaring
 
-If you can list rooms but have no occupancy data, do not declare `rooms` and return guesses.
-Declare nothing, publish nothing, and the agent will say this institution cannot answer that. A
-confidently wrong answer about whether a room is free is worse than no answer, because somebody
-walks to it.
+If you can list rooms but have no occupancy data, declare `room-inventory` and stop there. Do not
+declare `room-availability` and return guesses: a confidently wrong answer about whether a room is
+free is worse than no answer, because somebody walks to it.
+
+That is what the room capabilities being separate is for. The inventory alone still buys you
+directions and the ability to file faults — the agent simply never offers to find you a free room.
 
 ---
 

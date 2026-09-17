@@ -22,10 +22,11 @@ import {
 import type { Provider } from './provider.ts';
 
 describe(`the provider interface, frozen on ${FROZEN_ON}, amended ${AMENDED_ON.join(', ')} (ADR-006)`, () => {
-  it('declares six capabilities, in this order', () => {
+  it('declares seven capabilities, in this order', () => {
     // The order is the catalogue order a client sees, so it is part of the contract too.
     expect([...CAPABILITIES]).toEqual([
-      'rooms',
+      'room-inventory',
+      'room-availability',
       'timetable',
       'deadlines',
       'wayfinding',
@@ -36,7 +37,8 @@ describe(`the provider interface, frozen on ${FROZEN_ON}, amended ${AMENDED_ON.j
 
   it('obliges exactly these methods per capability', () => {
     expect(CAPABILITY_METHODS).toEqual({
-      rooms: ['findFreeRooms', 'getRoom', 'listRooms'],
+      'room-inventory': ['getRoom', 'listRooms'],
+      'room-availability': ['findFreeRooms'],
       timetable: ['timetable'],
       deadlines: ['deadlines'],
       wayfinding: ['wayfind'],
@@ -46,12 +48,17 @@ describe(`the provider interface, frozen on ${FROZEN_ON}, amended ${AMENDED_ON.j
   });
 
   it('records which capabilities need another one', () => {
-    expect(CAPABILITY_REQUIRES).toEqual({ 'issue-reporting': ['rooms'] });
+    expect(CAPABILITY_REQUIRES).toEqual({
+      'room-availability': ['room-inventory'],
+      'issue-reporting': ['room-inventory'],
+    });
   });
 
   it('publishes exactly these tools per capability', () => {
     expect(CAPABILITY_TOOLS).toEqual({
-      rooms: ['campus.find_room'],
+      // Knowing what rooms exist publishes nothing on its own. It is what the other two stand on.
+      'room-inventory': [],
+      'room-availability': ['campus.find_room'],
       timetable: ['campus.timetable'],
       deadlines: ['campus.deadlines'],
       wayfinding: ['campus.wayfind'],

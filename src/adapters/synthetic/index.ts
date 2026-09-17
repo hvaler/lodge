@@ -39,7 +39,15 @@ export const SYNTHETIC_DESCRIPTOR: ProviderDescriptor = {
   timeZone: CAMPUS_TIMEZONE,
   // San Telmo runs its own maintenance queue, so it can both take a report and answer how it is
   // getting on. An institution whose service desk is an email address declares only the first.
-  capabilities: ['rooms', 'timetable', 'deadlines', 'wayfinding', 'issue-reporting', 'issue-tracking'],
+  capabilities: [
+    'room-inventory',
+    'room-availability',
+    'timetable',
+    'deadlines',
+    'wayfinding',
+    'issue-reporting',
+    'issue-tracking',
+  ],
 };
 
 /** Strips the adapter's own bookkeeping before a room crosses the interface. */

@@ -32,6 +32,7 @@ el markdown es **lo que cambia mientras se construye**.
 | ADR-016 | La demostracion publica es una segunda funcion, con tope diario duro | 2026-09-16 | Aceptada | Despliegue |
 | ADR-017 | 'issues' se parte en abrir y consultar | 2026-09-17 | Aceptada | Arquitectura |
 | ADR-018 | Los partes van al sistema que la institucion ya vigila | 2026-09-17 | Aceptada | Integracion |
+| ADR-019 | 'rooms' se parte en saber cuales hay y saber cuales estan libres | 2026-09-17 | Aceptada | Arquitectura |
 
 ---
 
@@ -142,8 +143,9 @@ capacidades, de los metodos y de las seis herramientas. Renombrar `campus.find_r
 refactorizacion: ese nombre esta en el video, en la guia de adopcion y en cualquier cliente que una
 institucion ya haya apuntado a su servidor.
 
-**ENMENDADA el 17-09-2026**, y por el procedimiento que esta misma decision describe. `issues` se
-partio en `issue-reporting` e `issue-tracking` (ADR-017). Lo que paso, en orden: el compilador fallo
+**ENMENDADA DOS VECES el 17-09-2026**, ambas por el procedimiento que esta misma decision
+describe: `rooms` en `room-inventory` y `room-availability` (ADR-019), e `issues` en
+`issue-reporting` e `issue-tracking` (ADR-017). Lo que paso, en orden: el compilador fallo
 en `frozen.ts` senalando tres lineas, se actualizo la instantanea **a mano**, se repasaron los dos
 adaptadores y las seis herramientas, y seis tests del contrato se pusieron en rojo y hubo que
 decidir uno por uno si el cambio era correcto. Uno de ellos —"acepta `issue-reporting` declarada
@@ -550,5 +552,45 @@ configuracion del proyecto, y ese mensaje llega a una persona por un altavoz.
 **Consecuencia para la demostracion** — Carrigmore sigue **sin** configurar destino a proposito. Que
 no pueda dar un parte es lo mas convincente que hace la demostracion: el agente no se niega, es que
 no puede, porque la herramienta nunca estuvo en el catalogo que le dieron.
+
+---
+
+
+## ADR-019 · `rooms` se parte en saber cuales hay y saber cuales estan libres
+
+**Contexto** — Una sola capacidad `rooms` obligaba a `findFreeRooms`, `getRoom` y `listRooms`, y el
+adaptador de estandares solo la declaraba con inventario **y** horario, porque sin ocupacion no se
+puede decir que un aula esta libre.
+
+Al enchufar los destinos de incidencias (ADR-018) eso dejo una consecuencia que nadie defenderia en
+voz alta: **una institucion que no puede exportar su horario tampoco puede dar parte de un proyector
+roto.** Dar un parte necesita saber que el aula existe y que tiene ese equipo. Nada mas. La ocupacion
+no pinta nada ahi.
+
+**Decision** — Dos capacidades:
+
+| | Obliga | Necesita | Publica |
+|---|---|---|---|
+| `room-inventory` | `getRoom`, `listRooms` | la tabla de aulas | **nada** |
+| `room-availability` | `findFreeRooms` | la tabla **y** la ocupacion | `campus.find_room` |
+
+Y dos dependencias: `room-availability` exige `room-inventory` —su tarjeta ensena la rejilla entera,
+no solo lo libre— e `issue-reporting` tambien.
+
+**Lo raro, dicho a proposito** — `room-inventory` **no publica ninguna herramienta**. Es la primera
+capacidad asi, y describe un hecho sobre la institucion —"se que aulas tengo"— en el que se apoyan
+otras dos. "Enumerame todas las aulas" no es una pregunta que nadie le haga a un altavoz.
+
+**Lo que desbloquea** — Una lista de aulas en CSV y una direccion de correo bastan ahora para dar
+partes. Eso es exactamente lo que el runbook promete: se despliega con lo que la institucion ya
+tiene, y lo que no tenga simplemente no se publica.
+
+**Como se hizo** — El compilador fallo en tres lineas de `frozen.ts`, se actualizo la instantanea a
+mano, y cayeron **trece tests**. Diez eran del contrato y habia que decidirlos uno a uno. Los otros
+tres eran de latencia y resultaron ser otra cosa: la suite habia crecido lo bastante como para que un
+test que mide milisegundos de reloj con veinticuatro workers compitiendo midiera el planificador. Uno
+de ellos ni siquiera fallaba su asercion — se agotaba su tiempo antes de llegar a ella. Reformulados
+como guardias de regresion, con la medida de verdad donde de verdad esta: 214 ms contra el servidor
+desplegado.
 
 ---
