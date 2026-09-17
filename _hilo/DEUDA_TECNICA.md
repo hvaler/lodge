@@ -13,12 +13,12 @@
 
 ### 🔴 ALTO · Dos candidaturas, un equipo
 
-Lodge y **LREA** compiten por el mismo tiempo. Llevar dos proyectos en paralelo es la forma mas
+Lodge y **la segunda candidatura del equipo** compiten por el mismo tiempo. Llevar dos proyectos en paralelo es la forma mas
 fiable de entregar dos cosas a medias.
 
 **Mitigacion** — Las reglas de corte, con fecha concreta y sin reunion de por medio. Lodge tiene
 prioridad. **El 14 de octubre es el punto de no retorno**: si ese dia no hay demostracion de punta a
-punta, se abandona LREA. Una candidatura terminada vale mas que dos a medias.
+punta, se abandona la otra. Una candidatura terminada vale mas que dos a medias.
 
 ### ✅ CERRADO (16-09) · ALTO · La abstraccion se come el calendario
 
@@ -132,7 +132,7 @@ Aplicables **sin convocar una reunion**. Tienen fecha, no criterio.
 |---|---|---|
 | 1 | M2 se pasa del **4 de octubre** | El adaptador de estandares se recorta a calendarios e inventario; el directorio LDAP queda fuera |
 | 2 | M3 se pasa del **11 de octubre** | Caen las tarjetas visuales. La voz sola cumple el track |
-| 3 | El **14 de octubre** no hay demostracion de punta a punta | Se abandona LREA y todo el equipo pasa a Lodge |
+| 3 | El **14 de octubre** no hay demostracion de punta a punta | Se abandona la otra candidatura y todo el equipo pasa a Lodge |
 
 Transversal a las tres: los casos `essential` de `docs/use-cases.md` sobreviven a cualquier recorte;
 los `improvement` (hoy solo UC-06) caen primero.
@@ -160,7 +160,7 @@ Cifras y requisitos leidos de las bases y de la pagina de recursos, no del runbo
 | **Plan de la cuenta AWS** | ⚠️ **Free plan** (confirmado 14-09-2026 por captura de la consola). El free tier nuevo son 100 $ inmediatos + hasta 100 $ por actividades, 6 meses, y la cuenta **se cierra sola** a los 6 meses o al agotar creditos |
 | **Creditos de actividades: 100 $** | ⬜ 0 de 5 hechas. Dos estan en la ruta de Lodge: *modelo fundacional en el playground de Bedrock* (20 $, **es la verificacion que cierra M0**) y *aplicacion web con Lambda* (20 $, destino de M4). *AWS Budgets* (20 $) no es de Lodge pero conviene. EC2 y Aurora/RDS (40 $) estan fuera de ruta |
 | **Bedrock en plan Free** | ⚠️ La pagina de free tier dice que **no cubre inferencia de Bedrock**, y AgentCore figura como exclusivo de plan de pago. El orquestador de M3 vive de Nova 2 Lite: verificar que se puede invocar desde este plan |
-| **Creditos AWS de participacion: 150 $** | ⬜ https://forms.gle/GaHFxSbBQNG9Kti6A — **exige Devpost Profile URL**, asi que la cuenta de Devpost va primero. Se piden por **perfil de Devpost, no por proyecto**: son 150 $ para la persona, compartidos entre Lodge y LREA. Desplegable de dispositivo: Alexa+ (el formulario dice que se puede cambiar despues) |
+| **Creditos AWS de participacion: 150 $** | ⬜ https://forms.gle/GaHFxSbBQNG9Kti6A — **exige Devpost Profile URL**, asi que la cuenta de Devpost va primero. Se piden por **perfil de Devpost, no por proyecto**: son 150 $ para la persona, compartidos entre las dos candidaturas. Desplegable de dispositivo: Alexa+ (el formulario dice que se puede cambiar despues) |
 | Presupuesto de nube | El *free tier* "es suficiente para empezar" segun las bases; 150 $ cubren Bedrock y Lambda de la demo |
 | Video | Menos de 3 min **y publico en YouTube o Vimeo**. Debe mostrar el proyecto *funcionando en el dispositivo para el que se construyo* |
 | Criterios de evaluacion | Tech Implementation · Design · Potential Impact · Quality of the Idea. **No estaban en el runbook** |
@@ -172,7 +172,7 @@ Cifras y requisitos leidos de las bases y de la pagina de recursos, no del runbo
 | Periodo de envio | 31 ago 2026 10:15 PT - 23 oct 2026 12:00 PT. El primer commit (14 sep) entra de sobra en "creado despues del 31 de agosto" |
 | Premios (Alexa+ 1.º) | 25.000 $ + 15.000 $ en creditos. Mini-retos: 5.000 $ + 5.000 $ en creditos cada uno, pero **un proyecto solo puede ganar UN mini-reto**: «A project can only win one (1) track prize and one (1) mini challenge prize» |
 | **Techo real de Lodge** | **30.000 $** en metalico (25k + 5k) y **20.000 $** en creditos (15k + 5k). Optar a los dos mini-retos sigue mereciendo la pena: se gana uno |
-| Varias candidaturas | ✅ Permitidas: «An Entrant may submit more than one Submission, however, each Submission must be unique and substantially different». LREA no esta bloqueada; el limite de un proyecto por pantalla es de la interfaz de Devpost, no de las bases |
+| Varias candidaturas | ✅ Permitidas: «An Entrant may submit more than one Submission, however, each Submission must be unique and substantially different». La segunda no esta bloqueada; el limite de un proyecto por pantalla es de la interfaz de Devpost, no de las bases |
 
 > **Correccion de una correccion (14-09-2026).** Se anoto aqui que el techo de creditos era 25.000 $
 > en lugar de los 20.000 $ del runbook. Estaba mal: asumia que un proyecto podia ganar los dos

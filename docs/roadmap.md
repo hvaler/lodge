@@ -58,8 +58,52 @@ addition to the same adapter rather than a new one.
 inventory *and* a timetable, because without occupancy it would be guessing. An institution whose
 booking system answers "is this free" directly could support the capability without the feed.
 
-**Doing more with a fault than filing it.** `issues` files and lists. Updating, closing, or adding a
-note are the obvious next three, and UC-06 is already marked `improvement` rather than essential.
+**Filing into the tracker the institution already runs.** This is the largest gap in Lodge and the
+one worth explaining properly, because the shape of the answer is not obvious.
+
+Today, `campus.report_issue` writes into a queue Lodge owns: in memory in the container, DynamoDB on
+Lambda. That is fine for a demonstration and useless for a university, where a broken projector has
+to reach the people who fix projectors — and they already have a system they watch. So the
+`standards` adapter **never declares `issues` at all**, and the code says why:
+
+> *"Reading a queue is one thing; writing into the one maintenance already watches is an integration
+> per institution, and the runbook puts that after the hackathon."*
+
+The interface was built for this: the `issues` capability, `reportIssue` and `issueStatus` are in
+the frozen contract, and the queue sits behind `IssueStore` — two methods. Nothing has to be
+redesigned. What is missing is a source.
+
+**What we would build, in this order.** Note what is *not* first:
+
+1. **Email.** Every service desk on earth has an address, and a structured message to it needs no
+   API key, no firewall exception, no vendor and no procurement. It is the only option here that is
+   genuinely a standard every institution already has, which is the whole argument of this project.
+2. **A webhook.** POST a documented JSON payload and let the institution wire it to whatever they
+   run. The escape hatch for everyone the first two options do not fit.
+3. **Concrete connectors** — Jira Service Management, GLPI, OTRS, ServiceNow, Redmine. These come
+   last, not because they are hard, but because each one is a vendor's API that somebody has to keep
+   working, and the first two cover most institutions without that cost.
+
+**And here is the honest obstacle.** The `issues` capability obliges *both* `reportIssue` and
+`issueStatus`. Email can file a fault and cannot answer "how is my report going" — so an
+email-only institution would have to declare a tool that cannot work, which is precisely what
+capability negotiation exists to prevent. Supporting it properly means **splitting the capability**
+into filing and chasing.
+
+That would move the frozen interface. Which is allowed — ADR-006 is a doorbell, not a wall — but it
+is exactly the kind of change that should be made deliberately, with the snapshot updated by hand
+and both adapters re-checked, rather than slipped in. It is the first real candidate for breaking
+the freeze, and it is a good argument that the freeze worked: the contract survived four milestones
+and the first thing that genuinely strains it is a capability nobody had built yet.
+
+**Why not before the deadline.** Two reasons, and the second is the real one. It needs the interface
+to move. And Carrigmore not being able to file a fault is the single most convincing thing the
+demonstration does — the agent does not decline, it *cannot*, because the tool was never in the
+catalogue. Building this would mean deliberately leaving it unconfigured for the video anyway.
+
+**Doing more with a fault once filed.** Separately and more cheaply: `issues` files and lists.
+Updating, closing, or adding a note are the obvious next three, and UC-06 is already marked
+`improvement` rather than essential.
 
 **Accessible routes.** `Route.steps` currently says "go up to floor 1". An institution that knows
 which lifts exist could answer "step-free route to FAR-104", which for some people is the difference

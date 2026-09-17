@@ -84,7 +84,7 @@ Este archivo guía a Claude Code (claude.ai/code) cuando trabaja con código en 
 | **Confirmación en dos vueltas** | Las herramientas de escritura confirman antes de actuar: la primera llamada pregunta y no escribe, la segunda lleva `confirmed` (ADR-011). No usa `input_required`: sobre HTTP sin estado no hay canal del servidor al cliente | "Sin confirmación no se crea ningún ticket" |
 | **Tarjetas visuales** | Extensión MCP Apps: parrilla de ocupación, plano de planta, ficha de incidencia | "Donde hay pantalla, además la tarjeta" |
 | **Registro de fricción** | Bitácora de fricción con las APIs usadas. Se escribe mientras duele, no al final | "Eso va al registro de fricción" |
-| **LREA** | La segunda candidatura del equipo. Lodge tiene prioridad | "Regla de corte 3: el 14 de octubre se abandona LREA" |
+| **La segunda candidatura** | El equipo lleva otra entrega en paralelo. Lodge tiene prioridad | "Regla de corte 3: el 14 de octubre se abandona la otra" |
 
 ---
 

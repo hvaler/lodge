@@ -154,7 +154,7 @@
     ],
     "sprint_actual": null,
     "version_actual": "0.0.0",
-    "ultima_actualizacion": "2026-09-16",
+    "ultima_actualizacion": "2026-09-17",
     "actualizado_por": "Hugo Carlos Valer Rojas"
   },
   "acceso_bd": {
@@ -234,7 +234,7 @@
     "sla": "< 500 ms ida y vuelta (limite de la plataforma Alexa+, verificado 14-09-2026)",
     "horario_mantenimiento": null,
     "dependencias_inter_proyecto": [
-      "LREA - segunda candidatura del mismo equipo. Las bases PERMITEN varias candidaturas si son sustancialmente distintas, asi que no esta bloqueada; lo que compite es el tiempo. Lodge tiene prioridad (regla de corte 3, 14 oct).",
+      "SEGUNDA CANDIDATURA del mismo equipo. Las bases PERMITEN varias candidaturas si son sustancialmente distintas, asi que no esta bloqueada; lo que compite es el tiempo. Lodge tiene prioridad (regla de corte 3, 14 oct).",
       "Amazon Bedrock (us-east-1): el orquestador de demostracion depende de acceso al modelo Nova 2 Lite.",
       "Registro de complementos de Alexa+: cerrado a socios seleccionados, por eso la experiencia se simula en aplicacion web propia."
     ]
@@ -415,17 +415,16 @@
   },
   "ultimaSesion": {
     "_doc": "Se actualiza con /pausar y se lee con /continuar",
-    "fecha": "2026-09-16",
+    "fecha": "2026-09-17",
     "evolutivoActivo": "M3 (cerrado)",
     "usuario": "Hugo Carlos Valer Rojas",
     "ramaActiva": "main",
     "proximoPaso": "M4: OAuth 2.1 con PKCE (ruta critica) y pila CDK",
     "resumenSesion": "Congelada la interfaz (ADR-006). Prompt caching: 86 % menos entrada facturable y latencia sin cambios, medido. Demostrador web completo, y con el dos fallos de transporte arreglados (ADR-011, ADR-012, L-002). M0 a M3 cerrados. 300 tests.",
     "archivosModificados": [
-      "_hilo/ESTADO_PROYECTO.json",
       "_hilo/METRICAS.json"
     ],
-    "notas": "Las credenciales de AWS viven en el perfil 'lrea', no en 'default': cualquier script necesita AWS_PROFILE=lrea o no encuentra credenciales."
+    "notas": "Las credenciales de AWS NO estan en el perfil 'default' sino en uno con nombre propio: cualquier script necesita AWS_PROFILE=<el vuestro> o no encuentra credenciales."
   },
   "metricas": {
     "cobertura_tests": "352 tests en src + 15 de la pila CDK · CI construye ademas el contenedor",
@@ -440,13 +439,13 @@
       "BEDROCK VERIFICADO (15-09): responde en plan Free con el perfil us.amazon.nova-2-lite-v1:0. M3 desbloqueado. OJO: el playground enciende el razonamiento extendido y dio 5 293 ms; en la API viene apagado por defecto y el orquestador NO lo activa (ADR-010). Queda por mirar en Billing si el consumo sale de los 100 $.",
       "M6 - El texto de envio esta redactado en docs/management/devpost-submission.md, con la lista de campos al final: track Alexa+/MCP, mini-retos AWS Builder y Open Source. REVISARLO antes de enviar: lo escribio Claude y va con tu nombre. Y comprobar que las dos URL responden el dia del envio.",
       "M5 ESCRITO, FALTA LO HUMANO - El guion del video esta en docs/management/video-script.md presupuestado a 2:55, con lista de comprobacion. La guia de adopcion necesita que la recorra ALGUIEN AJENO al desarrollo y rellene la tabla del cronometro al final: validarla desde dentro no vale, y el entregable lo pide explicitamente.",
-      "DEMOSTRACION VIVA - Pagina: https://5fugfo2nx7ajeymmf62fjqssou0bgdvq.lambda-url.eu-west-1.on.aws/ · Servidor MCP: https://4joapeibeg357e7vyw2dj4pnwa0tmpay.lambda-url.eu-west-1.on.aws/mcp (eu-west-1, la cuenta de AWS del equipo). La pagina gasta Bedrock por pregunta y tiene tope de 500 al dia; el contador esta en la tabla DemoQuota. Modo sandbox sobre datos ficticios. Para tirarlo todo: cd infra && AWS_PROFILE=lrea npx cdk destroy.",
+      "DEMOSTRACION VIVA - Pagina: https://5fugfo2nx7ajeymmf62fjqssou0bgdvq.lambda-url.eu-west-1.on.aws/ · Servidor MCP: https://4joapeibeg357e7vyw2dj4pnwa0tmpay.lambda-url.eu-west-1.on.aws/mcp (eu-west-1, la cuenta de AWS del equipo). La pagina gasta Bedrock por pregunta y tiene tope de 500 al dia; el contador esta en la tabla DemoQuota. Modo sandbox sobre datos ficticios. Para tirarlo todo: cd infra && AWS_PROFILE=<el vuestro> npx cdk destroy.",
       "INTERFAZ CONGELADA (16-09, ADR-006). src/provider/frozen.ts guarda la instantanea y el compilador la compara en cada build; frozen.test.ts fija los nombres de capacidades y herramientas. A partir de aqui la interfaz se implementa, no se edita. Si algo de M4 o M5 obliga a moverla: actualizar la instantanea A MANO, anotarlo en ADR-006 y repasar los dos adaptadores y las seis herramientas.",
-      "ALTAS - Devpost hecho y cuenta AWS operativa. QUEDA el formulario de creditos (150 $) en https://forms.gle/GaHFxSbBQNG9Kti6A, que pide la Devpost Profile URL; se piden por PERFIL, no por proyecto, asi que el presupuesto es compartido con LREA. OJO: las credenciales estan en el perfil 'lrea', no en 'default' - cualquier script necesita AWS_PROFILE=lrea.",
+      "ALTAS - Devpost hecho y cuenta AWS operativa. QUEDA el formulario de creditos (150 $) en https://forms.gle/GaHFxSbBQNG9Kti6A, que pide la Devpost Profile URL; se piden por PERFIL, no por proyecto, asi que el presupuesto es compartido con la otra candidatura. OJO: las credenciales NO estan en el perfil 'default' sino en uno con nombre propio - cualquier script necesita AWS_PROFILE=<el vuestro>.",
       "AWS - Los 150 $ del hackathon son promotional credits y la pagina de free tier dice que solo los planes de pago son elegibles. Y el free tier no cubre inferencia de Bedrock. Confirmar ambas cosas antes de M3: el orquestador depende de Nova 2 Lite.",
       "UC-05 RESUELTO (16-09, ADR-011). No era que el cliente no declarase 'elicitation': sobre Streamable HTTP servido por peticion no hay canal del servidor al cliente, punto. La confirmacion es ahora un argumento 'confirmed' y una segunda llamada, que funciona en cualquier era y transporte. Mismo dia se arreglaron las tarjetas por la misma causa (ADR-012). Ver L-002: los tests usaban InMemoryTransport y por eso no lo vieron.",
       "OAuth 2.1 con PKCE (S256) esta en la RUTA CRITICA, no en M4: sin el no se conecta con Alexa+ (ADR-009). Presupuesto de latencia: < 500 ms ida y vuelta.",
-      "REGLA DE CORTE 3 - 14 de octubre, punto de no retorno: si no hay demostracion de punta a punta, se abandona LREA y todo el equipo pasa a Lodge. Una candidatura terminada vale mas que dos a medias.",
+      "REGLA DE CORTE 3 - 14 de octubre, punto de no retorno: si no hay demostracion de punta a punta, se abandona la otra candidatura y todo el equipo pasa a Lodge. Una candidatura terminada vale mas que dos a medias.",
       "REGLAS DE CORTE 1 y 2 - VENCIDAS SIN APLICARSE. M2 cerro el 15-09 (fecha limite 4 oct) y M3 el 16-09 (limite 11 oct), asi que ni el LDAP ni las tarjetas llegaron a estar en riesgo. Sigue viva la REGLA 3: 14 de octubre, punto de no retorno.",
       "PRIORIDAD DE RECORTE - Los casos marcados essential en docs/use-cases.md sobreviven a cualquier recorte; los marcados improvement (hoy solo UC-06) caen primero.",
       "Las reglas de corte se aplican sin convocar reunion. Tienen fecha, no criterio."

@@ -140,7 +140,7 @@ Detalle:
 
 ## 9. Reglas de corte
 
-El equipo lleva además una segunda candidatura (LREA). Lodge tiene prioridad. Se aplican sin convocar reunión:
+El equipo lleva además una segunda candidatura. Lodge tiene prioridad. Se aplican sin convocar reunión:
 
 1. **Si M2 se pasa del 4 de octubre** — el adaptador de estándares se recorta a calendarios e inventario, dejando el directorio fuera.
 2. **Si M3 se pasa del 11 de octubre** — caen las tarjetas visuales. La voz sola cumple el track.

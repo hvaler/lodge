@@ -140,7 +140,7 @@ Detail per milestone:
 
 ## 9. Cut rules
 
-This team is also carrying a second submission (LREA). Lodge takes priority. The rules apply without calling a meeting:
+This team is also carrying a second submission. Lodge takes priority. The rules apply without calling a meeting:
 
 1. **If M2 slips past October 4** — the standards adapter is trimmed to calendars and inventory, dropping the directory.
 2. **If M3 slips past October 11** — visual cards are cut. Voice alone satisfies the track.

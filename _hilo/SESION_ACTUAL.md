@@ -64,7 +64,7 @@ recordada. `src/cards/transport.test.ts` recorre ahora un socket real.
 
 ### Lo tuyo
 1. [ ] Formulario de créditos (150 $): https://forms.gle/GaHFxSbBQNG9Kti6A — pide la Devpost
-       Profile URL. Se piden **por perfil**, no por proyecto: presupuesto compartido con LREA
+       Profile URL. Se piden **por perfil**, no por proyecto: presupuesto compartido con la otra candidatura
 2. [ ] Mirar en Billing si el consumo de Bedrock **sale de los $100** o va aparte
 
 ### Lo siguiente en código: M4
@@ -75,8 +75,8 @@ recordada. `src/cards/transport.test.ts` recorre ahora un socket real.
 - **OpenTelemetry**: contexto de traza en las cabeceras del protocolo
 
 ### Trampas conocidas
-- Las credenciales de AWS viven en el perfil **`lrea`**, no en `default`. Cualquier script necesita
-  `AWS_PROFILE=lrea` o falla con `CredentialsProviderError`
+- Las credenciales de AWS **no están en el perfil `default`**, sino en uno con nombre propio.
+  Cualquier script necesita `AWS_PROFILE=<el vuestro>` o falla con `CredentialsProviderError`
 - **La interfaz está congelada.** Si M4 obliga a moverla: actualizar la instantánea a mano, anotarlo
   en ADR-006 y repasar los dos adaptadores y las seis herramientas. Se evaluó el riesgo antes de
   congelar y OAuth no debería tocarla, porque `RequestContext.principal` ya existe para eso
