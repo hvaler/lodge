@@ -12,11 +12,23 @@
  */
 
 import type { Capability, ProviderDescriptor } from '../../provider/index.ts';
+import type { InlineBuilding, InlineRoom } from './inventory.ts';
 import type { EmailSource, JiraSource, WebhookSource } from './issues.ts';
 
+/**
+ * Where the room table comes from: a CSV, or the configuration file itself.
+ *
+ * Exactly one. An institution with a few hundred rooms keeps a CSV because a spreadsheet is the
+ * right tool for that; one with twelve would rather not keep a second file for twelve lines. Both
+ * end up as the same rooms, validated the same way.
+ */
 export interface InventorySource {
   /** Path or URL to a CSV of rooms. Columns are described in `fixtures/README.md`. */
-  readonly location: string;
+  readonly location?: string;
+  /** The rooms themselves. */
+  readonly rooms?: readonly InlineRoom[];
+  /** Optional alongside `rooms`. Without it every building is treated as always open. */
+  readonly buildings?: readonly InlineBuilding[];
 }
 
 export interface CalendarSource {
@@ -142,6 +154,16 @@ export class ConfigurationError extends Error {
  * in an afternoon and giving up on it — which is the whole bet of the project.
  */
 export function assertConfigUsable(config: StandardsConfig): void {
+  if (config.inventory) {
+    const ways = [config.inventory.location, config.inventory.rooms].filter(Boolean).length;
+    if (ways !== 1) {
+      throw new ConfigurationError(
+        `'${config.institution}' gives ${ways} room tables under 'inventory'. Exactly one is ` +
+          `needed: either a 'location' pointing at a CSV, or the rooms written out under 'rooms'.`,
+      );
+    }
+  }
+
   const sinks = [config.issues?.email, config.issues?.webhook, config.issues?.jira].filter(Boolean);
   if (config.issues && sinks.length !== 1) {
     throw new ConfigurationError(

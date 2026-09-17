@@ -8,7 +8,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { ConfigFileError, parseLodgeConfig } from './config.ts';
+import { ConfigFileError, createProviderFor, parseLodgeConfig } from './config.ts';
 
 const CARRIGMORE = {
   adapter: 'standards' as const,
@@ -157,5 +157,89 @@ describe('the shape of the file', () => {
     // Answering as one of them would be a coin toss with somebody's timetable.
     expect(config.defaultSlug).toBeNull();
     expect([...config.institutions.keys()].sort()).toEqual(['carrigmore', 'san-telmo']);
+  });
+});
+
+describe('the rooms, written in the file instead of beside it', () => {
+  const TWELVE_LINES = {
+    adapter: 'standards' as const,
+    standards: {
+      institution: 'Carrigmore College',
+      locale: 'en-IE',
+      timeZone: 'Europe/Dublin',
+      inventory: {
+        rooms: [
+          {
+            id: 'QUA-G01',
+            building: 'QUA',
+            buildingName: 'Quadrangle',
+            floor: 0,
+            kind: 'lecture',
+            capacity: 150,
+            equipment: ['projector'],
+          },
+        ],
+        buildings: [{ code: 'QUA', name: 'Quadrangle', weekdays: '08:00-21:00' }],
+      },
+    },
+  };
+
+  it('accepts an institution that keeps no CSV at all', () => {
+    expect(() => parseLodgeConfig(TWELVE_LINES)).not.toThrow();
+  });
+
+  it('refuses a room table given twice, because one of the two would win silently', () => {
+    expect(() =>
+      parseLodgeConfig({
+        ...TWELVE_LINES,
+        standards: {
+          ...TWELVE_LINES.standards,
+          inventory: { ...TWELVE_LINES.standards.inventory, location: '/srv/rooms.csv' },
+        },
+      }),
+    ).toThrow(/one of the two, not both and not neither/);
+  });
+
+  it('refuses an empty inventory section, which says nothing at all', () => {
+    expect(() =>
+      parseLodgeConfig({ ...TWELVE_LINES, standards: { ...TWELVE_LINES.standards, inventory: {} } }),
+    ).toThrow(ConfigFileError);
+  });
+
+  it('names the kinds a room may be, rather than failing later on a typo', () => {
+    // The list lives in the adapter and the schema reads it, so it cannot drift into two lists.
+    expect(() =>
+      parseLodgeConfig({
+        ...TWELVE_LINES,
+        standards: {
+          ...TWELVE_LINES.standards,
+          inventory: {
+            rooms: [{ ...TWELVE_LINES.standards.inventory.rooms[0], kind: 'lecture-theatre' }],
+          },
+        },
+      }),
+    ).toThrow(ConfigFileError);
+  });
+
+  it('is enough on its own to publish directions and fault reports', async () => {
+    // ADR-019, seen from the file an adopter actually writes: a room list and a service desk, no
+    // timetable feed anywhere, and Lodge still has something to say.
+    const config = parseLodgeConfig({
+      ...TWELVE_LINES,
+      standards: {
+        ...TWELVE_LINES.standards,
+        issues: { email: { to: 'desk@example.ie', from: 'lodge@example.ie', host: 'smtp.example.ie' } },
+      },
+    });
+
+    const provider = await createProviderFor(config.institutions.get('default')!);
+
+    expect([...provider.descriptor.capabilities].sort()).toEqual([
+      'issue-reporting',
+      'room-inventory',
+      'wayfinding',
+    ]);
+    expect(provider.getRoom).toBeTypeOf('function');
+    expect(provider.findFreeRooms).toBeUndefined();
   });
 });

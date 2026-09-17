@@ -162,3 +162,89 @@ describe('rejecting a table an institution got wrong', () => {
     );
   });
 });
+
+describe('the rooms written in the configuration file instead of a table', () => {
+  // Carrigmore's first three rooms, said twice: once as the institution would write them in the
+  // configuration, once as the columns of the CSV that ships in `fixtures/`.
+  const INLINE = [
+    {
+      id: 'QUA-G01',
+      building: 'QUA',
+      buildingName: 'Quadrangle',
+      floor: 0,
+      kind: 'lecture',
+      capacity: 150,
+      equipment: ['projector', 'lectern microphone'],
+    },
+    {
+      id: 'QUA-101',
+      building: 'QUA',
+      buildingName: 'Quadrangle',
+      floor: 1,
+      kind: 'seminar',
+      capacity: 24,
+      equipment: ['whiteboard'],
+    },
+    { id: 'MIL-004', building: 'MIL', buildingName: 'Mill House', floor: 0, kind: 'study', capacity: 8 },
+  ] as const;
+
+  const AS_CSV =
+    `${HEADER}` +
+    'QUA-G01,QUA,Quadrangle,0,lecture,150,projector;lectern microphone,false\n' +
+    'QUA-101,QUA,Quadrangle,1,seminar,24,whiteboard,false\n' +
+    'MIL-004,MIL,Mill House,0,study,8,,false\n';
+
+  it('produces exactly the rooms the same table would', async () => {
+    // The claim the whole feature rests on: one room model, written two ways. If these ever
+    // diverge there are two models and the second one is undocumented.
+    const written = await loadInventory({ rooms: INLINE }, DUBLIN);
+    const tabulated = await loadInventory({ location: await withCsv(AS_CSV) }, DUBLIN);
+
+    expect(written.rooms).toEqual(tabulated.rooms);
+  });
+
+  it('refuses a bad room with the same sentence a table would earn', async () => {
+    const broken = [{ ...INLINE[0], capacity: 0 }];
+
+    await expect(loadInventory({ rooms: broken }, DUBLIN)).rejects.toThrow(InventoryError);
+    await expect(loadInventory({ rooms: broken }, DUBLIN)).rejects.toThrow(
+      /Room 'QUA-G01' has capacity '0', which is not a whole number of seats/,
+    );
+  });
+
+  it('says where the mistake is, and "the configuration file" is a place', async () => {
+    await expect(loadInventory({ rooms: [] }, DUBLIN)).rejects.toThrow(
+      /The room table at the configuration file has no rows/,
+    );
+  });
+
+  it('takes opening hours from the configuration too', async () => {
+    const inventory = await loadInventory(
+      {
+        rooms: INLINE,
+        buildings: [{ code: 'QUA', name: 'Quadrangle', weekdays: '08:00-21:00', saturday: '09:00-13:00' }],
+      },
+      DUBLIN,
+    );
+
+    // Thursday 09:00, inside the weekday window; Sunday has no window at all.
+    expect(inventory.isOpen('QUA', instantAt('2026-09-17', '09:00', DUBLIN), instantAt('2026-09-17', '10:00', DUBLIN))).toBe(true);
+    expect(inventory.isOpen('QUA', instantAt('2026-09-20', '09:00', DUBLIN), instantAt('2026-09-20', '10:00', DUBLIN))).toBe(false);
+  });
+
+  it('treats a building with no hours as always open, rather than never', async () => {
+    // An institution that writes twelve rooms and no hours has said nothing about closing, and
+    // answering "nothing is free, ever" to that silence would be the wrong reading.
+    const inventory = await loadInventory({ rooms: INLINE }, DUBLIN);
+
+    expect(inventory.isOpen('MIL', instantAt('2026-09-20', '03:00', DUBLIN), instantAt('2026-09-20', '04:00', DUBLIN))).toBe(true);
+    expect(inventory.buildingByCode('MIL')?.name).toBe('Mill House');
+  });
+
+  it('says the building code aloud when no name was given', async () => {
+    const nameless = [{ ...INLINE[0], buildingName: undefined }];
+    const inventory = await loadInventory({ rooms: nameless }, DUBLIN);
+
+    expect(inventory.buildingByCode('QUA')?.name).toBe('QUA');
+  });
+});

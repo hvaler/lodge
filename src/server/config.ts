@@ -17,7 +17,9 @@ import { readFile } from 'node:fs/promises';
 import * as z from 'zod/v4';
 
 import { createLdapDirectory } from '../adapters/standards/directory.ts';
+import { ROOM_KINDS } from '../adapters/standards/inventory.ts';
 import { createStandardsProvider } from '../adapters/standards/index.ts';
+import type { InventorySource } from '../adapters/standards/config.ts';
 import type { StandardsConfig } from '../adapters/standards/index.ts';
 import { createSyntheticProvider } from '../adapters/synthetic/index.ts';
 import type { Provider } from '../provider/index.ts';
@@ -76,11 +78,54 @@ const issuesSchema = z
       'would publish a reporting tool with nowhere to report to',
   });
 
+/**
+ * The room table: a CSV, or the rooms written out here.
+ *
+ * Exactly one. A few hundred rooms belong in a spreadsheet; twelve do not deserve a second file.
+ * Either way they end up as the same rooms through the same validator, so the rules about capacity,
+ * floors and equipment live in one place — see `InlineRoom`.
+ */
+const inventorySchema = z
+  .object({
+    location: z.string().optional().describe('Path or URL to a CSV of rooms'),
+    rooms: z
+      .array(
+        z.object({
+          id: z.string().describe('Qualified and unique, e.g. QUA-G01'),
+          building: z.string().describe('Building code, e.g. QUA'),
+          buildingName: z.string().optional().describe('Said aloud when giving directions'),
+          floor: z.number(),
+          kind: z.enum(ROOM_KINDS),
+          capacity: z.number(),
+          equipment: z.array(z.string()).optional().describe("In the institution's own words"),
+          supervised: z.boolean().optional().describe('Never offered as free'),
+        }),
+      )
+      .optional(),
+    buildings: z
+      .array(
+        z.object({
+          code: z.string(),
+          name: z.string(),
+          weekdays: z.string().optional().describe('Opening hours as 08:00-21:00'),
+          saturday: z.string().optional(),
+          sunday: z.string().optional(),
+        }),
+      )
+      .optional()
+      .describe('Only alongside `rooms`. Without it every building is treated as always open'),
+  })
+  .refine((inventory) => [inventory.location, inventory.rooms].filter(Boolean).length === 1, {
+    message:
+      "needs either a 'location' pointing at a CSV or the rooms written out under 'rooms' — one " +
+      'of the two, not both and not neither',
+  });
+
 const standardsSchema = z.object({
   institution: z.string(),
   locale: z.string().describe('BCP 47, e.g. en-IE'),
   timeZone: z.string().describe('IANA zone, e.g. Europe/Dublin'),
-  inventory: z.object({ location: z.string() }).optional(),
+  inventory: inventorySchema.optional(),
   calendars: z
     .object({
       timetable: z.string().optional(),
@@ -212,6 +257,44 @@ export async function loadLodgeConfig(path: string): Promise<LodgeConfig> {
 }
 
 /**
+ * The same omit-rather-than-undefined dance as everywhere else in this file, applied per room.
+ *
+ * Nothing is validated here — that is `loadInventory`'s job, and doing it twice would mean two sets
+ * of error messages for one mistake. This only turns what zod parsed into what the adapter's types
+ * say, which under `exactOptionalPropertyTypes` is not the same object.
+ */
+function inventoryFrom(inventory: z.infer<typeof inventorySchema>): InventorySource {
+  return {
+    ...(inventory.location ? { location: inventory.location } : {}),
+    ...(inventory.rooms
+      ? {
+          rooms: inventory.rooms.map((room) => ({
+            id: room.id,
+            building: room.building,
+            floor: room.floor,
+            kind: room.kind,
+            capacity: room.capacity,
+            ...(room.buildingName ? { buildingName: room.buildingName } : {}),
+            ...(room.equipment ? { equipment: room.equipment } : {}),
+            ...(room.supervised === undefined ? {} : { supervised: room.supervised }),
+          })),
+        }
+      : {}),
+    ...(inventory.buildings
+      ? {
+          buildings: inventory.buildings.map((building) => ({
+            code: building.code,
+            name: building.name,
+            ...(building.weekdays ? { weekdays: building.weekdays } : {}),
+            ...(building.saturday ? { saturday: building.saturday } : {}),
+            ...(building.sunday ? { sunday: building.sunday } : {}),
+          })),
+        }
+      : {}),
+  };
+}
+
+/**
  * Builds the provider one institution asks for.
  *
  * The directory is only constructed when configured. The `standards` adapter derives its
@@ -239,7 +322,7 @@ export async function createProviderFor(institution: InstitutionConfig): Promise
     institution: standards.institution,
     locale: standards.locale,
     timeZone: standards.timeZone,
-    ...(standards.inventory ? { inventory: standards.inventory } : {}),
+    ...(standards.inventory ? { inventory: inventoryFrom(standards.inventory) } : {}),
     ...(standards.calendars
       ? {
           calendars: {

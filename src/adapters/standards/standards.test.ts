@@ -121,6 +121,41 @@ describe('the catalogue follows what the institution configured', () => {
     await expect(createStandardsProvider(empty)).rejects.toThrow(/would enable deadlines/);
   });
 
+  it('refuses a room table given two ways, rather than letting one win silently', async () => {
+    // The adapter refuses it too, not only the configuration schema: an embedder building a
+    // `StandardsConfig` in code never goes through zod, and would otherwise get whichever of the
+    // two `loadInventory` happened to check first.
+    const both: StandardsConfig = {
+      ...CARRIGMORE,
+      inventory: {
+        location: join(FIXTURES, 'rooms.csv'),
+        rooms: [{ id: 'X-1', building: 'X', floor: 0, kind: 'study', capacity: 4 }],
+      },
+    };
+
+    await expect(createStandardsProvider(both)).rejects.toThrow(ConfigurationError);
+    await expect(createStandardsProvider(both)).rejects.toThrow(/gives 2 room tables/);
+  });
+
+  it('serves the rooms written straight into the configuration', async () => {
+    const inline: StandardsConfig = {
+      institution: 'Nowhere College',
+      locale: 'en-IE',
+      timeZone: DUBLIN,
+      inventory: {
+        rooms: [
+          { id: 'X-1', building: 'X', buildingName: 'The Annexe', floor: 0, kind: 'study', capacity: 4 },
+        ],
+      },
+    };
+
+    const provider = await createStandardsProvider(inline);
+    const room = await provider.getRoom!(ctx(), 'X-1');
+
+    expect(room?.capacity).toBe(4);
+    expect(() => assertProviderCoherent(provider)).not.toThrow();
+  });
+
   it('says so if a directory is configured but not supplied', async () => {
     const withDirectory: StandardsConfig = {
       ...CARRIGMORE,

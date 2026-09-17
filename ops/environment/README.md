@@ -48,6 +48,43 @@ falle la primera pregunta de un estudiante.
 }
 ```
 
+### Las aulas, sin CSV
+
+`inventory` admite las dos formas, y **exactamente una**: o `location` apuntando a un CSV, o las
+aulas escritas aquí mismo. Un centro con trescientas aulas quiere la hoja de cálculo; uno con doce no
+quiere un segundo fichero para doce líneas.
+
+```json
+"inventory": {
+  "rooms": [
+    { "id": "QUA-G01", "building": "QUA", "buildingName": "Quadrangle",
+      "floor": 0, "kind": "lecture", "capacity": 150,
+      "equipment": ["proyector", "micrófono de atril"] },
+    { "id": "MIL-004", "building": "MIL", "buildingName": "Mill House",
+      "floor": 0, "kind": "study", "capacity": 8, "supervised": true }
+  ],
+  "buildings": [
+    { "code": "QUA", "name": "Quadrangle", "weekdays": "08:00-21:00", "saturday": "09:00-13:00" }
+  ]
+}
+```
+
+Son las mismas aulas: cada campo es una columna del CSV, pasan por el mismo validador y dan el mismo
+mensaje de error. `kind` es uno de `lecture`, `seminar`, `lab`, `computer-lab`, `study`,
+`auditorium`; `equipment` se lee tal cual se escriba, en el idioma de la institución; `supervised`
+marca las aulas que nunca se ofrecen como libres.
+
+`buildings` es opcional incluso con `rooms`: un edificio sin horario se considera **siempre abierto**,
+porque quien no ha dicho nada sobre cerrar no ha dicho que cierre siempre. Un día sin franja
+(`sunday` ausente) sí es un día cerrado.
+
+**El horario no se escribe aquí**, y es a propósito: una lista de aulas es un conjunto fijo que se
+escribe una vez, mientras que un horario son miles de sesiones con fecha. Expresar recurrencia a mano
+sería reimplementar `RRULE` peor que iCalendar. Si no tenéis feed, exportad un `.ics` desde el
+calendario que ya uséis y apuntad `calendars.timetable` al fichero local.
+
+---
+
 **El catálogo sale de lo que configures.** Sin `directory` no se publica `campus.timetable`, porque
 sin saber quién pregunta no hay horario que dar. Sin `inventory` no se publica nada sobre aulas. Y
 con `inventory` pero sin feed de horario tampoco se publica `campus.find_room`, porque sin ocupación

@@ -100,7 +100,7 @@ the tools you cannot support simply are not published.
 
 | Source | Format | Gets you |
 |---|---|---|
-| Room list | CSV | `campus.find_room`, `campus.wayfind` |
+| Room list | CSV, or written into the config | `campus.wayfind`, `campus.report_issue`, and `campus.find_room` with a timetable |
 | Timetable feed | iCalendar | occupancy, and `campus.timetable` with a directory |
 | Deadlines feed | iCalendar | `campus.deadlines` |
 | Directory | LDAP | whose timetable it is |
@@ -119,10 +119,37 @@ QUA-G01,QUA,Quay House,0,lecture,150,"projector;screen;PA system",false
 semicolon-separated and **in your own words** — they are read back to people verbatim, so write
 what your staff call things. `supervised` rooms are never offered as free.
 
+**If you have a dozen rooms, skip the file.** Write them into the configuration instead — same
+fields, same validation, same error messages, one file fewer:
+
+```json
+"inventory": {
+  "rooms": [
+    { "id": "QUA-G01", "building": "QUA", "buildingName": "Quay House",
+      "floor": 0, "kind": "lecture", "capacity": 150,
+      "equipment": ["projector", "screen", "PA system"] }
+  ],
+  "buildings": [
+    { "code": "QUA", "name": "Quay House", "weekdays": "08:00-21:00", "saturday": "09:00-13:00" }
+  ]
+}
+```
+
+One or the other, not both. `buildings` is optional even here: a building with no hours is treated
+as always open, because saying nothing about closing is not the same as closing always.
+
+A room list on its own — no feeds, no directory at all — already gets you directions and, with a
+service desk, fault reports. That is the smallest useful Lodge, and it is a few minutes of typing.
+
 ### 2 · Your feeds
 
 Any iCalendar URL or file. Room bookings for the timetable, administrative dates for the deadlines.
 If your timetable system can export an `.ics` per room or per programme, that is what this wants.
+
+Unlike the room list, there is no way to write a timetable into the configuration, and that is
+deliberate: a room list is a fixed set written once, while a timetable is thousands of dated
+sessions. Writing recurrence by hand would be a worse `RRULE` than the one iCalendar already has.
+No feed? Export an `.ics` from whatever calendar you already keep and point at the local file.
 
 ### 3 · The configuration file
 

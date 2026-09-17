@@ -17,14 +17,18 @@ import type { DayHours, OpeningHours } from '../../shared/time.ts';
 import type { InventorySource } from './config.ts';
 import { readSource } from './source.ts';
 
-const ROOM_KINDS: readonly RoomKind[] = [
+/**
+ * The kinds a room may be. Exported because the configuration schema validates against this same
+ * list: two copies would drift the first time somebody adds one.
+ */
+export const ROOM_KINDS = [
   'lecture',
   'seminar',
   'lab',
   'computer-lab',
   'study',
   'auditorium',
-];
+] as const satisfies readonly RoomKind[];
 
 export class InventoryError extends Error {
   constructor(message: string) {
@@ -132,16 +136,87 @@ function toRoom(row: CsvRow): StandardsRoom {
  * clock on a clean machine by someone outside the project (M5), and an error that says only
  * "invalid CSV" is how that stops being twenty minutes.
  */
+/**
+ * A room written straight into the configuration file.
+ *
+ * For an institution that has twelve rooms and would rather not keep a CSV for them. It is the same
+ * data the table holds — every field below is one of its columns — and it becomes a row and goes
+ * through the same validator, so a capacity of zero is refused with the same sentence either way.
+ * There is one room model here, written two ways, not two models. (A bad `kind` is the exception:
+ * written here it is caught earlier still, by the configuration schema, against the same list.)
+ */
+export interface InlineRoom {
+  /** Qualified and unique across the institution, e.g. `QUA-G01`. */
+  readonly id: string;
+  /** Building code, e.g. `QUA`. */
+  readonly building: string;
+  /** Said aloud when giving directions. Defaults to the code. */
+  readonly buildingName?: string;
+  readonly floor: number;
+  readonly kind: RoomKind;
+  readonly capacity: number;
+  /** In the institution's own words: they are read back verbatim. */
+  readonly equipment?: readonly string[];
+  /** Supervised rooms are never offered as free. Defaults to false. */
+  readonly supervised?: boolean;
+}
+
+/** Opening hours as `"08:00-21:00"`, or omitted for a day the building does not open. */
+export interface InlineBuilding {
+  readonly code: string;
+  readonly name: string;
+  readonly weekdays?: string;
+  readonly saturday?: string;
+  readonly sunday?: string;
+}
+
+/** Inline data becomes a row, so there is one validator and one set of error messages. */
+function roomRow(room: InlineRoom): CsvRow {
+  return {
+    room_id: room.id,
+    building_code: room.building,
+    building_name: room.buildingName ?? '',
+    floor: String(room.floor),
+    kind: room.kind,
+    capacity: String(room.capacity),
+    equipment: (room.equipment ?? []).join(';'),
+    supervised: room.supervised ? 'true' : 'false',
+  };
+}
+
+function buildingRow(building: InlineBuilding): CsvRow {
+  const [opensWeek = '', closesWeek = ''] = (building.weekdays ?? '').split('-');
+  const [opensSat = '', closesSat = ''] = (building.saturday ?? '').split('-');
+  const [opensSun = '', closesSun = ''] = (building.sunday ?? '').split('-');
+
+  return {
+    building_code: building.code,
+    building_name: building.name,
+    opens_mon_fri: opensWeek,
+    closes_mon_fri: closesWeek,
+    opens_sat: opensSat,
+    closes_sat: closesSat,
+    opens_sun: opensSun,
+    closes_sun: closesSun,
+  };
+}
+
 export async function loadInventory(
   source: InventorySource,
   timeZone: string,
   buildingsLocation?: string,
 ): Promise<Inventory> {
-  const roomsText = await readSource(source.location);
-  const rooms = rows(roomsText, `The room table at '${source.location}'`).map(toRoom);
+  // Written in the configuration, or read from a table. `assertConfigUsable` has already refused
+  // both at once and neither, so exactly one of these is present.
+  const where = source.rooms ? 'the configuration file' : `'${source.location!}'`;
+  const roomRows = source.rooms
+    ? source.rooms.map(roomRow)
+    : rows(await readSource(source.location!), `The room table at ${where}`);
+
+  const rooms = roomRows.map(toRoom);
 
   if (rooms.length === 0) {
-    throw new InventoryError(`The room table at '${source.location}' has no rows.`);
+    throw new InventoryError(`The room table at ${where} has no rows.`);
   }
 
   const seen = new Set<string>();
@@ -153,35 +228,44 @@ export async function loadInventory(
   // Buildings are optional: without them every building is treated as always open, which is wrong
   // but honest, and beats refusing to start over a file an institution may not have.
   const buildings: StandardsBuilding[] = [];
-  const location = buildingsLocation ?? source.location.replace(/rooms\.csv$/, 'buildings.csv');
 
-  if (location !== source.location) {
+  const buildingRows = await (async (): Promise<CsvRow[]> => {
+    if (source.buildings) return source.buildings.map(buildingRow);
+    if (source.rooms) return [];
+
+    const location = buildingsLocation ?? source.location!.replace(/rooms\.csv$/, 'buildings.csv');
+    if (location === source.location) return [];
+
     try {
-      const text = await readSource(location);
-      for (const row of rows(text, `The building table at '${location}'`)) {
-        buildings.push({
-          code: required(row, 'building_code', 'A building'),
-          name: required(row, 'building_name', 'A building'),
-          openingHours: weekOf(
-            hours(row, 'opens_mon_fri', 'closes_mon_fri'),
-            hours(row, 'opens_sat', 'closes_sat'),
-            hours(row, 'opens_sun', 'closes_sun'),
-          ),
-        });
-      }
+      return rows(await readSource(location), `The building table at '${location}'`);
     } catch (error) {
       // A malformed building table is an error; a missing one is a choice.
       if (error instanceof InventoryError) throw error;
+      return [];
     }
+  })();
+
+  for (const row of buildingRows) {
+    buildings.push({
+      code: required(row, 'building_code', 'A building'),
+      name: required(row, 'building_name', 'A building'),
+      openingHours: weekOf(
+        hours(row, 'opens_mon_fri', 'closes_mon_fri'),
+        hours(row, 'opens_sat', 'closes_sat'),
+        hours(row, 'opens_sun', 'closes_sun'),
+      ),
+    });
   }
 
   // Any building named by a room but absent from the table still needs a name to speak aloud.
   for (const room of rooms) {
     if (buildings.some((b) => b.code === room.building)) continue;
-    const named = rows(roomsText, 'the room table').find((r) => r['building_code'] === room.building);
+    const named = roomRows.find((r) => r['building_code'] === room.building);
     buildings.push({
       code: room.building,
-      name: named?.['building_name'] ?? room.building,
+      // A blank name means the institution did not give one, whether the row came from a table or
+      // from the configuration file. Say the code aloud rather than nothing at all.
+      name: named?.['building_name'] || room.building,
       openingHours: weekOf({ open: '00:00', close: '23:59' }, { open: '00:00', close: '23:59' }, {
         open: '00:00',
         close: '23:59',

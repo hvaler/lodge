@@ -427,8 +427,8 @@
     "notas": "Las credenciales de AWS NO estan en el perfil 'default' sino en uno con nombre propio: cualquier script necesita AWS_PROFILE=<el vuestro> o no encuentra credenciales."
   },
   "metricas": {
-    "cobertura_tests": "352 tests en src + 15 de la pila CDK · CI construye ademas el contenedor",
-    "ultimo_build": "2026-09-16 (CI verde: typecheck, test, build)",
+    "cobertura_tests": "425 tests en src + 15 de la pila CDK · CI construye ademas el contenedor",
+    "ultimo_build": "2026-09-17 (CI verde: typecheck, test, build)",
     "ultimo_deploy": "2026-09-16 (eu-west-1, sandbox, con la pagina publica)",
     "incidencias_abiertas": 0,
     "evolutivos_completados_mes": 0
