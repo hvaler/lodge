@@ -160,6 +160,8 @@ And the honest one: an institution walking the adoption guide on a clean machine
 The guide claims five minutes to see it work and thirty to point it at your own campus. Those
 numbers are ours until somebody else checks them.
 
+The full list — including what we refused on purpose and what we know is missing — is in [`docs/roadmap.md`](https://github.com/hvaler/lodge/blob/main/docs/roadmap.md).
+
 ---
 
 ## Built with

@@ -207,6 +207,7 @@ Function URL (no authorizer)         so a client needs an MCP client, not an AWS
 | [Writing an adapter](docs/writing-an-adapter.md) | When your sources are not CSV, iCalendar and LDAP |
 | [Use cases](docs/use-cases.md) | The acceptance criteria. Each one is a contract test |
 | [Friction log](docs/friction-log.md) | What every API we used did to us, and what worked |
+| [What could come next](docs/roadmap.md) | What we refused on purpose, what the protocol will unlock, and what is missing today |
 | [The University of San Telmo](docs/san-telmo.md) | The generated campus, in detail |
 | [Deployment reference](ops/environment/README.md) | Config file, OAuth, tracing, several institutions |
 

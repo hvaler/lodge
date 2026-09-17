@@ -179,4 +179,30 @@ _patron/
 INICIO_RAPIDO.md
 
 # Plantilla neutra del ecosistema; la configuracion real de Lodge es ecosystem.config.json
+
+# ── Andamiaje del ecosistema que no es de Lodge ──────────────────────────────
+# Este repositorio es publico y lo lee un jurado. Lo de abajo describe la herramienta
+# con la que se construyo el proyecto, no el proyecto: se queda en disco para que las
+# skills sigan funcionando, y deja de publicarse.
+
+# Version del ecosistema (1.2.3), que ademas contradice a package.json (0.0.0).
+VERSION.json
+
+# Configuracion de organizacion. Valida contra un esquema en .claude/, que no se publica,
+# asi que en el repositorio seria un fichero que apunta a algo inexistente.
+ecosystem.config.json
+
+# Plantillas y documentacion del propio ecosistema, todas vacias de contenido de Lodge:
+_hilo/HILO.md
+_hilo/ESTADO_PROYECTO.schema.md
+_hilo/FEEDBACK_ECOSISTEMA.md
+_hilo/AUDITORIA_NUGET.json
+_hilo/HISTORIAL_ANALISIS.json
+_hilo/reuniones/
+_hilo/specs/
+
+# El resto de _hilo/ SI se publica a proposito: DECISIONES.md son las dieciseis decisiones
+# de arquitectura que la documentacion publica cita, y LECCIONES.md es de lo mejor que
+# tiene el proyecto que contar.
+
 ecosystem.config.example.json
