@@ -28,7 +28,7 @@ import { loadDeadlines, loadTimetable } from './calendars.ts';
 import type { TimetableFeed } from './calendars.ts';
 import { assertConfigUsable, capabilitiesFor, descriptorFor } from './config.ts';
 import type { StandardsConfig } from './config.ts';
-import { createJiraTracker, createWebhookSink } from './issues.ts';
+import { createEmailSink, createJiraTracker, createWebhookSink } from './issues.ts';
 import type { Fetch, IssueSink, IssueTracker } from './issues.ts';
 import { loadInventory } from './inventory.ts';
 import type { Inventory, StandardsRoom } from './inventory.ts';
@@ -230,11 +230,15 @@ export async function createStandardsProvider(
       ? await loadDeadlines(config.calendars.deadlines, config.timeZone)
       : null,
     directory: directory ?? null,
+    // Exactly one is configured — `assertConfigUsable` refused anything else — so the order here
+    // only decides which branch is read first, not which one wins.
     issues: config.issues?.jira
       ? createJiraTracker(config.issues.jira, fetchImpl ?? fetch)
       : config.issues?.webhook
         ? createWebhookSink(config.issues.webhook, fetchImpl ?? fetch)
-        : null,
+        : config.issues?.email
+          ? createEmailSink(config.issues.email)
+          : null,
   };
 
   // A configured directory with no lookup supplied is a wiring mistake, and it would silently

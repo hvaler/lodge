@@ -5,18 +5,23 @@
  * queue Lodge invented — they are looking at the one they already have open. So this module writes
  * outward, and the shape of what it writes into is the institution's choice.
  *
- * Two of them, deliberately in this order:
+ * Three of them:
  *
- *  - **A webhook** needs no vendor, no library and no account. POST a documented payload and let
- *    the institution wire it to whatever they run. It can file a fault and it cannot answer "how is
- *    mine going", which is exactly why `issues` was split into `issue-reporting` and
- *    `issue-tracking` (ADR-017).
- *  - **Jira** as the worked example of a real tracker, because it can do both and because it is the
- *    one people ask about. Everything specific to it lives here and nothing above this file knows.
+ *  - **Email**, which is the only one that is genuinely a standard every institution already has.
+ *    A service desk address needs no API key, no firewall exception and no procurement.
+ *  - **A webhook** needs no vendor and no library either. POST a documented payload and let the
+ *    institution wire it to whatever they run.
+ *  - **Jira** as the worked example of a real tracker, because it can answer back and because it is
+ *    the one people ask about. Everything specific to it lives here and nothing above knows.
  *
- * What is **not** here yet is email, which is the only one of the three that is genuinely a
- * standard every institution already has. It needs an SMTP dependency; see `docs/roadmap.md`.
+ * Only Jira can say how a report is getting on. The other two receive and cannot be asked, which is
+ * exactly why `issues` was split into `issue-reporting` and `issue-tracking` (ADR-017).
  */
+
+import { randomBytes } from 'node:crypto';
+
+import { createTransport } from 'nodemailer';
+import type { Transporter } from 'nodemailer';
 
 import type { IssueStatus, Ticket } from '../../provider/index.ts';
 
@@ -51,6 +56,114 @@ export class IssueSinkError extends Error {
 
 /** Injected so a test can answer without a network, and so a proxy can be supplied. */
 export type Fetch = (url: string, init?: RequestInit) => Promise<Response>;
+
+// ── Email ────────────────────────────────────────────────────────────────────
+
+export interface EmailSource {
+  /** The service desk address faults are sent to. */
+  readonly to: string;
+  /** Who they come from. Wherever replies should land. */
+  readonly from: string;
+  readonly host: string;
+  /** Defaults to 587, which is submission with STARTTLS. */
+  readonly port?: number;
+  /** True for implicit TLS on 465. Defaults to false, which still upgrades on 587. */
+  readonly secure?: boolean;
+  readonly user?: string;
+  readonly password?: string;
+}
+
+/**
+ * Letters that cannot be confused when read out loud or written down from hearing them.
+ *
+ * No `O` or `0`, no `I`, `1` or `L`. The reference exists to be spoken by a synthesiser, repeated
+ * by a person and typed by somebody at a service desk, and every one of those steps is a chance to
+ * turn an O into a zero.
+ */
+const UNAMBIGUOUS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+
+function shortReference(): string {
+  const bytes = randomBytes(6);
+  let out = '';
+  for (const byte of bytes) out += UNAMBIGUOUS[byte % UNAMBIGUOUS.length];
+  return `LDG-${out}`;
+}
+
+/** What nodemailer needs from a transport. Narrowed so a test can pass six lines. */
+export interface MailTransport {
+  sendMail(message: {
+    from: string;
+    to: string;
+    subject: string;
+    text: string;
+  }): Promise<unknown>;
+}
+
+export interface EmailSinkOptions {
+  /** Injected so a test can pin the reference and assert on it. */
+  readonly reference?: () => string;
+  /** Injected so a test can answer without SMTP. */
+  readonly transport?: MailTransport;
+}
+
+/**
+ * Sends the fault to the service desk, with a reference **Lodge mints**.
+ *
+ * This is the opposite of the webhook rule, which refuses to invent one, and the difference is not
+ * an inconsistency. A webhook belongs to a system that assigns its own references, so inventing one
+ * would hand somebody a number the desk has never seen. An inbox assigns nothing until a human
+ * triages it — so until then there is no identifier at all, and the one Lodge puts **in the subject
+ * line** is the only thing both sides can search for. It is meaningful to the desk precisely
+ * because it is written where they will read it.
+ */
+export function createEmailSink(source: EmailSource, options: EmailSinkOptions = {}): IssueSink {
+  const reference = options.reference ?? shortReference;
+  const transport: MailTransport =
+    options.transport ??
+    (createTransport({
+      host: source.host,
+      port: source.port ?? 587,
+      secure: source.secure ?? false,
+      ...(source.user ? { auth: { user: source.user, pass: source.password ?? '' } } : {}),
+    }) as unknown as Transporter as MailTransport);
+
+  return {
+    async file(report: FaultReport): Promise<string> {
+      const number = reference();
+
+      // Labelled lines, plain text. A person reads this on a phone and a mail rule may parse it,
+      // and neither is served by HTML. The reference leads the subject so it survives a reply
+      // chain and a truncated notification.
+      const text = [
+        `Reference:   ${number}`,
+        `Room:        ${report.roomId}`,
+        `Equipment:   ${report.equipment}`,
+        `Reported by: ${report.reportedBy}`,
+        `Reported at: ${report.reportedAt.toISOString()}`,
+        ...(report.note ? [`Note:        ${report.note}`] : []),
+        '',
+        `Reported through Lodge at ${report.institution}.`,
+        'Replying to this message does not reach the person who reported it.',
+      ].join('\n');
+
+      try {
+        await transport.sendMail({
+          from: source.from,
+          to: source.to,
+          subject: `[${number}] ${report.equipment} in ${report.roomId} — ${report.institution}`,
+          text,
+        });
+      } catch (error) {
+        throw new IssueSinkError(
+          `The fault could not be sent to '${source.to}' through ${source.host}.`,
+          { cause: error },
+        );
+      }
+
+      return number;
+    },
+  };
+}
 
 // ── Webhook ──────────────────────────────────────────────────────────────────
 

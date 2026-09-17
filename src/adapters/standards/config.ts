@@ -12,7 +12,7 @@
  */
 
 import type { Capability, ProviderDescriptor } from '../../provider/index.ts';
-import type { JiraSource, WebhookSource } from './issues.ts';
+import type { EmailSource, JiraSource, WebhookSource } from './issues.ts';
 
 export interface InventorySource {
   /** Path or URL to a CSV of rooms. Columns are described in `fixtures/README.md`. */
@@ -43,6 +43,7 @@ export interface DirectorySource {
  * can receive a report and cannot answer "how is mine going", so it yields `issue-reporting` alone.
  */
 export interface IssuesSource {
+  readonly email?: EmailSource;
   readonly webhook?: WebhookSource;
   readonly jira?: JiraSource;
 }
@@ -138,7 +139,7 @@ export class ConfigurationError extends Error {
  * in an afternoon and giving up on it — which is the whole bet of the project.
  */
 export function assertConfigUsable(config: StandardsConfig): void {
-  const sinks = [config.issues?.webhook, config.issues?.jira].filter(Boolean);
+  const sinks = [config.issues?.email, config.issues?.webhook, config.issues?.jira].filter(Boolean);
   if (config.issues && sinks.length !== 1) {
     throw new ConfigurationError(
       `'${config.institution}' configures ${sinks.length} fault destinations under 'issues'. ` +

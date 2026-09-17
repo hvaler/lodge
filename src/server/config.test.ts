@@ -22,6 +22,26 @@ const CARRIGMORE = {
 };
 
 describe('where faults go', () => {
+  it('accepts an email address, which is the one every institution already has', () => {
+    const config = parseLodgeConfig({
+      ...CARRIGMORE,
+      standards: {
+        ...CARRIGMORE.standards,
+        issues: {
+          email: {
+            to: 'facilities@carrigmore.ie',
+            from: 'lodge@carrigmore.ie',
+            host: 'smtp.carrigmore.ie',
+          },
+        },
+      },
+    });
+
+    expect(config.institutions.get('default')?.standards?.issues?.email?.to).toBe(
+      'facilities@carrigmore.ie',
+    );
+  });
+
   it('accepts a webhook', () => {
     const config = parseLodgeConfig({
       ...CARRIGMORE,
@@ -63,8 +83,8 @@ describe('where faults go', () => {
         standards: {
           ...CARRIGMORE.standards,
           issues: {
+            email: { to: 'a@b.ie', from: 'c@d.ie', host: 'smtp.example.ie' },
             webhook: { url: 'https://desk.example.ie/faults', referenceField: 'id' },
-            jira: { url: 'https://x.atlassian.net', project: 'FM', email: 'a@b.ie', token: 't' },
           },
         },
       });

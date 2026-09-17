@@ -65,9 +65,14 @@ An institution now names a destination in its config file and `campus.report_iss
 
 | | Can | Why in this order |
 |---|---|---|
+| **Email** | File | The only one that genuinely is a standard every institution already has. One dependency, `nodemailer`, which has none of its own |
 | **Webhook** | File | No vendor, no library, no account. A documented payload the institution wires to whatever they run |
-| **Jira** | File and chase | The worked example of a real tracker, because it can do both and because it is the one people ask about |
-| **Email** | File | **Still outstanding.** The only one of the three that genuinely is a standard every institution already has, and it needs an SMTP dependency |
+| **Jira** | File and chase | The worked example of a real tracker, because it can answer back and because it is the one people ask about |
+
+Email mints its own reference and puts it in the subject line, which is the opposite of the webhook
+rule and is not an inconsistency: a webhook belongs to a system that assigns references, an inbox
+assigns nothing until a human reads it, and the reference Lodge writes into the subject is then the
+only thing either side can search for.
 
 Building it needed the frozen interface to move, which is the part worth reading: `issues` obliged
 both filing *and* chasing, and a service desk reached by a webhook can do one and not the other. It

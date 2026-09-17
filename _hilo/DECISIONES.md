@@ -522,11 +522,17 @@ en su fichero de configuracion. **Exactamente uno**: dos abririan dos avisos por
 |---|---|---|
 | **Webhook** | Abrir | Sin proveedor, sin libreria y sin cuenta. Se publica un payload documentado y la institucion lo conecta a lo que tenga |
 | **Jira** | Abrir y consultar | El ejemplo trabajado de un gestor de verdad, porque puede con las dos cosas y porque es el que la gente pregunta |
-| **Correo** | Abrir | **Todavia no.** Es el unico de los tres que de verdad es un estandar que ya tienen todas, y necesita una dependencia SMTP |
+| **Correo** | Abrir | El unico de los tres que de verdad es un estandar que ya tienen todas. Una dependencia, `nodemailer`, que no tiene ninguna suya |
 
 **Detalles que no son obvios:**
 
-La **referencia** se exige, no se inventa. Es lo que la persona cita luego en la mesa de servicio;
+En el **correo**, al reves, Lodge **si** acuna la referencia y la escribe en el asunto. No es una
+incoherencia con lo de abajo: un webhook pertenece a un sistema que asigna las suyas, y un buzon no
+asigna nada hasta que alguien tria el mensaje. Hasta entonces no existe identificador ninguno, y el
+del asunto es lo unico que ambas partes pueden buscar. El alfabeto evita O, 0, I, 1 y L, porque esa
+referencia la dice un sintetizador, la repite una persona y la teclea alguien en una mesa.
+
+En el **webhook**, la referencia se exige, no se inventa. Es lo que la persona cita luego en la mesa de servicio;
 darle un numero nuestro seria darle uno que no significa nada para quien se lo va a decir. Si el
 endpoint no devuelve referencia, el parte falla y se dice.
 

@@ -40,6 +40,17 @@ const directorySchema = z.object({
  */
 const issuesSchema = z
   .object({
+    email: z
+      .object({
+        to: z.string().describe('The service desk address, e.g. servicedesk@example.ie'),
+        from: z.string().describe('Who the message comes from'),
+        host: z.string().describe('SMTP host'),
+        port: z.number().int().positive().optional().describe('Defaults to 587'),
+        secure: z.boolean().optional().describe('True for implicit TLS on 465'),
+        user: z.string().optional(),
+        password: z.string().optional(),
+      })
+      .optional(),
     webhook: z
       .object({
         url: z.url(),
@@ -59,7 +70,7 @@ const issuesSchema = z
       })
       .optional(),
   })
-  .refine((issues) => [issues.webhook, issues.jira].filter(Boolean).length === 1, {
+  .refine((issues) => [issues.email, issues.webhook, issues.jira].filter(Boolean).length === 1, {
     message:
       'needs exactly one destination — two would file the same broken projector twice, and none ' +
       'would publish a reporting tool with nowhere to report to',
@@ -243,6 +254,25 @@ export async function createProviderFor(institution: InstitutionConfig): Promise
     ...(standards.issues
       ? {
           issues: {
+            ...(standards.issues.email
+              ? {
+                  email: {
+                    to: standards.issues.email.to,
+                    from: standards.issues.email.from,
+                    host: standards.issues.email.host,
+                    ...(standards.issues.email.port !== undefined
+                      ? { port: standards.issues.email.port }
+                      : {}),
+                    ...(standards.issues.email.secure !== undefined
+                      ? { secure: standards.issues.email.secure }
+                      : {}),
+                    ...(standards.issues.email.user ? { user: standards.issues.email.user } : {}),
+                    ...(standards.issues.email.password
+                      ? { password: standards.issues.email.password }
+                      : {}),
+                  },
+                }
+              : {}),
             ...(standards.issues.webhook
               ? {
                   webhook: {

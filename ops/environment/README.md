@@ -97,6 +97,31 @@ Sin este bloque, `campus.report_issue` no se publica y el agente **no puede** da
 escribe en el sistema que ya vigiláis. **Exactamente un destino**: dos abrirían dos avisos por el
 mismo proyector.
 
+El más sencillo, y el único que de verdad tenéis ya: **una dirección de correo**.
+
+```json
+"issues": {
+  "email": {
+    "to": "mesadeservicio@example.ie",
+    "from": "lodge@example.ie",
+    "host": "smtp.example.ie",
+    "port": 587,
+    "user": "...", "password": "..."
+  }
+}
+```
+
+Llega un mensaje de texto plano con líneas etiquetadas —referencia, aula, equipo, quién y cuándo—
+y el asunto encabezado por la referencia: `[LDG-7K2MPQ] projector in QUA-G01 — …`.
+
+Aquí **Lodge sí acuña la referencia**, al revés que con el webhook, y no es una incoherencia: un
+webhook pertenece a un sistema que asigna las suyas, mientras que un buzón no asigna nada hasta que
+alguien tría el mensaje. Hasta entonces no existe ningún identificador, y el que Lodge escribe **en
+el asunto** es lo único que ambas partes pueden buscar. El alfabeto evita `O`, `0`, `I`, `1` y `L`,
+porque esa referencia la dice un sintetizador, la repite una persona y la teclea alguien en la mesa.
+
+O un webhook, si preferís conectarlo vosotros a algo:
+
 ```json
 "issues": {
   "webhook": {
@@ -143,14 +168,15 @@ que cada proyecto renombra a su gusto.
 | Configuráis | Se publica |
 |---|---|
 | nada | ninguna de las dos |
+| `email` | `campus.report_issue` |
 | `webhook` | `campus.report_issue` |
 | `jira` | `campus.report_issue` y `campus.issue_status` |
 
+El correo y el webhook reciben y no se les puede preguntar, así que no publican
+`campus.issue_status`. Eso no es una carencia que disimular: es el catálogo diciendo la verdad.
+
 Dar un parte comprueba el aula y su equipo antes de pedir confirmación, así que también necesita el
 inventario **y** el feed de horario. Sin ellos el servidor se niega a arrancar y lo dice.
-
-> **Correo todavía no.** Es el que de verdad tenéis todas y es el siguiente; necesita una
-> dependencia SMTP. Ver [`docs/roadmap.md`](../../docs/roadmap.md).
 
 ---
 

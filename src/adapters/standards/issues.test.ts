@@ -9,6 +9,8 @@
 
 import { createServer } from 'node:http';
 import type { Server } from 'node:http';
+import { createServer as createSocketServer } from 'node:net';
+import type { Server as SocketServer } from 'node:net';
 import { resolve } from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
@@ -18,7 +20,12 @@ import type { RequestContext } from '../../provider/index.ts';
 import { capabilitiesFor } from './config.ts';
 import type { StandardsConfig } from './config.ts';
 import { createStandardsProvider } from './index.ts';
-import { IssueSinkError, createJiraTracker, createWebhookSink } from './issues.ts';
+import {
+  IssueSinkError,
+  createEmailSink,
+  createJiraTracker,
+  createWebhookSink,
+} from './issues.ts';
 
 const FIXTURES = resolve(import.meta.dirname, '../../../fixtures/carrigmore');
 const NOW = new Date('2026-10-06T15:30:00Z');
@@ -31,7 +38,7 @@ const REPORT = {
   institution: 'Carrigmore College',
 };
 
-let servers: Server[] = [];
+let servers: (Server | SocketServer)[] = [];
 
 afterEach(async () => {
   await Promise.all(servers.map((s) => new Promise<void>((done) => s.close(() => done()))));
@@ -68,6 +75,179 @@ async function serving(
   if (typeof address === 'string' || address === null) throw new Error('no port');
   return { url: `http://127.0.0.1:${address.port}`, received };
 }
+
+/**
+ * Enough SMTP to take one message: greet, accept the envelope, swallow the body.
+ *
+ * Written out rather than mocked because the point of this one test is the wire. A stubbed
+ * transport proves our stub agrees with us; this proves nodemailer and a socket agree with each
+ * other, which is where an institution's first attempt actually fails.
+ */
+async function smtpServer(): Promise<{ port: number; messages: string[] }> {
+  const messages: string[] = [];
+
+  const server = createSocketServer((socket) => {
+    let body: string[] | null = null;
+    let buffer = '';
+
+    socket.write('220 localhost ESMTP test\r\n');
+
+    socket.on('data', (chunk) => {
+      buffer += chunk.toString('utf8');
+      let cut: number;
+      while ((cut = buffer.indexOf('\r\n')) !== -1) {
+        const line = buffer.slice(0, cut);
+        buffer = buffer.slice(cut + 2);
+
+        if (body !== null) {
+          if (line === '.') {
+            messages.push(body.join('\n'));
+            body = null;
+            socket.write('250 Queued\r\n');
+          } else {
+            body.push(line);
+          }
+          continue;
+        }
+
+        const verb = line.slice(0, 4).toUpperCase();
+        // No STARTTLS advertised, so nodemailer stays in plaintext on a loopback port.
+        if (verb === 'EHLO' || verb === 'HELO') socket.write('250-localhost\r\n250 SIZE 10240000\r\n');
+        else if (verb === 'MAIL' || verb === 'RCPT') socket.write('250 OK\r\n');
+        else if (verb === 'DATA') {
+          body = [];
+          socket.write('354 Go ahead\r\n');
+        } else if (verb === 'QUIT') {
+          socket.write('221 Bye\r\n');
+          socket.end();
+        } else socket.write('250 OK\r\n');
+      }
+    });
+  });
+
+  servers.push(server);
+  await new Promise<void>((done) => server.listen(0, '127.0.0.1', done));
+  const address = server.address();
+  if (typeof address === 'string' || address === null) throw new Error('no port');
+  return { port: address.port, messages };
+}
+
+describe('the email destination', () => {
+  /** Records what would have been sent, for the assertions that are about wording. */
+  function recording(): { sent: Record<string, string>[]; transport: { sendMail(m: never): Promise<unknown> } } {
+    const sent: Record<string, string>[] = [];
+    return {
+      sent,
+      transport: {
+        async sendMail(message: never) {
+          sent.push(message as unknown as Record<string, string>);
+          return {};
+        },
+      },
+    };
+  }
+
+  it('mints a reference and leads the subject with it', async () => {
+    // An inbox assigns nothing until a human triages it, so this is the only identifier that
+    // exists — and putting it where the desk will read it is what makes it worth quoting.
+    const { sent, transport } = recording();
+    const sink = createEmailSink(
+      { to: 'desk@example.ie', from: 'lodge@example.ie', host: 'smtp.example.ie' },
+      { transport, reference: () => 'LDG-7K2MPQ' },
+    );
+
+    expect(await sink.file(REPORT)).toBe('LDG-7K2MPQ');
+    expect(sent[0]?.['subject']).toBe(
+      '[LDG-7K2MPQ] projector in QUA-G01 — Carrigmore College',
+    );
+  });
+
+  it('writes plain, labelled lines a person or a mail rule can both read', async () => {
+    const { sent, transport } = recording();
+
+    await createEmailSink(
+      { to: 'desk@example.ie', from: 'lodge@example.ie', host: 'smtp.example.ie' },
+      { transport, reference: () => 'LDG-AAAAAA' },
+    ).file({ ...REPORT, note: 'flickers after ten minutes' });
+
+    const text = sent[0]?.['text'] ?? '';
+    expect(text).toContain('Reference:   LDG-AAAAAA');
+    expect(text).toContain('Room:        QUA-G01');
+    expect(text).toContain('Equipment:   projector');
+    expect(text).toContain('Reported by: u-1001');
+    expect(text).toContain('Note:        flickers after ten minutes');
+    // Nobody at the desk should think replying reaches the student.
+    expect(text).toContain('does not reach the person who reported it');
+  });
+
+  it('leaves the note out entirely when there is none, rather than printing an empty label', async () => {
+    const { sent, transport } = recording();
+
+    await createEmailSink(
+      { to: 'desk@example.ie', from: 'lodge@example.ie', host: 'smtp.example.ie' },
+      { transport, reference: () => 'LDG-AAAAAA' },
+    ).file(REPORT);
+
+    expect(sent[0]?.['text']).not.toContain('Note:');
+  });
+
+  it('sends from and to whoever the institution configured', async () => {
+    const { sent, transport } = recording();
+
+    await createEmailSink(
+      { to: 'facilities@carrigmore.ie', from: 'lodge@carrigmore.ie', host: 'smtp.example.ie' },
+      { transport, reference: () => 'LDG-AAAAAA' },
+    ).file(REPORT);
+
+    expect(sent[0]?.['to']).toBe('facilities@carrigmore.ie');
+    expect(sent[0]?.['from']).toBe('lodge@carrigmore.ie');
+  });
+
+  it('generates references nobody can mishear', async () => {
+    // Spoken by a synthesiser, repeated by a person, typed at a desk. Every step is a chance to
+    // turn an O into a zero, so neither is in the alphabet.
+    const { transport } = recording();
+    const sink = createEmailSink(
+      { to: 'desk@example.ie', from: 'lodge@example.ie', host: 'smtp.example.ie' },
+      { transport },
+    );
+
+    const references = await Promise.all(Array.from({ length: 40 }, () => sink.file(REPORT)));
+
+    for (const reference of references) expect(reference).toMatch(/^LDG-[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{6}$/);
+    // And they have to be different, or two faults share one.
+    expect(new Set(references).size).toBeGreaterThan(35);
+  });
+
+  it('actually sends it over SMTP', async () => {
+    const { port, messages } = await smtpServer();
+
+    const reference = await createEmailSink({
+      to: 'desk@example.ie',
+      from: 'lodge@example.ie',
+      host: '127.0.0.1',
+      port,
+      secure: false,
+    }).file(REPORT);
+
+    expect(reference).toMatch(/^LDG-/);
+    expect(messages).toHaveLength(1);
+    expect(messages[0]).toContain(reference);
+    expect(messages[0]).toContain('QUA-G01');
+  });
+
+  it('says so when the mail server is not there', async () => {
+    const sink = createEmailSink({
+      to: 'desk@example.ie',
+      from: 'lodge@example.ie',
+      host: '127.0.0.1',
+      port: 1,
+    });
+
+    await expect(sink.file(REPORT)).rejects.toThrow(IssueSinkError);
+    await expect(sink.file(REPORT)).rejects.toThrow(/could not be sent to 'desk@example.ie'/);
+  });
+});
 
 describe('the webhook destination', () => {
   it('files the fault and speaks back the reference the institution gave it', async () => {
@@ -266,6 +446,17 @@ describe('what an institution gets for configuring each one', () => {
     inventory: { location: resolve(FIXTURES, 'rooms.csv') },
     calendars: { timetable: resolve(FIXTURES, 'timetable.ics') },
   } satisfies StandardsConfig;
+
+  it('email publishes reporting and not chasing', () => {
+    // The destination every institution already has, and the one that cannot be asked back.
+    const capabilities = capabilitiesFor({
+      ...base,
+      issues: { email: { to: 'desk@example.ie', from: 'lodge@example.ie', host: 'smtp.example.ie' } },
+    });
+
+    expect(capabilities).toContain('issue-reporting');
+    expect(capabilities).not.toContain('issue-tracking');
+  });
 
   it('a webhook publishes reporting and not chasing', () => {
     // The whole reason ADR-017 split the capability: this institution can take a fault report and
