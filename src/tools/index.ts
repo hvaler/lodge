@@ -123,8 +123,10 @@ export function registerTools(
       case 'wayfinding':
         registerWayfind(server, provider, resolveContext);
         break;
-      case 'issues':
+      case 'issue-reporting':
         registerReportIssue(server, provider, resolveContext);
+        break;
+      case 'issue-tracking':
         registerIssueStatus(server, provider, resolveContext);
         break;
     }

@@ -91,6 +91,69 @@ Si el `sub` de vuestro IdP es un identificador opaco y el directorio indexa por 
 
 ---
 
+## Dónde van los partes de avería
+
+Sin este bloque, `campus.report_issue` no se publica y el agente **no puede** dar un aviso. Con él,
+escribe en el sistema que ya vigiláis. **Exactamente un destino**: dos abrirían dos avisos por el
+mismo proyector.
+
+```json
+"issues": {
+  "webhook": {
+    "url": "https://mesadeservicio.example.ie/faults",
+    "referenceField": "id",
+    "headers": { "x-api-key": "..." }
+  }
+}
+```
+
+Lodge hace `POST` con este cuerpo, que es estable y podéis conectar a lo que sea:
+
+```json
+{
+  "room": "QUA-G01", "equipment": "projector", "note": "",
+  "reportedBy": "u-1001", "reportedAt": "2026-10-06T15:30:00.000Z",
+  "institution": "Carrigmore College", "source": "lodge"
+}
+```
+
+`referenceField` dice de qué campo de vuestra respuesta sale la referencia (admite anidado:
+`data.ticket.id`). **Se exige**: es lo que la persona os cita luego, y darle un número nuestro sería
+darle uno que no significa nada para quien se lo va a decir. Si no la devolvéis, el parte falla y se
+dice en voz alta.
+
+O Jira, que además puede contestar «cómo va el mío»:
+
+```json
+"issues": {
+  "jira": {
+    "url": "https://example.atlassian.net",
+    "project": "FM",
+    "email": "lodge@example.ie",
+    "token": "...",
+    "issueType": "Task"
+  }
+}
+```
+
+Atribuye con una **etiqueta** (`lodge-<subject>`) y no con el campo `reporter`, porque eso exigiría
+una cuenta de Jira por estudiante. El estado sale de la *categoría* del estado y no de su nombre,
+que cada proyecto renombra a su gusto.
+
+| Configuráis | Se publica |
+|---|---|
+| nada | ninguna de las dos |
+| `webhook` | `campus.report_issue` |
+| `jira` | `campus.report_issue` y `campus.issue_status` |
+
+Dar un parte comprueba el aula y su equipo antes de pedir confirmación, así que también necesita el
+inventario **y** el feed de horario. Sin ellos el servidor se niega a arrancar y lo dice.
+
+> **Correo todavía no.** Es el que de verdad tenéis todas y es el siguiente; necesita una
+> dependencia SMTP. Ver [`docs/roadmap.md`](../../docs/roadmap.md).
+
+---
+
 ## Trazas
 
 Apagadas mientras no digas dónde mandarlas:

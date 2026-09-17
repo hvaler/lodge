@@ -57,13 +57,18 @@ you declared its capability.** Both directions are checked when the adapter load
 | `timetable` | `timetable` |
 | `deadlines` | `deadlines` |
 | `wayfinding` | `wayfind` |
-| `issues` | `reportIssue`, `issueStatus` |
+| `issue-reporting` | `reportIssue` — **also needs `rooms`**, because filing checks the room and its equipment first |
+| `issue-tracking` | `issueStatus` |
 
 Get it wrong and the process refuses to start, naming what is missing:
 
 ```
-Adapter 'example' declares capability 'issues' but does not implement 'reportIssue'.
+Adapter 'example' declares capability 'issue-reporting' but does not implement 'reportIssue'.
 ```
+
+Filing and chasing are **two** capabilities on purpose. A service desk reached by a webhook can
+receive a fault report and cannot answer "how is mine going"; one capability would have forced such
+an institution to publish a tool that cannot work (ADR-017).
 
 That check is the whole reason the catalogue is trustworthy. The six MCP tools are derived from what
 you declare, so an institution with no fault tracker never sees the agent offer to file one — and

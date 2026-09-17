@@ -30,6 +30,8 @@ el markdown es **lo que cambia mientras se construye**.
 | ADR-014 | En el destino gestionado solo persisten los avisos; el dataset vive en el codigo | 2026-09-16 | Aceptada | Despliegue |
 | ADR-015 | Instrumentar siempre, exportar solo si lo piden | 2026-09-16 | Aceptada | Observabilidad |
 | ADR-016 | La demostracion publica es una segunda funcion, con tope diario duro | 2026-09-16 | Aceptada | Despliegue |
+| ADR-017 | 'issues' se parte en abrir y consultar | 2026-09-17 | Aceptada | Arquitectura |
+| ADR-018 | Los partes van al sistema que la institucion ya vigila | 2026-09-17 | Aceptada | Integracion |
 
 ---
 
@@ -139,6 +141,22 @@ la interfaz a proposito con los tres tipos de deriva antes de dar la congelacion
 capacidades, de los metodos y de las seis herramientas. Renombrar `campus.find_room` no es una
 refactorizacion: ese nombre esta en el video, en la guia de adopcion y en cualquier cliente que una
 institucion ya haya apuntado a su servidor.
+
+**ENMENDADA el 17-09-2026**, y por el procedimiento que esta misma decision describe. `issues` se
+partio en `issue-reporting` e `issue-tracking` (ADR-017). Lo que paso, en orden: el compilador fallo
+en `frozen.ts` senalando tres lineas, se actualizo la instantanea **a mano**, se repasaron los dos
+adaptadores y las seis herramientas, y seis tests del contrato se pusieron en rojo y hubo que
+decidir uno por uno si el cambio era correcto. Uno de ellos —"acepta `issue-reporting` declarada
+sola"— fallaba porque la comprobacion de dependencias nueva funcionaba.
+
+La fecha de congelacion **no se reinicia**. Una congelacion que reiniciase el reloj cada vez que
+alguien cambia algo seria un registro de cambios, no una congelacion; lo que la fecha dice es cuando
+el contrato dejo de moverse *por defecto*, y eso sigue siendo cierto. `frozen.ts` lleva ahora
+`AMENDED_ON` al lado de `FROZEN_ON`.
+
+Y es un argumento a favor de haber congelado: el contrato aguanto cuatro hitos, dos adaptadores, el
+despliegue gestionado, OAuth y las trazas sin moverse, y lo primero que de verdad lo tenso fue una
+capacidad que nadie habia construido todavia.
 
 **Consecuencia** — Si M4 o M5 necesitan mover el contrato, se actualiza la instantanea a mano y se
 anota aqui. El riesgo se evaluo antes de congelar: OAuth 2.1 vive en la capa de servidor e
@@ -461,5 +479,70 @@ incrementar **un** contador. Nada mas.
 vive detras de `-c sandbox=true`. La pagina desplegada sirve solo San Telmo: los ficheros de
 Carrigmore no estan en el paquete de esa funcion, y ofrecer el cambio de institucion seria ofrecer
 un boton que falla. Ese momento esta en el video y en `npm run demo`, donde es real.
+
+---
+
+
+## ADR-017 · `issues` se parte en abrir y consultar
+
+**Contexto** — Hasta hoy una sola capacidad, `issues`, obligaba a implementar `reportIssue` **y**
+`issueStatus`. Al ponerse a integrar un gestor de incidencias real aparecio el problema: una mesa de
+servicio a la que se llega por correo puede **recibir** un parte y no puede responder "como va el
+mio". Esa institucion tendria que declarar una herramienta que no funciona, que es exactamente el
+fallo que la negociacion de capacidades existe para impedir.
+
+**Decision** — Dos capacidades: `issue-reporting` (publica `campus.report_issue`) e `issue-tracking`
+(publica `campus.issue_status`). Una institucion declara las que pueda.
+
+**Y una dependencia entre capacidades**, que es nueva en el modelo: `issue-reporting` exige `rooms`.
+Dar un parte comprueba que el aula existe y que tiene ese equipo **antes** de pedir confirmacion, asi
+que sin `rooms` la herramienta reventaria en su primera llamada. Se comprueba al cargar, con todo lo
+demas. La alternativa —dejar que la herramienta se degrade y abrir un parte contra un aula que nadie
+encuentra— convierte un error de configuracion en un aviso de mantenimiento para un aula inexistente.
+
+**Lo que cuesta** — La dependencia es a nivel de *capacidad*, no de metodo, y eso es mas estricto de
+lo que suena: `rooms` exige a su vez inventario **y** horario, asi que una institucion con gestor de
+incidencias y lista de aulas pero sin horario no puede dar partes. Se acepta porque "las capacidades
+dependen de capacidades" es el modelo mas simple de mantener honesto; si a alguien le aprieta, lo
+siguiente que se parte es `rooms`, y la congelacion volvera a hacerlo deliberado.
+
+---
+
+## ADR-018 · Los partes van al sistema que la institucion ya vigila
+
+**Contexto** — Un proyector roto tiene que llegar a quien arregla proyectores, y esa gente no mira
+una cola que Lodge se invento: mira la que ya tiene abierta.
+
+**Decision** — El adaptador de estandares escribe hacia fuera, y el destino lo elige la institucion
+en su fichero de configuracion. **Exactamente uno**: dos abririan dos avisos por el mismo proyector.
+
+**El orden en que se han construido importa, y no es el que se pide primero:**
+
+| | Puede | Por que en este puesto |
+|---|---|---|
+| **Webhook** | Abrir | Sin proveedor, sin libreria y sin cuenta. Se publica un payload documentado y la institucion lo conecta a lo que tenga |
+| **Jira** | Abrir y consultar | El ejemplo trabajado de un gestor de verdad, porque puede con las dos cosas y porque es el que la gente pregunta |
+| **Correo** | Abrir | **Todavia no.** Es el unico de los tres que de verdad es un estandar que ya tienen todas, y necesita una dependencia SMTP |
+
+**Detalles que no son obvios:**
+
+La **referencia** se exige, no se inventa. Es lo que la persona cita luego en la mesa de servicio;
+darle un numero nuestro seria darle uno que no significa nada para quien se lo va a decir. Si el
+endpoint no devuelve referencia, el parte falla y se dice.
+
+En **Jira** se atribuye con una **etiqueta** (`lodge-<subject>`) y no con el campo `reporter`, porque
+eso ultimo exigiria una cuenta de Jira por estudiante, que es una conversacion de licencias y no una
+integracion. `openedBy` busca por esa etiqueta, asi que el limite de privacidad esta en la consulta
+y no en un filtro aplicado despues.
+
+El **estado** se mapea desde la *categoria* de Jira y no desde el nombre del estado, que cada
+proyecto renombra a su gusto.
+
+Los errores de Jira **no se repiten hacia fuera**: sus cuerpos llevan nombres de campos y detalles de
+configuracion del proyecto, y ese mensaje llega a una persona por un altavoz.
+
+**Consecuencia para la demostracion** — Carrigmore sigue **sin** configurar destino a proposito. Que
+no pueda dar un parte es lo mas convincente que hace la demostracion: el agente no se niega, es que
+no puede, porque la herramienta nunca estuvo en el catalogo que le dieron.
 
 ---

@@ -38,17 +38,22 @@ describe('assertProviderCoherent', () => {
     expect(() => assertProviderCoherent(providerFor([...CAPABILITIES]))).not.toThrow();
   });
 
-  it.each(CAPABILITIES)('accepts %s declared on its own', (capability) => {
+  // Every capability stands alone except the one that depends on another, which has its own
+  // block below. Listing the exception here rather than filtering silently keeps the test honest
+  // about what it is not covering.
+  const STANDALONE = CAPABILITIES.filter((c) => c !== 'issue-reporting');
+
+  it.each(STANDALONE)('accepts %s declared on its own', (capability) => {
     expect(() => assertProviderCoherent(providerFor([capability]))).not.toThrow();
   });
 
   it('rejects a capability that is declared but not implemented', () => {
-    // Arrange: declares `issues` but the methods were never attached.
-    const provider = { descriptor: descriptorFor(['issues']) } as unknown as Provider;
+    // Arrange: declares `issue-tracking` but the method was never attached.
+    const provider = { descriptor: descriptorFor(['issue-tracking']) } as unknown as Provider;
 
     // Act & Assert
     expect(() => assertProviderCoherent(provider)).toThrow(ProviderContractError);
-    expect(() => assertProviderCoherent(provider)).toThrow(/declares capability 'issues'/);
+    expect(() => assertProviderCoherent(provider)).toThrow(/declares capability 'issue-tracking'/);
   });
 
   it('rejects a method that is implemented but not declared', () => {
@@ -59,11 +64,41 @@ describe('assertProviderCoherent', () => {
       findFreeRooms: noop,
       getRoom: noop,
       listRooms: noop,
-      reportIssue: noop,
       issueStatus: noop,
     } as unknown as Provider;
 
-    expect(() => assertProviderCoherent(provider)).toThrow(/does not declare capability 'issues'/);
+    expect(() => assertProviderCoherent(provider)).toThrow(
+      /does not declare capability 'issue-tracking'/,
+    );
+  });
+
+  describe('filing a fault needs somewhere to check the room', () => {
+    it('refuses issue-reporting without rooms, naming what is missing', () => {
+      // The tool validates the room and its equipment before asking anyone to confirm. Without
+      // `rooms` it would throw on its first call, and a configuration mistake would surface as a
+      // broken conversation rather than as a server that refused to start.
+      const provider = providerFor(['issue-reporting']);
+
+      expect(() => assertProviderCoherent(provider)).toThrow(ProviderContractError);
+      expect(() => assertProviderCoherent(provider)).toThrow(
+        /declares 'issue-reporting', which needs 'rooms' as well/,
+      );
+    });
+
+    it('accepts issue-reporting alongside rooms', () => {
+      expect(() =>
+        assertProviderCoherent(providerFor(['rooms', 'issue-reporting'])),
+      ).not.toThrow();
+    });
+
+    it('lets an institution take reports without being able to chase them', () => {
+      // The whole point of the split: a service desk reached by email can receive a fault and
+      // cannot answer "how is mine going". It publishes one tool, not two.
+      const provider = providerFor(['rooms', 'issue-reporting']);
+
+      expect(toolCatalogue(provider)).toContain('campus.report_issue');
+      expect(toolCatalogue(provider)).not.toContain('campus.issue_status');
+    });
   });
 
   it('rejects a provider that declares nothing, since it would publish no tools', () => {
@@ -75,7 +110,7 @@ describe('assertProviderCoherent', () => {
 
 describe('toolCatalogue', () => {
   it('publishes only the tools of the declared capabilities', () => {
-    // An institution with no issue tracker: the agent must never offer to file a fault.
+    // An institution with no issue tracker at all: the agent must never offer to file a fault.
     const catalogue = toolCatalogue(providerFor(['rooms', 'timetable', 'deadlines']));
 
     expect(catalogue).toEqual(['campus.find_room', 'campus.timetable', 'campus.deadlines']);

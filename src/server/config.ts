@@ -31,6 +31,40 @@ const directorySchema = z.object({
   subjectAttribute: z.string().optional().describe('Attribute matching the token subject. Defaults to uid.'),
 });
 
+/**
+ * Where a reported fault goes. Exactly one destination.
+ *
+ * A webhook can receive a report and cannot answer "how is mine going", so an institution that
+ * configures one publishes `campus.report_issue` and not `campus.issue_status` (ADR-017). Jira can
+ * do both.
+ */
+const issuesSchema = z
+  .object({
+    webhook: z
+      .object({
+        url: z.url(),
+        headers: z.record(z.string(), z.string()).optional(),
+        referenceField: z
+          .string()
+          .describe('Field of the JSON answer carrying the reference, dotted: key, data.id'),
+      })
+      .optional(),
+    jira: z
+      .object({
+        url: z.url().describe('e.g. https://example.atlassian.net'),
+        project: z.string().describe('Project key faults are filed under, e.g. FM'),
+        email: z.string().describe('Account the API token belongs to'),
+        token: z.string(),
+        issueType: z.string().optional().describe('Defaults to Task'),
+      })
+      .optional(),
+  })
+  .refine((issues) => [issues.webhook, issues.jira].filter(Boolean).length === 1, {
+    message:
+      'needs exactly one destination — two would file the same broken projector twice, and none ' +
+      'would publish a reporting tool with nowhere to report to',
+  });
+
 const standardsSchema = z.object({
   institution: z.string(),
   locale: z.string().describe('BCP 47, e.g. en-IE'),
@@ -43,6 +77,7 @@ const standardsSchema = z.object({
     })
     .optional(),
   directory: directorySchema.optional(),
+  issues: issuesSchema.optional(),
 });
 
 /**
@@ -203,6 +238,38 @@ export async function createProviderFor(institution: InstitutionConfig): Promise
         }
       : {}),
     ...(standards.directory ? { directory: standards.directory } : {}),
+    // Same omit-rather-than-undefined dance as above, one level deeper: the destination is a
+    // union of two optional shapes and only one of them is ever present.
+    ...(standards.issues
+      ? {
+          issues: {
+            ...(standards.issues.webhook
+              ? {
+                  webhook: {
+                    url: standards.issues.webhook.url,
+                    referenceField: standards.issues.webhook.referenceField,
+                    ...(standards.issues.webhook.headers
+                      ? { headers: standards.issues.webhook.headers }
+                      : {}),
+                  },
+                }
+              : {}),
+            ...(standards.issues.jira
+              ? {
+                  jira: {
+                    url: standards.issues.jira.url,
+                    project: standards.issues.jira.project,
+                    email: standards.issues.jira.email,
+                    token: standards.issues.jira.token,
+                    ...(standards.issues.jira.issueType
+                      ? { issueType: standards.issues.jira.issueType }
+                      : {}),
+                  },
+                }
+              : {}),
+          },
+        }
+      : {}),
   };
 
   return createStandardsProvider(sources, directory);

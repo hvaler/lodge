@@ -15,10 +15,12 @@ import type {
   DeadlineQuery,
   FreeRoomQuery,
   Provider,
+  ReportIssueQuery,
   RequestContext,
   Room,
   Route,
   Session,
+  Ticket,
   TimetableQuery,
   WayfindQuery,
 } from '../../provider/index.ts';
@@ -26,6 +28,8 @@ import { loadDeadlines, loadTimetable } from './calendars.ts';
 import type { TimetableFeed } from './calendars.ts';
 import { assertConfigUsable, capabilitiesFor, descriptorFor } from './config.ts';
 import type { StandardsConfig } from './config.ts';
+import { createJiraTracker, createWebhookSink } from './issues.ts';
+import type { Fetch, IssueSink, IssueTracker } from './issues.ts';
 import { loadInventory } from './inventory.ts';
 import type { Inventory, StandardsRoom } from './inventory.ts';
 
@@ -42,6 +46,7 @@ interface Loaded {
   readonly timetable: TimetableFeed | null;
   readonly deadlines: readonly Deadline[] | null;
   readonly directory: DirectoryLookup | null;
+  readonly issues: (IssueSink & Partial<IssueTracker>) | null;
 }
 
 /** What a directory has to answer for the timetable to be attributable to anyone. */
@@ -147,9 +152,67 @@ function wayfind(loaded: Loaded) {
  * Failing here, loudly and with the offending file named, is the point: an institution finds out
  * its feed URL is wrong at start-up rather than the first time a student asks a question.
  */
+/**
+ * Files a fault into wherever the institution said.
+ *
+ * The room and its equipment are checked here as well as in the tool, because a provider is a
+ * public interface and somebody will call it directly. The check is what makes the confirmation
+ * mean something: confirming "the projector in 203" only matters if a room without a projector
+ * would have been refused.
+ */
+function reportIssue(loaded: Loaded) {
+  return async (ctx: RequestContext, query: ReportIssueQuery): Promise<Ticket> => {
+    const subject = ctx.principal?.subject;
+    if (!subject) throw new UnauthenticatedError('Reporting a fault');
+
+    const room = loaded.inventory!.roomById(query.roomId);
+    if (!room) throw new NotFoundError('room', query.roomId);
+
+    const wanted = query.equipment.trim().toLowerCase();
+    const equipment = room.equipment.find((item) => item.toLowerCase() === wanted);
+    if (!equipment) {
+      throw new InvalidRequestError(
+        `${room.id} has no '${query.equipment}'. It has: ${room.equipment.join(', ')}.`,
+      );
+    }
+
+    const reference = await loaded.issues!.file({
+      roomId: room.id,
+      equipment,
+      ...(query.note ? { note: query.note } : {}),
+      reportedBy: subject,
+      reportedAt: ctx.now,
+      institution: loaded.config.institution,
+    });
+
+    // `open` because that is what it is the instant it is filed, whatever the institution's own
+    // workflow calls the first column. Asking the tracker back for the status of something created
+    // a millisecond ago would be a round trip to learn what we already know.
+    return {
+      number: reference,
+      roomId: room.id,
+      equipment,
+      status: 'open',
+      openedAt: ctx.now,
+    };
+  };
+}
+
+/** Only what this caller filed. UC-06 is a privacy boundary, not a convenience filter. */
+function issueStatus(loaded: Loaded) {
+  return async (ctx: RequestContext): Promise<readonly Ticket[]> => {
+    const subject = ctx.principal?.subject;
+    if (!subject) throw new UnauthenticatedError('Checking a fault report');
+
+    return loaded.issues!.openedBy!(subject);
+  };
+}
+
 export async function createStandardsProvider(
   config: StandardsConfig,
   directory?: DirectoryLookup,
+  /** Injected so a test can answer a webhook or a Jira without a network. */
+  fetchImpl?: Fetch,
 ): Promise<Provider> {
   assertConfigUsable(config);
 
@@ -167,6 +230,11 @@ export async function createStandardsProvider(
       ? await loadDeadlines(config.calendars.deadlines, config.timeZone)
       : null,
     directory: directory ?? null,
+    issues: config.issues?.jira
+      ? createJiraTracker(config.issues.jira, fetchImpl ?? fetch)
+      : config.issues?.webhook
+        ? createWebhookSink(config.issues.webhook, fetchImpl ?? fetch)
+        : null,
   };
 
   // A configured directory with no lookup supplied is a wiring mistake, and it would silently
@@ -191,6 +259,8 @@ export async function createStandardsProvider(
   if (capabilities.includes('wayfinding')) provider['wayfind'] = wayfind(loaded);
   if (capabilities.includes('deadlines')) provider['deadlines'] = deadlines(loaded);
   if (capabilities.includes('timetable')) provider['timetable'] = timetable(loaded);
+  if (capabilities.includes('issue-reporting')) provider['reportIssue'] = reportIssue(loaded);
+  if (capabilities.includes('issue-tracking')) provider['issueStatus'] = issueStatus(loaded);
 
   return provider as unknown as Provider;
 }

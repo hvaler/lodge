@@ -11,14 +11,27 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { FROZEN_ON } from './frozen.ts';
-import { CAPABILITIES, CAPABILITY_METHODS, CAPABILITY_TOOLS, toolCatalogue } from './provider.ts';
+import { AMENDED_ON, FROZEN_ON } from './frozen.ts';
+import {
+  CAPABILITIES,
+  CAPABILITY_METHODS,
+  CAPABILITY_REQUIRES,
+  CAPABILITY_TOOLS,
+  toolCatalogue,
+} from './provider.ts';
 import type { Provider } from './provider.ts';
 
-describe(`the provider interface, frozen on ${FROZEN_ON} (ADR-006)`, () => {
-  it('declares five capabilities, in this order', () => {
+describe(`the provider interface, frozen on ${FROZEN_ON}, amended ${AMENDED_ON.join(', ')} (ADR-006)`, () => {
+  it('declares six capabilities, in this order', () => {
     // The order is the catalogue order a client sees, so it is part of the contract too.
-    expect([...CAPABILITIES]).toEqual(['rooms', 'timetable', 'deadlines', 'wayfinding', 'issues']);
+    expect([...CAPABILITIES]).toEqual([
+      'rooms',
+      'timetable',
+      'deadlines',
+      'wayfinding',
+      'issue-reporting',
+      'issue-tracking',
+    ]);
   });
 
   it('obliges exactly these methods per capability', () => {
@@ -27,8 +40,13 @@ describe(`the provider interface, frozen on ${FROZEN_ON} (ADR-006)`, () => {
       timetable: ['timetable'],
       deadlines: ['deadlines'],
       wayfinding: ['wayfind'],
-      issues: ['reportIssue', 'issueStatus'],
+      'issue-reporting': ['reportIssue'],
+      'issue-tracking': ['issueStatus'],
     });
+  });
+
+  it('records which capabilities need another one', () => {
+    expect(CAPABILITY_REQUIRES).toEqual({ 'issue-reporting': ['rooms'] });
   });
 
   it('publishes exactly these tools per capability', () => {
@@ -37,7 +55,8 @@ describe(`the provider interface, frozen on ${FROZEN_ON} (ADR-006)`, () => {
       timetable: ['campus.timetable'],
       deadlines: ['campus.deadlines'],
       wayfinding: ['campus.wayfind'],
-      issues: ['campus.report_issue', 'campus.issue_status'],
+      'issue-reporting': ['campus.report_issue'],
+      'issue-tracking': ['campus.issue_status'],
     });
   });
 

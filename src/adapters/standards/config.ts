@@ -12,6 +12,7 @@
  */
 
 import type { Capability, ProviderDescriptor } from '../../provider/index.ts';
+import type { JiraSource, WebhookSource } from './issues.ts';
 
 export interface InventorySource {
   /** Path or URL to a CSV of rooms. Columns are described in `fixtures/README.md`. */
@@ -34,6 +35,18 @@ export interface DirectorySource {
   readonly baseDN: string;
 }
 
+/**
+ * Where a reported fault goes.
+ *
+ * Exactly one of these, because two would mean filing the same fault twice and nobody wants two
+ * tickets for one projector. Which one an institution picks decides what it can publish: a webhook
+ * can receive a report and cannot answer "how is mine going", so it yields `issue-reporting` alone.
+ */
+export interface IssuesSource {
+  readonly webhook?: WebhookSource;
+  readonly jira?: JiraSource;
+}
+
 export interface StandardsConfig {
   readonly institution: string;
   /** BCP 47, e.g. `en-IE`. Drives how dates and times are spoken. */
@@ -44,6 +57,7 @@ export interface StandardsConfig {
   readonly inventory?: InventorySource;
   readonly calendars?: CalendarSource;
   readonly directory?: DirectorySource;
+  readonly issues?: IssuesSource;
 }
 
 /**
@@ -85,6 +99,18 @@ export function capabilitiesFor(config: StandardsConfig, available: Available = 
   if (config.calendars?.deadlines) capabilities.push('deadlines');
   if (config.calendars?.timetable && hasDirectory) capabilities.push('timetable');
 
+  // Filing a fault checks the room and its equipment before asking anyone to confirm, so it needs
+  // `rooms` — which in turn needs the inventory *and* the timetable feed. That is stricter than it
+  // sounds: an institution with a ticketing system and a room list but no timetable cannot publish
+  // this. The alternative was a dependency on a single method rather than a capability, and
+  // capabilities depending on capabilities is the simpler model to keep honest. Noted in
+  // docs/roadmap.md as the next thing to split if it bites somebody.
+  if (config.issues && capabilities.includes('rooms')) capabilities.push('issue-reporting');
+
+  // Only a tracker that can be read back. A webhook is write-only by nature, and publishing
+  // `campus.issue_status` against one would mean offering a tool that answers nothing.
+  if (config.issues?.jira && capabilities.includes('rooms')) capabilities.push('issue-tracking');
+
   return capabilities;
 }
 
@@ -112,6 +138,23 @@ export class ConfigurationError extends Error {
  * in an afternoon and giving up on it — which is the whole bet of the project.
  */
 export function assertConfigUsable(config: StandardsConfig): void {
+  const sinks = [config.issues?.webhook, config.issues?.jira].filter(Boolean);
+  if (config.issues && sinks.length !== 1) {
+    throw new ConfigurationError(
+      `'${config.institution}' configures ${sinks.length} fault destinations under 'issues'. ` +
+        `Exactly one is needed: two would file the same broken projector twice, and none would ` +
+        `publish a reporting tool with nowhere to report to.`,
+    );
+  }
+
+  if (config.issues && !capabilitiesFor(config).includes('issue-reporting')) {
+    throw new ConfigurationError(
+      `'${config.institution}' configures where faults go, but reporting one also needs an ` +
+        `'inventory' CSV and a 'calendars.timetable' feed: the tool checks that the room exists ` +
+        `and has the equipment before asking anyone to confirm.`,
+    );
+  }
+
   if (capabilitiesFor(config).length > 0) return;
 
   const missing: string[] = [];

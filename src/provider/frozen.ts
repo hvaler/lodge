@@ -35,8 +35,23 @@ import type {
   WayfindQuery,
 } from './types.ts';
 
-/** The date the contract stopped being designed. ADR-006. */
+/**
+ * The date the contract stopped being designed. ADR-006.
+ *
+ * Not reset by the amendment below. A freeze that restarted its clock every time somebody changed
+ * something would be a changelog, not a freeze; what the date says is when the contract stopped
+ * moving *by default*, and that is still true.
+ */
 export const FROZEN_ON = '2026-09-16';
+
+/**
+ * Amendments since, newest first. Each one was deliberate and is recorded in ADR-006.
+ *
+ * - **2026-09-17** — `issues` split into `issue-reporting` and `issue-tracking`. A service desk
+ *   reached by email can receive a fault report and cannot answer "how is mine going", and the
+ *   single capability forced such an institution to publish a tool that could not work.
+ */
+export const AMENDED_ON: readonly string[] = ['2026-09-17'];
 
 // ── The checks ───────────────────────────────────────────────────────────────
 
@@ -150,7 +165,13 @@ interface FrozenReportIssueQuery {
   readonly note?: string;
 }
 
-type FrozenCapability = 'rooms' | 'timetable' | 'deadlines' | 'wayfinding' | 'issues';
+type FrozenCapability =
+  | 'rooms'
+  | 'timetable'
+  | 'deadlines'
+  | 'wayfinding'
+  | 'issue-reporting'
+  | 'issue-tracking';
 
 interface FrozenProviderDescriptor {
   readonly id: string;

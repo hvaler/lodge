@@ -26,7 +26,14 @@ import type {
  * from that declaration at runtime (ADR-004), so an institution with no issue tracker never sees
  * the agent offer to file a fault.
  */
-export const CAPABILITIES = ['rooms', 'timetable', 'deadlines', 'wayfinding', 'issues'] as const;
+export const CAPABILITIES = [
+  'rooms',
+  'timetable',
+  'deadlines',
+  'wayfinding',
+  'issue-reporting',
+  'issue-tracking',
+] as const;
 
 export type Capability = (typeof CAPABILITIES)[number];
 
@@ -81,10 +88,17 @@ export interface Provider {
   /** `wayfinding` — spoken directions, sufficient without a screen (UC-04). */
   wayfind?(ctx: RequestContext, query: WayfindQuery): Promise<Route | null>;
 
-  /** `issues` — files a fault. Requires an authenticated principal. */
+  /**
+   * `issue-reporting` — files a fault. Requires an authenticated principal.
+   *
+   * Separate from {@link issueStatus} because plenty of institutions can do one and not the other.
+   * A service desk reached by email can receive a report and cannot answer "how is mine going";
+   * declaring a single `issues` capability would have forced such an institution to publish a
+   * tool that cannot work, which is the exact failure capability negotiation exists to prevent.
+   */
   reportIssue?(ctx: RequestContext, query: ReportIssueQuery): Promise<Ticket>;
 
-  /** `issues` — only the tickets opened by `ctx.principal` (UC-06). */
+  /** `issue-tracking` — only the tickets opened by `ctx.principal` (UC-06). */
   issueStatus?(ctx: RequestContext): Promise<readonly Ticket[]>;
 }
 
@@ -94,8 +108,25 @@ export const CAPABILITY_METHODS = {
   timetable: ['timetable'],
   deadlines: ['deadlines'],
   wayfinding: ['wayfind'],
-  issues: ['reportIssue', 'issueStatus'],
+  'issue-reporting': ['reportIssue'],
+  'issue-tracking': ['issueStatus'],
 } as const satisfies Record<Capability, readonly (keyof Provider)[]>;
+
+/**
+ * Capabilities that only make sense alongside another.
+ *
+ * Filing a fault needs {@link Provider.getRoom}: the tool checks that the room exists and that it
+ * has the equipment somebody is reporting **before** asking them to confirm, because confirming
+ * and only then hearing that 301 has no projector wastes the person's turn. An institution that
+ * declared `issue-reporting` without `rooms` would get a tool that throws on its first call.
+ *
+ * Checked at load with everything else. The alternative — letting the tool degrade and file a
+ * report against a room nobody can find — turns a configuration mistake into a maintenance ticket
+ * for a room that does not exist.
+ */
+export const CAPABILITY_REQUIRES = {
+  'issue-reporting': ['rooms'],
+} as const satisfies Partial<Record<Capability, readonly Capability[]>>;
 
 /** Which MCP tools each capability publishes. The catalogue is the union over declared ones. */
 export const CAPABILITY_TOOLS = {
@@ -103,7 +134,8 @@ export const CAPABILITY_TOOLS = {
   timetable: ['campus.timetable'],
   deadlines: ['campus.deadlines'],
   wayfinding: ['campus.wayfind'],
-  issues: ['campus.report_issue', 'campus.issue_status'],
+  'issue-reporting': ['campus.report_issue'],
+  'issue-tracking': ['campus.issue_status'],
 } as const satisfies Record<Capability, readonly string[]>;
 
 export class ProviderContractError extends Error {
@@ -116,8 +148,8 @@ export class ProviderContractError extends Error {
 /**
  * Checks that what the adapter declares and what it implements are the same thing, in both
  * directions. Without this, "the catalogue is derived from capabilities" is a promise in a README:
- * a provider could declare `issues` and not implement `reportIssue`, and the agent would offer a
- * tool that throws.
+ * a provider could declare `issue-reporting` and not implement `reportIssue`, and the agent would
+ * offer a tool that throws.
  *
  * Call it once when the adapter is loaded — failing at start-up beats failing mid-conversation.
  */
@@ -141,6 +173,19 @@ export function assertProviderCoherent(provider: Provider): void {
         throw new ProviderContractError(
           `Adapter '${provider.descriptor.id}' implements '${method}' but does not declare capability '${capability}'. ` +
             `An undeclared method is unreachable: the tool that would call it is never published.`,
+        );
+      }
+    }
+  }
+
+  for (const [capability, needs] of Object.entries(CAPABILITY_REQUIRES)) {
+    if (!declared.has(capability as Capability)) continue;
+    for (const required of needs) {
+      if (!declared.has(required)) {
+        throw new ProviderContractError(
+          `Adapter '${provider.descriptor.id}' declares '${capability}', which needs '${required}' ` +
+            `as well: filing a fault checks the room and its equipment before asking anyone to ` +
+            `confirm, and without '${required}' there is nothing to check against.`,
         );
       }
     }

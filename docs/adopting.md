@@ -104,6 +104,7 @@ the tools you cannot support simply are not published.
 | Timetable feed | iCalendar | occupancy, and `campus.timetable` with a directory |
 | Deadlines feed | iCalendar | `campus.deadlines` |
 | Directory | LDAP | whose timetable it is |
+| Service desk | a webhook, or Jira | `campus.report_issue`, and `campus.issue_status` if it can be read back |
 
 ### 1 · The room list
 
@@ -148,6 +149,11 @@ If your timetable system can export an `.ics` per room or per programme, that is
   }
 }
 ```
+
+Add an `issues` block naming **one** destination and the agent can file faults into the system you
+already watch — a webhook you wire to anything, or Jira. A webhook can receive a report and cannot
+answer "how is mine going", so that institution publishes one tool and not two; the catalogue tells
+the truth either way.
 
 Omit any block you cannot fill. `ops/environment/README.md` has the full reference.
 
