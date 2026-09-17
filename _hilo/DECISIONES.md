@@ -508,6 +508,11 @@ incidencias y lista de aulas pero sin horario no puede dar partes. Se acepta por
 dependen de capacidades" es el modelo mas simple de mantener honesto; si a alguien le aprieta, lo
 siguiente que se parte es `rooms`, y la congelacion volvera a hacerlo deliberado.
 
+> **Apretó el mismo dia.** `rooms` se partio en `room-inventory` y `room-availability` esa misma
+> tarde (ADR-019), asi que la dependencia que este ADR describe es hoy `issue-reporting` →
+> `room-inventory`, sin horario de por medio. Lo de arriba se deja como se escribio: es el
+> razonamiento que llevo a la enmienda siguiente.
+
 ---
 
 ## ADR-018 · Los partes van al sistema que la institucion ya vigila

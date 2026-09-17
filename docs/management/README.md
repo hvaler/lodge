@@ -1,12 +1,9 @@
-# docs/management/ — Gestión del proyecto
+# `docs/management/` — la candidatura
 
-| Fichero | Para qué |
+| Fichero | Qué es |
 |---|---|
-| `config_proyecto.json` | datos básicos del proyecto; rellenarlo al arrancar. Una actualización del ecosistema no lo pisa |
-| `CHECKLIST_INICIO.md` | lista de comprobación para arrancar un proyecto con desarrollo asistido |
-| `requirements/PLANTILLA_REQUERIMIENTOS.md` | plantilla del documento de requisitos |
-| `meetings/PLANTILLA_ACTA_REUNION.md` | plantilla de acta de reunión |
+| [`video-script.md`](video-script.md) | el guion del vídeo de demostración, presupuestado plano a plano contra el límite duro de tres minutos |
+| [`devpost-submission.md`](devpost-submission.md) | el texto de envío, con la lista de campos del formulario al final |
 
-Lo escribe el equipo. Ningún workflow del ecosistema genera ficheros aquí; `/hv:onboarding` solo lee
-`config_proyecto.json`. La memoria viva del proyecto (estado, decisiones, lecciones) no está aquí sino
-en `_hilo/`.
+Esto es papeleo de una candidatura a un hackathon, no documentación del producto. Para **usar**
+Lodge: [`../adopting.md`](../adopting.md).

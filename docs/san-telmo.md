@@ -14,7 +14,7 @@ a number has to change, it changes *here* first.
 | **Locale** | `es-ES` |
 | **Seed** | `san-telmo-2026` (fixed) |
 | **Academic year** | 2026–2027 |
-| **Capabilities declared** | rooms, timetable, deadlines, wayfinding, issues |
+| **Capabilities declared** | all seven: `room-inventory`, `room-availability`, `timetable`, `deadlines`, `wayfinding`, `issue-reporting`, `issue-tracking` |
 
 > **Determinism is a contract.** Same seed → same rooms, same timetables, same issue numbers. Whoever
 > clones the repository gets exactly the answers in the video. The generator must be pure: no

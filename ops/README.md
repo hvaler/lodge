@@ -1,13 +1,14 @@
-# ops/ — Operación y entrega
+# `ops/` — lo que se ejecuta
 
-Todo lo que se **ejecuta** para levantar el entorno, integrar y desplegar. Se organiza por naturaleza,
-no por fase.
+| Fichero | Para qué |
+|---|---|
+| `environment/docker-compose.yml` | Lodge y un LDAP de pruebas, que es como se verificó UC-07: un servidor, dos instituciones, catálogos distintos |
+| `environment/carrigmore.json` | configuración de ejemplo del adaptador `standards`, contra ficheros del repositorio |
+| `environment/demo.json` | la de la demostración pública |
+| `environment/README.md` | **la referencia del fichero de configuración**: cada bloque, qué publica y qué pasa si falta |
 
-| Carpeta | Qué contiene | Quién escribe |
-|---|---|---|
-| `environment/` | `docker-compose.yml` del entorno local y `.env.example` | el equipo (plantillas incluidas) |
-| `cicd/` | runbooks, documentación de pipelines, secretos, `scripts/` | `/hv:cicd-init` y la familia `cicd-*` |
-| `testing/` | configuración que consume el pipeline: `coverlet.runsettings`, `.security-exceptions.yml` | `/hv:cicd-init` |
+La infraestructura de AWS no está aquí sino en [`infra/`](../infra), que es CDK v2 y por tanto
+código. El pipeline está en `.github/workflows/ci.yml`: comprueba tipos, pasa los tests, compila,
+construye la imagen del contenedor y le hace una pregunta.
 
-El fichero de pipeline (`azure-pipelines.yml` u otro) sigue en la raíz del repositorio, donde lo busca
-la plataforma de CI. Dispara con cambios bajo `src/**` y `ops/testing/**`.
+Para desplegar o para adoptarlo, el camino es [`docs/adopting.md`](../docs/adopting.md).

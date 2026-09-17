@@ -201,7 +201,33 @@ _hilo/HISTORIAL_ANALISIS.json
 _hilo/reuniones/
 _hilo/specs/
 
-# El resto de _hilo/ SI se publica a proposito: DECISIONES.md son las dieciseis decisiones
+# Telemetria del ecosistema sobre las sesiones de edicion (46 sesiones: cuantos ficheros se tocaron,
+# que skills corrieron, a que hora). Mide la herramienta, no el proyecto.
+_hilo/METRICAS.json
+
+# Changelog del ecosistema, nunca rellenado: sus noventa y cuatro lineas son la plantilla y
+# cinco marcadores 'X.Y.Z'. El historial de cambios de Lodge es el log de git.
+_hilo/HISTORIAL_CAMBIOS.md
+
+# Plantillas de gestion del ecosistema (acta de reunion, requerimientos, checklist de arranque)
+# y su config_proyecto.json, que describe un proyecto .NET 8 / SQL Server / Azure con el nombre
+# sin rellenar. docs/management/ SI se publica: ahi viven el guion del video y el texto de envio.
+docs/management/CHECKLIST_INICIO.md
+docs/management/config_proyecto.json
+docs/management/meetings/
+docs/management/requirements/
+
+# Carpetas cuyo unico contenido era un README describiendo ficheros que genera el ecosistema y
+# que aqui no existen (diagramas de /hv:analizar, coverlet.runsettings, runbooks de pipeline...).
+# Lo que Lodge tiene que decir de su arquitectura, sus pruebas y su CI ya esta en README.md,
+# docs/adopting.md, docs/use-cases.md y ops/environment/README.md.
+docs/architecture/
+docs/support/
+docs/testing/
+ops/cicd/
+ops/testing/
+
+# El resto de _hilo/ SI se publica a proposito: DECISIONES.md son las diecinueve decisiones
 # de arquitectura que la documentacion publica cita, y LECCIONES.md es de lo mejor que
 # tiene el proyecto que contar.
 

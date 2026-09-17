@@ -54,9 +54,10 @@ Ordered by how often we think it would come up.
 system has a REST endpoint, and one on Microsoft 365 has room lists in Graph. Each is a small
 addition to the same adapter rather than a new one.
 
-**Occupancy without a timetable feed.** `standards` publishes `rooms` only when it has both an
-inventory *and* a timetable, because without occupancy it would be guessing. An institution whose
-booking system answers "is this free" directly could support the capability without the feed.
+**Occupancy without a timetable feed.** `standards` publishes `room-availability` only when it has
+both an inventory *and* a timetable, because without occupancy it would be guessing. An institution
+whose booking system answers "is this free" directly could support the capability without the feed —
+and would keep everything `room-inventory` already buys it in the meantime.
 
 **Filing into the tracker the institution already runs.** ✅ **Built, 17 September.** This was the
 largest gap and it is worth recording what it cost, because the answer was not the obvious one.

@@ -416,13 +416,14 @@
   "ultimaSesion": {
     "_doc": "Se actualiza con /pausar y se lee con /continuar",
     "fecha": "2026-09-17",
-    "evolutivoActivo": "M3 (cerrado)",
+    "evolutivoActivo": "M5 (solo queda lo humano)",
     "usuario": "Hugo Carlos Valer Rojas",
     "ramaActiva": "main",
-    "proximoPaso": "M4: OAuth 2.1 con PKCE (ruta critica) y pila CDK",
-    "resumenSesion": "Congelada la interfaz (ADR-006). Prompt caching: 86 % menos entrada facturable y latencia sin cambios, medido. Demostrador web completo, y con el dos fallos de transporte arreglados (ADR-011, ADR-012, L-002). M0 a M3 cerrados. 300 tests.",
+    "proximoPaso": "Nada de codigo. Grabar el video (guion a 2:55), que alguien AJENO recorra docs/adopting.md con el cronometro, y revisar el texto de envio antes de pegarlo en Devpost.",
+    "resumenSesion": "Destinos de un parte: correo, webhook o Jira, exactamente uno (ADR-018). La interfaz congelada se enmendo DOS veces en una tarde por el procedimiento de ADR-006: 'issues' en issue-reporting/issue-tracking (ADR-017) y 'rooms' en room-inventory/room-availability (ADR-019), esta ultima porque atar el parte de averia al horario dejaba sin avisar de un proyector roto a quien no puede exportar su calendario. Las aulas se pueden escribir en el propio fichero de configuracion (el horario no, y es deliberado). Barrido del repositorio publico: fuera el andamiaje del ecosistema que seguia publicado. 425 tests.",
     "archivosModificados": [
-      "_hilo/METRICAS.json"
+      "src/provider/", "src/adapters/standards/", "src/server/config.ts",
+      "docs/", "ops/", "_hilo/", ".gitignore"
     ],
     "notas": "Las credenciales de AWS NO estan en el perfil 'default' sino en uno con nombre propio: cualquier script necesita AWS_PROFILE=<el vuestro> o no encuentra credenciales."
   },

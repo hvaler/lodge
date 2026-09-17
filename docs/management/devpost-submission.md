@@ -133,7 +133,7 @@ and not one of them needed the contract to change.
 **214 ms** end to end from Spain against the platform's 500 ms budget, network included, measured
 against the deployed server rather than a laptop.
 
-**Every acceptance criterion is a test.** Seven use cases, 352 tests over the source plus 15 over the
+**Every acceptance criterion is a test.** Seven use cases, 425 tests over the source plus 15 over the
 CloudFormation, run on every build — including under a distant timezone, because an iCalendar
 all-day date used to mean different things in Dublin and Auckland.
 

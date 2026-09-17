@@ -44,7 +44,7 @@ Este archivo guía a Codex (Codex.ai/code) cuando trabaja con código en este re
 > **Ese andamiaje no se publica** — es la herramienta, no el proyecto —, así que las rutas que lo
 > citan no existirán en tu copia, y no hacen falta para nada.
 >
-> Lo que sí se publica y sí es de Lodge: [`_hilo/DECISIONES.md`](_hilo/DECISIONES.md), las dieciséis
+> Lo que sí se publica y sí es de Lodge: [`_hilo/DECISIONES.md`](_hilo/DECISIONES.md), las diecinueve
 > decisiones de arquitectura que la documentación cita; [`_hilo/LECCIONES.md`](_hilo/LECCIONES.md);
 > y [`_hilo/DEUDA_TECNICA.md`](_hilo/DEUDA_TECNICA.md) con los riesgos y cuáles se cumplieron.
 >
