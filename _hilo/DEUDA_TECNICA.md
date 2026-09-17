@@ -3,7 +3,7 @@
 > **INSTRUCCIONES PARA CLAUDE**: registro de riesgos, deuda y asuntos abiertos. Consultalo antes de
 > proponer trabajo nuevo y anade aqui lo que aparezca.
 >
-> Estado a **16-09-2026**. M0 a M4 cerrados y desplegados; M5 escrito. Los riesgos marcados
+> Estado a **17-09-2026**. M0 a M4 cerrados y desplegados; M5 escrito y el codigo terminado. Los riesgos marcados
 > CERRADO se conservan con lo que acabo pasando, porque lo util de un registro de riesgos es
 > saber cuales se cumplieron y cuales no.
 
@@ -139,15 +139,26 @@ los `improvement` (hoy solo UC-06) caen primero.
 
 ---
 
-## Abierto ahora mismo (M0, arrancado el 14 sep)
+## Abierto ahora mismo (a 17-09)
 
-| Asunto | Estado | Fecha limite |
+**Nada de codigo.** Lo que queda son tres cosas que no puede hacer quien escribio el proyecto, y una
+administrativa:
+
+| Asunto | Estado | Cuando |
 |---|---|---|
-| Repositorio publico con licencia en el primer commit | ✅ https://github.com/hvaler/lodge, Apache-2.0 | hecho 14 sep |
-| Universidad de San Telmo | ✅ definicion cerrada en `docs/san-telmo.md` | hecho 14 sep |
-| Creditos AWS de participacion (150 $) | ⬜ formulario sin enviar | cuanto antes |
-| Cuenta AWS con acceso a Bedrock en `us-east-1` | ⬜ el AWS CLI no esta instalado en la maquina | 17 sep |
-| Version de protocolo a la que apuntar | ⬜ **decision pendiente** tras verificar que Alexa+ habla 2025-11-25 | antes de M1, 18 sep |
+| Grabar el video | ⬜ guion escrito y presupuestado a 2:55 sobre un limite duro de 3:00 | antes del 21 oct |
+| **Que alguien AJENO recorra `docs/adopting.md`** y rellene el cronometro | ⬜ el entregable lo pide explicitamente, y validarla desde dentro no vale | antes del 21 oct |
+| Revisar `docs/management/devpost-submission.md` antes de enviarlo | ⬜ lo redacto Claude y va con el nombre del autor | antes del 21 oct |
+| Creditos AWS de participacion (150 $) | ⬜ formulario sin enviar; pide la Devpost Profile URL | cuanto antes |
+
+### Lo que estaba abierto y se cerro
+
+| Asunto | Como acabo |
+|---|---|
+| Repositorio publico con licencia en el primer commit | ✅ https://github.com/hvaler/lodge, Apache-2.0, 14 sep |
+| Universidad de San Telmo | ✅ definicion cerrada en `docs/san-telmo.md`, 14 sep |
+| Cuenta AWS con acceso a Bedrock | ✅ verificado el 15 sep respondiendo en plan Free; el 16 sep la pila CDK estaba desplegada en eu-west-1 y medida a 214 ms de mediana desde Espana |
+| Version de protocolo a la que apuntar | ✅ **2025-11-25** (ADR-009), con handler multi-era para revisiones posteriores. Decidido antes de M1, que cerro el 16 sep |
 
 ---
 
