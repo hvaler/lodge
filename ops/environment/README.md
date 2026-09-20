@@ -1,30 +1,30 @@
-# ops/environment/ — el despliegue autónomo
+# `ops/environment/` — the self-hosted deployment
 
-Lo que una institución necesita para levantar Lodge en su propia infraestructura: un contenedor, un
-fichero de configuración y sus credenciales. Sin nube.
+What an institution needs to run Lodge on its own infrastructure: a container, a configuration file
+and its own credentials. No cloud.
 
-| Fichero | Para qué |
+| File | What for |
 |---|---|
-| `docker-compose.yml` | Lodge + un OpenLDAP con el directorio de Carrigmore, para probar el adaptador `standards` contra un directorio de verdad |
-| `carrigmore.json` | Una institución: el caso normal, servida en `/mcp` |
-| `demo.json` | Dos instituciones: UC-07, servidas en `/mcp/{slug}` |
+| `docker-compose.yml` | Lodge plus an OpenLDAP holding Carrigmore's directory, to exercise the `standards` adapter against a real directory |
+| `carrigmore.json` | One institution: the ordinary case, served at `/mcp` |
+| `demo.json` | Two institutions: UC-07, served at `/mcp/{slug}` |
 
 ```bash
-docker compose up -d          # desde esta carpeta
-curl localhost:3000/health    # qué está sirviendo y con cuántas herramientas
+docker compose up -d          # from this folder
+curl localhost:3000/health    # what it is serving, and with how many tools
 ```
 
-Los ficheros de Carrigmore (`rooms.csv`, `timetable.ics`, `deadlines.ics`, `directory.ldif`) viven
-en `fixtures/carrigmore/` y se montan **de solo lectura**: Lodge responde preguntas, no tiene nada
-que escribir en los datos de una institución.
+Carrigmore's files (`rooms.csv`, `timetable.ics`, `deadlines.ics`, `directory.ldif`) live in
+`fixtures/carrigmore/` and are mounted **read-only**: Lodge answers questions, and has nothing to
+write into an institution's data.
 
 ---
 
-## El fichero de configuración
+## The configuration file
 
-Qué adaptador, dónde están sus fuentes y quién avala a sus personas. Se lee una vez al arrancar y se
-valida en voz alta: una URL mal escrita debe hacer que el contenedor se niegue a arrancar, no que
-falle la primera pregunta de un estudiante.
+Which adapter, where its sources are, and who vouches for its people. Read once at start-up and
+validated loudly: a mistyped URL should make the container refuse to start, not make a student's
+first question fail.
 
 ```json
 {
@@ -48,18 +48,18 @@ falle la primera pregunta de un estudiante.
 }
 ```
 
-### Las aulas, sin CSV
+### Rooms, without a CSV
 
-`inventory` admite las dos formas, y **exactamente una**: o `location` apuntando a un CSV, o las
-aulas escritas aquí mismo. Un centro con trescientas aulas quiere la hoja de cálculo; uno con doce no
-quiere un segundo fichero para doce líneas.
+`inventory` takes either form, and **exactly one**: a `location` pointing at a CSV, or the rooms
+written out right here. A place with three hundred rooms wants the spreadsheet; one with twelve does
+not want a second file for twelve lines.
 
 ```json
 "inventory": {
   "rooms": [
     { "id": "QUA-G01", "building": "QUA", "buildingName": "Quadrangle",
       "floor": 0, "kind": "lecture", "capacity": 150,
-      "equipment": ["proyector", "micrófono de atril"] },
+      "equipment": ["projector", "lectern microphone"] },
     { "id": "MIL-004", "building": "MIL", "buildingName": "Mill House",
       "floor": 0, "kind": "study", "capacity": 8, "supervised": true }
   ],
@@ -69,44 +69,45 @@ quiere un segundo fichero para doce líneas.
 }
 ```
 
-Son las mismas aulas: cada campo es una columna del CSV, pasan por el mismo validador y dan el mismo
-mensaje de error. `kind` es uno de `lecture`, `seminar`, `lab`, `computer-lab`, `study`,
-`auditorium`; `equipment` se lee tal cual se escriba, en el idioma de la institución; `supervised`
-marca las aulas que nunca se ofrecen como libres.
+They are the same rooms: every field is a column of the CSV, they go through the same validator and
+they earn the same error messages. `kind` is one of `lecture`, `seminar`, `lab`, `computer-lab`,
+`study`, `auditorium`; `equipment` is read back exactly as you write it, in your own words;
+`supervised` marks the rooms that are never offered as free.
 
-`buildings` es opcional incluso con `rooms`: un edificio sin horario se considera **siempre abierto**,
-porque quien no ha dicho nada sobre cerrar no ha dicho que cierre siempre. Un día sin franja
-(`sunday` ausente) sí es un día cerrado.
+`buildings` stays optional even alongside `rooms`: a building with no hours is treated as **always
+open**, because saying nothing about closing is not the same as closing always. A day with no window
+(`sunday` absent) *is* a closed day.
 
-**El horario no se escribe aquí**, y es a propósito: una lista de aulas es un conjunto fijo que se
-escribe una vez, mientras que un horario son miles de sesiones con fecha. Expresar recurrencia a mano
-sería reimplementar `RRULE` peor que iCalendar. Si no tenéis feed, exportad un `.ics` desde el
-calendario que ya uséis y apuntad `calendars.timetable` al fichero local.
+**A timetable cannot be written here**, and that is deliberate: a room list is a fixed set written
+once, while a timetable is thousands of dated sessions. Expressing recurrence by hand would be a
+worse `RRULE` than the one iCalendar already has. No feed? Export an `.ics` from whatever calendar
+you already keep and point `calendars.timetable` at the local file.
 
 ---
 
-**El catálogo sale de lo que configures.** Sin `directory` no se publica `campus.timetable`, porque
-sin saber quién pregunta no hay horario que dar. Sin `inventory` no se publica nada sobre aulas. Y
-con `inventory` pero sin feed de horario tampoco se publica `campus.find_room`, porque sin ocupación
-decir que un aula está libre sería adivinar — pero sí las indicaciones y los partes de avería. Nada
-se ofrece a medias.
+**The catalogue comes from what you configure.** Without `directory` there is no `campus.timetable`,
+because without knowing who is asking there is no timetable to give. Without `inventory` nothing
+about rooms is published at all. And with `inventory` but no timetable feed there is still no
+`campus.find_room`, because calling a room free without occupancy would be guessing — though
+directions and fault reports both survive. Nothing is offered by halves.
 
 ---
 
 ## OAuth 2.1
 
-Lodge **verifica** tokens; no los emite (ADR-013). El bloque `auth` nombra el proveedor de identidad
-que ya tiene la institución, y hacen falta dos cosas más:
+Lodge **verifies** tokens; it does not issue them (ADR-013). The `auth` block names the identity
+provider the institution already has, and two more things are needed:
 
 ```bash
-LODGE_PUBLIC_URL=https://lodge.carrigmore.ie   # la URL por la que llegan los clientes
+LODGE_PUBLIC_URL=https://lodge.carrigmore.ie   # the URL clients arrive on
 ```
 
-Sin ella no se comprueba ningún token, y el servidor lo dice al arrancar. La razón es que un token
-se liga al **URI canónico** de este servidor (RFC 8707): sin saber cuál es, no hay a qué ligarlo, y
-aceptar un token emitido para el servidor de otro es peor que no tener OAuth, porque lo parece.
+Without it no token is checked, and the server says so at start-up. The reason is that a token is
+bound to this server's **canonical URI** (RFC 8707): not knowing what that is leaves nothing to bind
+to, and accepting a token issued for somebody else's server is worse than having no OAuth, because
+it looks like having it.
 
-Con eso, Lodge publica dónde mirar:
+With that, Lodge publishes where to look:
 
 ```
 GET /.well-known/oauth-protected-resource/mcp
@@ -118,30 +119,31 @@ GET /.well-known/oauth-protected-resource/mcp
 }
 ```
 
-Un cliente sin token recibe `401` con la cabecera `WWW-Authenticate` apuntando a ese documento, va a
-buscar uno y vuelve. El PKCE ocurre entre el cliente y el proveedor de identidad; Lodge no lo ve.
+A client with no token gets a `401` whose `WWW-Authenticate` header points at that document, goes
+and fetches one, and comes back. PKCE happens between the client and the identity provider; Lodge
+never sees it.
 
-Si el `sub` de vuestro IdP es un identificador opaco y el directorio indexa por otra cosa —el mismo
-`uid` del LDAP, por ejemplo—, `"subjectClaim": "uid"` dice cuál de los dos seguir.
+If your IdP's `sub` is an opaque identifier and the directory indexes by something else — the same
+LDAP `uid`, say — then `"subjectClaim": "uid"` says which of the two to follow.
 
-> **`LODGE_DEV_IDENTITY=1`** deja que cualquiera diga quién es mediante una cabecera. Es un bypass de
-> autenticación, existe para el demostrador y para desarrollo, y no tiene ningún caso de uso en un
-> despliegue. El servidor avisa cuando está encendido.
+> **`LODGE_DEV_IDENTITY=1`** lets anyone say who they are through a header. It is an authentication
+> bypass, it exists for the demonstration and for development, and it has no use in a deployment.
+> The server warns when it is on.
 
 ---
 
-## Dónde van los partes de avería
+## Where fault reports go
 
-Sin este bloque, `campus.report_issue` no se publica y el agente **no puede** dar un aviso. Con él,
-escribe en el sistema que ya vigiláis. **Exactamente un destino**: dos abrirían dos avisos por el
-mismo proyector.
+Without this block, `campus.report_issue` is not published and the agent **cannot** file anything.
+With it, faults land in the system you already watch. **Exactly one destination**: two would open two
+tickets for one projector.
 
-El más sencillo, y el único que de verdad tenéis ya: **una dirección de correo**.
+The simplest, and the one you genuinely already have: **an email address**.
 
 ```json
 "issues": {
   "email": {
-    "to": "mesadeservicio@example.ie",
+    "to": "servicedesk@example.ie",
     "from": "lodge@example.ie",
     "host": "smtp.example.ie",
     "port": 587,
@@ -150,28 +152,28 @@ El más sencillo, y el único que de verdad tenéis ya: **una dirección de corr
 }
 ```
 
-Llega un mensaje de texto plano con líneas etiquetadas —referencia, aula, equipo, quién y cuándo—
-y el asunto encabezado por la referencia: `[LDG-7K2MPQ] projector in QUA-G01 — …`.
+A plain-text message arrives with labelled lines — reference, room, equipment, who and when — and a
+subject led by the reference: `[LDG-7K2MPQ] projector in QUA-G01 — …`.
 
-Aquí **Lodge sí acuña la referencia**, al revés que con el webhook, y no es una incoherencia: un
-webhook pertenece a un sistema que asigna las suyas, mientras que un buzón no asigna nada hasta que
-alguien tría el mensaje. Hasta entonces no existe ningún identificador, y el que Lodge escribe **en
-el asunto** es lo único que ambas partes pueden buscar. El alfabeto evita `O`, `0`, `I`, `1` y `L`,
-porque esa referencia la dice un sintetizador, la repite una persona y la teclea alguien en la mesa.
+Here **Lodge does mint the reference**, unlike the webhook, and that is not an inconsistency: a
+webhook belongs to a system that assigns its own, whereas a mailbox assigns nothing until somebody
+triages the message. Until then no identifier exists, and the one Lodge writes **into the subject**
+is the only thing both sides can search for. The alphabet avoids `O`, `0`, `I`, `1` and `L`, because
+that reference gets spoken by a synthesiser, repeated by a person, and typed by somebody at the desk.
 
-O un webhook, si preferís conectarlo vosotros a algo:
+Or a webhook, if you would rather wire it to something yourself:
 
 ```json
 "issues": {
   "webhook": {
-    "url": "https://mesadeservicio.example.ie/faults",
+    "url": "https://servicedesk.example.ie/faults",
     "referenceField": "id",
     "headers": { "x-api-key": "..." }
   }
 }
 ```
 
-Lodge hace `POST` con este cuerpo, que es estable y podéis conectar a lo que sea:
+Lodge `POST`s this body, which is stable and which you can map onto anything:
 
 ```json
 {
@@ -181,12 +183,12 @@ Lodge hace `POST` con este cuerpo, que es estable y podéis conectar a lo que se
 }
 ```
 
-`referenceField` dice de qué campo de vuestra respuesta sale la referencia (admite anidado:
-`data.ticket.id`). **Se exige**: es lo que la persona os cita luego, y darle un número nuestro sería
-darle uno que no significa nada para quien se lo va a decir. Si no la devolvéis, el parte falla y se
-dice en voz alta.
+`referenceField` says which field of *your* answer the reference comes from (nesting is fine:
+`data.ticket.id`). It is **required**: it is what the person quotes back to you later, and handing
+them a number of ours would be handing them one that means nothing to whoever they say it to. If you
+do not return one, filing fails and says so out loud.
 
-O Jira, que además puede contestar «cómo va el mío»:
+Or Jira, which can also answer "how is mine going":
 
 ```json
 "issues": {
@@ -200,53 +202,54 @@ O Jira, que además puede contestar «cómo va el mío»:
 }
 ```
 
-Atribuye con una **etiqueta** (`lodge-<subject>`) y no con el campo `reporter`, porque eso exigiría
-una cuenta de Jira por estudiante. El estado sale de la *categoría* del estado y no de su nombre,
-que cada proyecto renombra a su gusto.
+It attributes with a **label** (`lodge-<subject>`) rather than the `reporter` field, because that
+would require a Jira account per student. Status comes from the status *category* and not its name,
+which every project renames to taste.
 
-| Configuráis | Se publica |
+| You configure | You get |
 |---|---|
-| nada | ninguna de las dos |
+| nothing | neither of them |
 | `email` | `campus.report_issue` |
 | `webhook` | `campus.report_issue` |
-| `jira` | `campus.report_issue` y `campus.issue_status` |
+| `jira` | `campus.report_issue` and `campus.issue_status` |
 
-El correo y el webhook reciben y no se les puede preguntar, así que no publican
-`campus.issue_status`. Eso no es una carencia que disimular: es el catálogo diciendo la verdad.
+Email and a webhook receive and cannot be asked back, so they do not publish `campus.issue_status`.
+That is not a gap to paper over: it is the catalogue telling the truth.
 
-Dar un parte comprueba el aula y su equipo antes de pedir confirmación, así que necesita el
-**inventario** — y solo eso. No hace falta feed de horario: si no podéis exportarlo, seguís pudiendo
-dar partes. Sin el inventario el servidor se niega a arrancar y lo dice.
+Filing a fault checks the room and its equipment before asking anyone to confirm, so it needs the
+**inventory** — and only that. No timetable feed is required: if you cannot export one, you can
+still report faults. Without the inventory the server refuses to start and says why.
 
 ---
 
-## Trazas
+## Traces
 
-Apagadas mientras no digas dónde mandarlas:
+Off until you say where to send them:
 
 ```bash
 OTEL_EXPORTER_OTLP_ENDPOINT=http://collector:4318
 ```
 
-Sin esa variable, Lodge no carga el SDK, no abre conexión y no exporta nada. Con ella, cada petición
-MCP produce un tramo, y debajo aparecen los que de verdad van a algún sitio: una consulta al
-directorio o la lectura de un calendario.
+Without that variable Lodge does not load the SDK, does not open a connection and exports nothing.
+With it, every MCP request produces a span, and under it appear the ones that really go somewhere: a
+directory lookup, or reading a calendar.
 
-Lo que hace esto útil y no mera higiene es que **la traza continúa la del cliente**. Si vuestro
-agente propaga contexto W3C —por la cabecera `traceparent` o por el `_meta` de la petición—, veréis
-un solo dibujo desde la pregunta del estudiante hasta la consulta LDAP que provocó, en vez de dos
-inconexos.
+What makes this useful rather than mere hygiene is that **the trace continues the client's**. If
+your agent propagates W3C context — through the `traceparent` header or the request's `_meta` — you
+see one picture from the student's question down to the LDAP lookup it caused, instead of two
+disconnected ones.
 
-Un detalle del directorio: el tramo envuelve la consulta real, no la caché. Si una traza no lleva
-tramo de directorio, esa respuesta salió de memoria.
+One detail about the directory: the span wraps the real lookup, not the cache. A trace with no
+directory span means that answer came out of memory.
 
-Si preferís el camino estándar de OpenTelemetry —arrancar Node con `--import` y vuestro propio
-arranque de SDK—, funciona igual: los tramos encuentran vuestro proveedor y esta variable sobra.
+If you prefer the standard OpenTelemetry path — starting Node with `--import` and your own SDK
+bootstrap — that works too: the spans find your provider and this variable is unnecessary.
 
-## Varias instituciones
+## Several institutions
 
-`demo.json` sirve dos a la vez, cada una en su ruta y con su catálogo, su idioma y su zona horaria.
-Cada una lleva también su propio `auth`: el proveedor de identidad es de la institución, no del
-despliegue, y un token emitido para una **no vale en la otra** aunque las sirva el mismo proceso.
+`demo.json` serves two at once, each on its own path and with its own catalogue, language and time
+zone. Each carries its own `auth` too: the identity provider belongs to the institution, not to the
+deployment, and a token issued for one **is not valid for the other** even though the same process
+serves both.
 
-Es UC-07, y es lo que justifica que la interfaz de proveedor exista.
+That is UC-07, and it is what justifies the provider interface existing at all.

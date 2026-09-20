@@ -1,14 +1,14 @@
-# `ops/` — lo que se ejecuta
+# `ops/` — what gets run
 
-| Fichero | Para qué |
+| File | What for |
 |---|---|
-| `environment/docker-compose.yml` | Lodge y un LDAP de pruebas, que es como se verificó UC-07: un servidor, dos instituciones, catálogos distintos |
-| `environment/carrigmore.json` | configuración de ejemplo del adaptador `standards`, contra ficheros del repositorio |
-| `environment/demo.json` | la de la demostración pública |
-| `environment/README.md` | **la referencia del fichero de configuración**: cada bloque, qué publica y qué pasa si falta |
+| `environment/docker-compose.yml` | Lodge and a test LDAP, which is how UC-07 was verified: one server, two institutions, different catalogues |
+| `environment/carrigmore.json` | a worked `standards` configuration, against files in this repository |
+| `environment/demo.json` | the one the public demonstration runs |
+| `environment/README.md` | **the configuration-file reference**: every block, what it publishes, and what happens without it |
 
-La infraestructura de AWS no está aquí sino en [`infra/`](../infra), que es CDK v2 y por tanto
-código. El pipeline está en `.github/workflows/ci.yml`: comprueba tipos, pasa los tests, compila,
-construye la imagen del contenedor y le hace una pregunta.
+AWS infrastructure is not here but in [`infra/`](../infra), because CDK v2 is code. The pipeline is
+`.github/workflows/ci.yml`: it typechecks, runs the tests, builds, builds the container image and
+asks it a question.
 
-Para desplegar o para adoptarlo, el camino es [`docs/adopting.md`](../docs/adopting.md).
+To deploy it or adopt it, the path is [`docs/adopting.md`](../docs/adopting.md).

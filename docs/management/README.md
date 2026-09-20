@@ -1,9 +1,9 @@
-# `docs/management/` — la candidatura
+# `docs/management/` — the submission
 
-| Fichero | Qué es |
+| File | What it is |
 |---|---|
-| [`video-script.md`](video-script.md) | el guion del vídeo de demostración, presupuestado plano a plano contra el límite duro de tres minutos |
-| [`devpost-submission.md`](devpost-submission.md) | el texto de envío, con la lista de campos del formulario al final |
+| [`video-script.md`](video-script.md) | the demonstration video script, budgeted shot by shot against a hard three-minute limit |
+| [`devpost-submission.md`](devpost-submission.md) | the submission text, with the form's field list at the end |
 
-Esto es papeleo de una candidatura a un hackathon, no documentación del producto. Para **usar**
-Lodge: [`../adopting.md`](../adopting.md).
+This is hackathon paperwork, not product documentation. To **use** Lodge:
+[`../adopting.md`](../adopting.md).

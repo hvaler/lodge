@@ -1,31 +1,31 @@
-# `src/` — el servidor
+# `src/` — the server
 
-TypeScript sobre Node 24, sin paso de compilación para leerlo: cada carpeta es una capa del diagrama
-del [README](../README.md), en el mismo orden en que una pregunta las atraviesa.
+TypeScript on Node 24, with no build step needed to read it. Each folder is a layer of the diagram
+in the [README](../README.md), in the order a question passes through them.
 
-| Carpeta | Qué hay | Empieza por |
+| Folder | What is in it | Start at |
 |---|---|---|
-| `server/` | el servidor MCP sobre Streamable HTTP, sin estado; el fichero de configuración; OAuth 2.1 | `main.ts`, `config.ts` |
-| `provider/` | **la interfaz de proveedor, congelada** (ADR-006): capacidades, métodos y qué herramienta publica cada una | `provider.ts`, `frozen.ts` |
-| `adapters/synthetic/` | la Universidad de San Telmo, generada y determinista | `index.ts` |
-| `adapters/standards/` | iCalendar, LDAP, inventario en tabla y los tres destinos de un parte de avería | `config.ts`, `inventory.ts` |
-| `tools/` | las seis herramientas `campus.*`, registradas según lo que el adaptador declare | `index.ts` |
-| `cards/` | las tarjetas visuales (extensión MCP Apps) que acompañan a una respuesta hablada | `index.ts` |
-| `orchestrator/` | el cliente: Bedrock, la vuelta de llamadas a herramienta y el *prompt caching* | `index.ts`, `model.ts` |
-| `web/` | el demostrador con voz y la página pública, que hablan con el servidor por HTTP como cualquier cliente | `main.ts` |
-| `lambda/` | los dos puntos de entrada de AWS, sobre el mismo servidor | `handler.ts` |
-| `shared/`, `telemetry/` | zonas horarias e idioma; OpenTelemetry con el contexto de traza del cliente | `time.ts` |
+| `server/` | the MCP server over Streamable HTTP, stateless; the configuration file; OAuth 2.1 | `main.ts`, `config.ts` |
+| `provider/` | **the provider interface, frozen** (ADR-006): capabilities, methods, and which tool each one publishes | `provider.ts`, `frozen.ts` |
+| `adapters/synthetic/` | the Universidad de San Telmo, generated and deterministic | `index.ts` |
+| `adapters/standards/` | iCalendar, LDAP, a room table, and the three places a fault report can go | `config.ts`, `inventory.ts` |
+| `tools/` | the six `campus.*` tools, registered from what the adapter declares | `index.ts` |
+| `cards/` | the visual cards (MCP Apps extension) that ride along with a spoken answer | `index.ts` |
+| `orchestrator/` | the client: Bedrock, the tool-call loop, and prompt caching | `index.ts`, `model.ts` |
+| `web/` | the voice demonstration and the public page, which talk to the server over HTTP like any client | `main.ts` |
+| `lambda/` | the two AWS entry points, over the same server | `handler.ts` |
+| `shared/`, `telemetry/` | time zones and language; OpenTelemetry continuing the client's trace | `time.ts` |
 
-Los tests viven **junto al código** que prueban, como `<modulo>.test.ts`; no hay carpeta de tests.
-Cada criterio de aceptación de [`docs/use-cases.md`](../docs/use-cases.md) tiene el suyo.
+Tests live **next to the code** they cover, as `<module>.test.ts`; there is no test folder. Every
+acceptance criterion in [`docs/use-cases.md`](../docs/use-cases.md) has one.
 
 ```bash
-npm test          # toda la suite
-npm run build     # incluye la comprobación de la interfaz congelada
-npm start         # el servidor, contra LODGE_CONFIG
-npm run demo      # el demostrador: Lodge en :3000 y la simulación de Alexa+ en :8080
+npm test          # the whole suite
+npm run build     # includes the frozen-interface check
+npm start         # the server, against LODGE_CONFIG
+npm run demo      # the demonstration: Lodge on :3000, the Alexa+ simulation on :8080
 ```
 
-> **La interfaz de `provider/` está congelada.** Se implementa, no se edita. Si algo obliga a
-> moverla, el compilador lo dirá en cada `npm run build`: el procedimiento está en ADR-006, y en
-> ADR-017 y ADR-019 hay dos ejemplos de haberlo seguido.
+> **The interface in `provider/` is frozen.** It gets implemented, not edited. If something forces
+> it to move, the compiler says so on every `npm run build`: the procedure is in ADR-006, and
+> ADR-017 and ADR-019 are two worked examples of following it.
