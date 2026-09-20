@@ -16,7 +16,7 @@ import { CfnOutput, Duration, RemovalPolicy, Stack, Token } from 'aws-cdk-lib';
 import type { StackProps } from 'aws-cdk-lib';
 import { AttributeType, Billing, TableV2 } from 'aws-cdk-lib/aws-dynamodb';
 import { PolicyStatement } from 'aws-cdk-lib/aws-iam';
-import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
+import { Architecture, Code, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { FunctionUrlAuthType } from 'aws-cdk-lib/aws-lambda';
 import { NodejsFunction, OutputFormat } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs';
@@ -30,9 +30,15 @@ export interface LodgeStackProps extends StackProps {
    * and `identity.ts` says the only safe default for that is off and the only way on is somebody
    * typing it. A flag we would wave away here is a flag we would wave away somewhere that matters.
    *
-   * Switching it on is defensible for exactly this deployment, because `src/lambda/handler.ts`
-   * builds the **synthetic** provider and nothing else. There is no configuration path from this
-   * stack to a real institution's data, so the worst it can expose is a fictional university.
+   * Switching it on is defensible for exactly this deployment, because every institution it serves
+   * is **invented and public**. San Telmo is generated; Carrigmore is read from the fixture files
+   * committed to this repository. There is no configuration path from this stack to a real
+   * institution's data — no directory to bind to, no feed outside the bundle — so the worst an
+   * impersonated caller can reach is a timetable anybody can already read on GitHub.
+   *
+   * That reasoning used to be "the handler builds the synthetic provider and nothing else". It
+   * stopped being true when Carrigmore was added, and it is restated here rather than quietly
+   * inherited: the guarantee is the same, the mechanism is not.
    */
   readonly sandbox?: boolean;
   /**
@@ -73,6 +79,25 @@ export class LodgeStack extends Stack {
       removalPolicy: RemovalPolicy.DESTROY,
     });
 
+    /**
+     * Carrigmore's room table and calendars, mounted read-only at `/opt/carrigmore`.
+     *
+     * A layer rather than a bundling hook: `NodejsFunction` bundles with the local esbuild, so a
+     * `commandHooks` copy would run in whatever shell the person deploying happens to have, and
+     * `cp` is not a command on Windows. CDK zips a directory the same way everywhere.
+     *
+     * A layer rather than a second copy of the data in TypeScript, too. These are the same four
+     * kilobytes the container mounts and the tests read; duplicating them to avoid a construct
+     * would buy a drift nobody notices until Carrigmore answers two different things.
+     */
+    const carrigmore = new LayerVersion(this, 'CarrigmoreData', {
+      code: Code.fromAsset(join(import.meta.dirname, '../../fixtures')),
+      compatibleRuntimes: [Runtime.NODEJS_24_X],
+      compatibleArchitectures: [Architecture.ARM_64],
+      description: 'Carrigmore College: room table and calendars, for the second institution',
+      removalPolicy: RemovalPolicy.DESTROY,
+    });
+
     const server = new NodejsFunction(this, 'Server', {
       entry: join(import.meta.dirname, '../../src/lambda/handler.ts'),
       handler: 'handler',
@@ -90,8 +115,11 @@ export class LodgeStack extends Stack {
         retention: RetentionDays.ONE_WEEK,
         removalPolicy: RemovalPolicy.DESTROY,
       }),
+      layers: [carrigmore],
       environment: {
         LODGE_ISSUES_TABLE: issues.tableName,
+        // Where the layer put them. Absent, the handler serves San Telmo alone.
+        LODGE_CARRIGMORE_DIR: '/opt/carrigmore',
         ...(props.sandbox ? { LODGE_DEV_IDENTITY: '1' } : {}),
       },
       bundling: {

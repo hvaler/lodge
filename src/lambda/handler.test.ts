@@ -36,10 +36,17 @@ describe('the health probe', () => {
     );
 
     expect(result.statusCode).toBe(200);
-    const body = JSON.parse(result.body) as { status: string; institution: string; tools: string[] };
+    // The same nested shape the container answers with, rather than a flat one that happened to be
+    // enough while this deployment served exactly one institution.
+    const body = JSON.parse(result.body) as {
+      status: string;
+      default: string;
+      institutions: Record<string, { path: string; institution: string; tools: string[] }>;
+    };
     expect(body.status).toBe('ok');
-    expect(body.institution).toBe('Universidad de San Telmo');
-    expect(body.tools).toHaveLength(6);
+    expect(body.default).toBe('san-telmo');
+    expect(body.institutions['san-telmo']?.institution).toBe('Universidad de San Telmo');
+    expect(body.institutions['san-telmo']?.tools).toHaveLength(6);
   });
 });
 

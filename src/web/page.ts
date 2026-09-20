@@ -223,7 +223,7 @@ function drawInstitutions() {
     const b = document.createElement('button');
     b.type = 'button';
     b.setAttribute('aria-pressed', String(c.slug === current.slug));
-    b.innerHTML = esc(c.name) + '<small>' + esc(c.locale) + ' · ' + c.tools.length + ' herramientas</small>';
+    b.innerHTML = esc(c.name) + '<small>' + esc(c.locale) + ' · ' + c.tools.length + ' tools</small>';
     b.onclick = () => { choose(c.slug); };
     box.appendChild(b);
   }
@@ -232,7 +232,7 @@ function drawInstitutions() {
 function drawIdentities() {
   const box = el('identities');
   box.innerHTML = '';
-  const options = [{ subject: '', label: 'Sin identificar' }].concat(current.identities);
+  const options = [{ subject: '', label: 'Not identified' }].concat(current.identities);
   for (const id of options) {
     const b = document.createElement('button');
     b.type = 'button';
@@ -283,7 +283,7 @@ function choose(slug) {
   el('utterance').placeholder = 'Pregunta a ' + current.name + '…';
 }
 
-// ── Preguntar ───────────────────────────────────────────────────────────────
+// ── Asking ──────────────────────────────────────────────────────────────────
 function reset() {
   history = [];
   el('talk').innerHTML = '';
@@ -337,7 +337,7 @@ async function ask() {
     render(data);
   } catch (e) {
     pending.className = 'turn lodge';
-    pending.textContent = 'No he podido preguntar: ' + e.message;
+    pending.textContent = 'I could not ask: ' + e.message;
   } finally {
     el('send').disabled = false;
     el('utterance').focus();
@@ -382,7 +382,7 @@ function say(text) {
   window.speechSynthesis.speak(u);
 }
 
-// ── Voz ─────────────────────────────────────────────────────────────────────
+// ── Voice ───────────────────────────────────────────────────────────────────
 const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 let listening = null;
 
@@ -399,11 +399,11 @@ function toggleMic() {
   r.start();
 }
 
-// ── Arranque ────────────────────────────────────────────────────────────────
+// ── Start-up ────────────────────────────────────────────────────────────────
 (async function start() {
   catalogues = await (await fetch('/api/institutions')).json();
   if (!catalogues.length) {
-    addTurn('lodge', 'Este despliegue no sirve ninguna institución.');
+    addTurn('lodge', 'This deployment serves no institution.');
     return;
   }
   choose(catalogues[0].slug);
@@ -425,36 +425,36 @@ function toggleMic() {
 const BODY = `
 <header>
   <h1>Lodge</h1>
-  <p>La conserjería que no cierra · simulación de Alexa+ sobre el servidor MCP</p>
+  <p>The porter&rsquo;s lodge that never closes &middot; an Alexa+ simulation over the MCP server</p>
 </header>
 
 <main>
   <aside>
     <div class="block">
-      <h2>Institución</h2>
+      <h2>Institution</h2>
       <div class="choices" id="institutions"></div>
     </div>
     <div class="block">
-      <h2>Quién pregunta</h2>
+      <h2>Who is asking</h2>
       <div class="choices" id="identities"></div>
     </div>
     <div class="block">
-      <h2>Herramientas publicadas</h2>
+      <h2>Tools published</h2>
       <div id="catalogue"></div>
     </div>
   </aside>
 
   <section>
     <div class="ask">
-      <input id="utterance" autocomplete="off" placeholder="Pregunta…" aria-label="Tu pregunta">
-      <button id="mic" type="button" aria-pressed="false" title="Preguntar con la voz">🎙</button>
-      <button id="speak" type="button" aria-pressed="true" title="Leer la respuesta en voz alta">🔊</button>
-      <button id="send" type="button">Preguntar</button>
+      <input id="utterance" autocomplete="off" placeholder="Ask something…" aria-label="Your question">
+      <button id="mic" type="button" aria-pressed="false" title="Ask by voice">🎙</button>
+      <button id="speak" type="button" aria-pressed="true" title="Read the answer aloud">🔊</button>
+      <button id="send" type="button">Ask</button>
     </div>
     <div class="suggestions" id="suggestions"></div>
 
     <div id="talk"></div>
-    <button id="reset" type="button" hidden>Empezar de nuevo</button>
+    <button id="reset" type="button" hidden>Start again</button>
 
     <div class="meta" id="meta"></div>
     <div id="trace"></div>
@@ -463,23 +463,27 @@ const BODY = `
 </main>
 
 <footer>
-  Las herramientas de la izquierda no están escritas en esta página: se leen del servidor con
-  <code>tools/list</code> al arrancar. Una institución sin gestor de incidencias no publica
-  <code>campus.report_issue</code>, y entonces el agente no puede dar un aviso aunque se lo pidas.
+  The tools on the left are not written into this page: they are read from the server with
+  <code>tools/list</code> on start-up. Switch to Carrigmore and three of them disappear &mdash; it
+  has a room table and two calendars, and no directory, so it never offers to tell you your
+  timetable. The catalogue follows the sources, and nothing is offered by halves.
   <br><br>
-  Da un aviso de una avería y verás que primero pregunta y no abre nada; responde
-  <strong>sí</strong> y entonces sí. Son dos llamadas a la herramienta, y la primera no escribe.
+  Each institution answers in <strong>its own language</strong>. That is the adapter&rsquo;s, not
+  this page&rsquo;s.
+  <br><br>
+  Report a fault and you will see it ask first and open nothing; answer <strong>yes</strong> and
+  then it does. Two tool calls, and the first one writes nothing.
 </footer>
 `;
 
 /** The whole page, as one document. */
 export function demoPage(): string {
   return `<!doctype html>
-<html lang="es">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Lodge · demostración</title>
+<title>Lodge · demonstration</title>
 <!-- Inline, like everything else here: a 404 in the console of a demonstration is a distraction
      the viewer has to be told to ignore. -->
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>🛎️</text></svg>">

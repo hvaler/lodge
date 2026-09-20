@@ -33,12 +33,20 @@ function lodgeUrl(): string {
 }
 
 /**
- * Only San Telmo here.
+ * Both of them, which is the moment the whole architecture exists for.
  *
- * The local demonstration serves Carrigmore too, from the CSV and iCalendar files in the repository.
- * Those are not in this function's bundle and the managed Lodge does not serve them, so offering
- * the switch would be offering a button that fails. The institution-switching moment is in the
- * video and in `npm run demo`, where it is real.
+ * Carrigmore used to be local-only: its files were not in the managed function's bundle, so
+ * offering the switch would have been offering a button that fails. A Lambda layer now mounts them
+ * and `handler.ts` serves it at `/mcp/carrigmore`, so the switch is real here too.
+ *
+ * The two are deliberately unequal. San Telmo is generated and complete — a directory, a fault
+ * queue, six tools. Carrigmore is read from four files a real institution would already have, with
+ * no directory to bind to and no service desk to mail, so it publishes **three**. Nobody has to be
+ * told that the catalogue follows the sources: you press the other button and two of the buttons
+ * you were just using are gone.
+ *
+ * It also gives a visitor who does not read Spanish something to read. That was not the reason for
+ * doing it, but it is a reason it matters.
  */
 const INSTITUTIONS: readonly Omit<DemoInstitution, 'mcpUrl'>[] = [
   {
@@ -58,12 +66,30 @@ const INSTITUTIONS: readonly Omit<DemoInstitution, 'mcpUrl'>[] = [
       'El proyector de MEN-203 no funciona',
     ],
   },
+  {
+    slug: 'carrigmore',
+    name: 'Carrigmore College',
+    locale: 'en-IE',
+    // Empty on purpose. There is no directory in front of this one, so there is nobody to be: the
+    // three tools it publishes are the three that do not need to know who is asking. Offering
+    // identities that change nothing would be a control that lies.
+    identities: [],
+    suggestions: [
+      'Which room is free right now in Quay House?',
+      'When does registration close?',
+      'How do I get to QUA-G01?',
+      // The last one is meant to fail, and to fail well: `campus.timetable` is not published here,
+      // so the agent says it cannot answer instead of inventing a plausible Tuesday. That is UC-03,
+      // and it is easier to believe when you press the button yourself.
+      'Can you tell me my timetable?',
+    ],
+  },
 ];
 
 // Built once per container. The page is a constant and the API holds no per-request state.
 const base = lodgeUrl();
 const api = createDemoApi({
-  institutions: INSTITUTIONS.map((i) => ({ ...i, mcpUrl: `${base}/mcp` })),
+  institutions: INSTITUTIONS.map((i) => ({ ...i, mcpUrl: `${base}/mcp/${i.slug}` })),
   model: createBedrockModel(bedrockOptionsFrom(process.env)),
 });
 

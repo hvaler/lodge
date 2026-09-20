@@ -10,9 +10,9 @@ quedarle es **que esto no es un chatbot más**, y eso se demuestra en la secció
 |---|---|
 | Publicación | YouTube o Vimeo, **público**, menos de 3 min |
 | Grabación | 1920×1080, navegador a pantalla completa, sin barra de marcadores |
-| Narración | En inglés. Lo que se ve está en español, y eso es parte del argumento |
+| Narración | En inglés, igual que la interfaz. Lo que sale **en español son las respuestas**, porque el idioma lo declara la institución y no la página: eso es el argumento, y se ve mejor ahora que el marco no lo tapa |
 | Audio | La voz del agente se oye de verdad — es el track de voz, no lo silencies |
-| Preparar antes | `npm run demo`, pestaña en `localhost:8080`, identidad en *Sin identificar* |
+| Preparar antes | `npm run demo`, pestaña en `localhost:8080`, identidad en *Not identified* |
 
 ---
 

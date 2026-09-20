@@ -162,8 +162,13 @@ It answers in **214 ms** from Spain, network included, against the platform's 50
 The page and the server are **two separate functions**, and the page reaches the server over HTTP
 like any other client would. That is the point of it: what you watch the page do, your own agent
 can do. The page answers a bounded number of questions a day, because each one calls a model —
-`npm run demo` runs the same thing locally with no limit, and switches between two institutions,
-which the deployed one does not.
+`npm run demo` runs the same thing locally with no limit and with a real LDAP directory behind
+Carrigmore, which the deployed one has no way to reach.
+
+**Both institutions are live.** San Telmo answers at `/mcp` with six tools; Carrigmore answers at
+`/mcp/carrigmore` with three, because in the cloud it has a room table and two calendars and no
+directory. Press the other button on the page and three of the tools you were using disappear. That
+is UC-07, and it is the only part of this you have to see rather than read.
 
 This is a **public sandbox over a fictional university**: the `x-lodge-dev-subject` header lets any
 caller claim any identity, so you can ask for a timetable or file a fault without an identity

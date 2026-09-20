@@ -24,10 +24,10 @@ import type { ProtectedInstitution } from './auth.ts';
 import { configPathFrom, createProvidersFrom, loadLodgeConfig } from './config.ts';
 import { devIdentityEnabled } from './identity.ts';
 import { startTelemetry } from '../telemetry/setup.ts';
-import { createLodgeHandler, describeDeployment } from './index.ts';
+import { MCP_PATH, createLodgeHandler, describeDeployment, institutionFor } from './index.ts';
 import type { LodgeServerOptions } from './index.ts';
 
-const MCP_PATH = '/mcp';
+
 const HEALTH_PATH = '/health';
 
 function port(env: NodeJS.ProcessEnv): number {
@@ -149,13 +149,7 @@ export function createHttpServer(
       return;
     }
 
-    // `/mcp` or `/mcp/{slug}`; nothing deeper.
-    const slug =
-      path === MCP_PATH
-        ? institutions.defaultSlug
-        : path.startsWith(`${MCP_PATH}/`) && !path.slice(MCP_PATH.length + 1).includes('/')
-          ? path.slice(MCP_PATH.length + 1)
-          : undefined;
+    const slug = institutionFor(path, institutions.defaultSlug);
 
     if (slug === undefined) {
       json(res, 404, { error: 'not found', paths: [...handlers.keys()].map((s) => `${MCP_PATH}/${s}`) });

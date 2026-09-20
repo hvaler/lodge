@@ -16,9 +16,13 @@
  * non-standard entrypoint we would have to explain.
  */
 
+import { join } from 'node:path';
+
+import { createStandardsProvider } from '../adapters/standards/index.ts';
 import { createSyntheticProvider } from '../adapters/synthetic/index.ts';
 import { DynamoIssueStore, issuesTableFrom } from '../adapters/synthetic/dynamo-issues.ts';
-import { createLodgeHandler, describeDeployment } from '../server/index.ts';
+import type { Provider } from '../provider/index.ts';
+import { createLodgeHandler, describeDeployment, institutionFor } from '../server/index.ts';
 import { startTelemetry } from '../telemetry/setup.ts';
 import { toRequest, toResult } from './event.ts';
 import type { FunctionUrlEvent, FunctionUrlResult } from './event.ts';
@@ -35,10 +39,52 @@ function issueStore(env: NodeJS.ProcessEnv): DynamoIssueStore | undefined {
   return table ? new DynamoIssueStore({ tableName: table }) : undefined;
 }
 
-// Built once per container, not per request: the adapter generates a campus and the handler
-// registers six tools, and paying for that on every invocation would be paying for nothing.
-const provider = createSyntheticProvider(issueStore(process.env));
-const mcp = createLodgeHandler(provider);
+/**
+ * Carrigmore College, when its files shipped with this deployment.
+ *
+ * A Lambda layer mounts `fixtures/carrigmore/` read-only, and `LODGE_CARRIGMORE_DIR` says where.
+ * Without the variable this returns nothing and the deployment serves one institution, which is
+ * what every deployment did before: the second one is an addition, not a requirement.
+ *
+ * No directory and no fault destination here, and that is the point rather than a shortcut. There
+ * is no LDAP inside a Lambda and no service desk to mail, so Carrigmore declares what it can prove
+ * — a room table and two calendars — and its catalogue comes out **three tools against San Telmo's
+ * six**. That difference is UC-07, visible in a browser rather than described in a README.
+ */
+async function carrigmore(dir: string): Promise<Provider> {
+  return createStandardsProvider({
+    institution: 'Carrigmore College',
+    locale: 'en-IE',
+    timeZone: 'Europe/Dublin',
+    inventory: { location: join(dir, 'rooms.csv') },
+    calendars: {
+      timetable: join(dir, 'timetable.ics'),
+      deadlines: join(dir, 'deadlines.ics'),
+    },
+  });
+}
+
+// Built once per container, not per request: the adapters read their sources and each handler
+// registers its tools, and paying for that on every invocation would be paying for nothing.
+const carrigmoreDir = process.env['LODGE_CARRIGMORE_DIR'];
+const providers = new Map<string, Provider>([
+  ['san-telmo', createSyntheticProvider(issueStore(process.env))],
+  ...(carrigmoreDir ? ([['carrigmore', await carrigmore(carrigmoreDir)]] as const) : []),
+]);
+
+// San Telmo answers at bare `/mcp` as it always has: the clients, the documentation and the
+// demonstration page all point there, and moving it to earn symmetry would break every one of them
+// to gain nothing. Both are also reachable by name at `/mcp/{slug}`.
+const DEFAULT_SLUG = 'san-telmo';
+const handlers = new Map([...providers].map(([slug, p]) => [slug, createLodgeHandler(p)]));
+
+function notFound(error: string): FunctionUrlResult {
+  return {
+    statusCode: 404,
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ error, paths: [...handlers.keys()].map((s) => `/mcp/${s}`) }),
+  };
+}
 
 /**
  * Started during init, flushed before every return.
@@ -50,7 +96,13 @@ const mcp = createLodgeHandler(provider);
  * and the whole path disappears.
  */
 const telemetry = await startTelemetry(process.env);
-const health = JSON.stringify({ status: 'ok', ...describeDeployment(provider) });
+const health = JSON.stringify({
+  status: 'ok',
+  default: DEFAULT_SLUG,
+  institutions: Object.fromEntries(
+    [...providers].map(([slug, p]) => [slug, { path: `/mcp/${slug}`, ...describeDeployment(p) }]),
+  ),
+});
 
 export async function lambdaHandler(event: FunctionUrlEvent): Promise<FunctionUrlResult> {
   const path = event.rawPath ?? '/';
@@ -61,7 +113,13 @@ export async function lambdaHandler(event: FunctionUrlEvent): Promise<FunctionUr
       return { statusCode: 200, headers: { 'content-type': 'application/json' }, body: health };
     }
 
-    return await toResult(await mcp.fetch(toRequest(event)));
+    const slug = institutionFor(path, DEFAULT_SLUG);
+    if (slug === undefined) return notFound('not found');
+
+    const handler = slug === null ? undefined : handlers.get(slug);
+    if (!handler) return notFound(`no institution called '${slug}'`);
+
+    return await toResult(await handler.fetch(toRequest(event)));
   } finally {
     await telemetry?.shutdown();
   }

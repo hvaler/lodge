@@ -105,6 +105,28 @@ function withRequestSpan(handler: McpHttpHandler, provider: Provider): McpHttpHa
   };
 }
 
+/** Where the MCP endpoint lives. One institution answers here; several answer beneath it. */
+export const MCP_PATH = '/mcp';
+
+/**
+ * Which institution a path is asking for.
+ *
+ * `/mcp` is the default one, `/mcp/{slug}` is that one by name, and nothing deeper is an endpoint.
+ * Shared by the Node server and the Lambda entry point rather than written twice: they serve the
+ * same URLs, and two copies of this would drift the first time one of them gained an institution.
+ *
+ * - a slug — serve it (it may still not exist; the caller says so)
+ * - `null` — several are served and none is the default, so `/mcp` cannot answer without guessing
+ * - `undefined` — not an MCP path at all
+ */
+export function institutionFor(path: string, defaultSlug: string | null): string | null | undefined {
+  if (path === MCP_PATH) return defaultSlug;
+  if (!path.startsWith(`${MCP_PATH}/`)) return undefined;
+
+  const rest = path.slice(MCP_PATH.length + 1);
+  return rest.length > 0 && !rest.includes('/') ? rest : undefined;
+}
+
 /**
  * Builds the HTTP handler for one provider.
  *
