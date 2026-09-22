@@ -15,7 +15,7 @@ import { join } from 'node:path';
 import { CfnOutput, Duration, RemovalPolicy, Stack, Token } from 'aws-cdk-lib';
 import type { StackProps } from 'aws-cdk-lib';
 import { AttributeType, Billing, TableV2 } from 'aws-cdk-lib/aws-dynamodb';
-import { PolicyStatement } from 'aws-cdk-lib/aws-iam';
+import { PolicyStatement, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Code, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { FunctionUrlAuthType } from 'aws-cdk-lib/aws-lambda';
 import { NodejsFunction, OutputFormat } from 'aws-cdk-lib/aws-lambda-nodejs';
@@ -48,6 +48,17 @@ export interface LodgeStackProps extends StackProps {
    * spends the whole budget. Generous enough that a room full of judges never notices.
    */
   readonly dailyLimit?: number;
+  /**
+   * The id of the Alexa skill allowed to invoke the bridge, e.g. `amzn1.ask.skill.xxxx`.
+   *
+   * Absent means no bridge is deployed at all, which is the default: it only exists to record a
+   * video on a real device, it spends money per question like the demonstration does, and the id
+   * cannot be known before the skill is created in the developer console.
+   *
+   * **The bridge is a classic custom skill, not Alexa+.** Registering an Alexa+ add-on is not open
+   * to entrants; this proves the server answers a real device, nothing more.
+   */
+  readonly alexaSkillId?: string;
   /** The Bedrock inference profile the demonstration uses. Must match what the code defaults to. */
   readonly modelId?: string;
 }
@@ -152,6 +163,7 @@ export class LodgeStack extends Stack {
     });
 
     if (props.sandbox) this.#addDemonstration(url.url, props);
+    if (props.sandbox && props.alexaSkillId) this.#addAlexaBridge(url.url, props);
   }
 
   /**
@@ -240,6 +252,72 @@ export class LodgeStack extends Stack {
     new CfnOutput(this, 'Demonstration', {
       value: demoUrl.url,
       description: 'The page, for somebody with a browser and no MCP client',
+    });
+  }
+
+  /**
+   * The bridge to a real device: a classic Alexa custom skill over the same MCP server.
+   *
+   * **Not Alexa+.** That registry is limited to selected partners, so nobody entering a hackathon
+   * can register an add-on. What this buys is the one thing a browser tab cannot be: a speaker on
+   * a table answering out loud, against the very same server everything else talks to.
+   *
+   * No function URL. Alexa invokes the function directly, which is both simpler and safer than an
+   * HTTPS endpoint — there is no certificate to keep, and no request signature to verify, because
+   * the only caller that can reach it is the one named below.
+   */
+  #addAlexaBridge(mcpUrl: string, props: LodgeStackProps): void {
+    const modelId = props.modelId ?? 'eu.amazon.nova-2-lite-v1:0';
+    const foundationModel = modelId.replace(/^[a-z]{2}\./, '');
+
+    const skill = new NodejsFunction(this, 'AlexaSkill', {
+      entry: join(import.meta.dirname, '../../src/lambda/skill.ts'),
+      handler: 'handler',
+      runtime: Runtime.NODEJS_24_X,
+      architecture: Architecture.ARM_64,
+      // The cold start is what this buys. Measured 22-09-2026: the turn is ~1.5 s warm and ~4.5 s
+      // cold against Alexa's 8 s cut-off, and the cold one is the one that happens on the take
+      // that matters. The skill also sends a progressive response, so the gap is filled either way.
+      memorySize: 1024,
+      // Under Alexa's cut-off on purpose: a function that is still working when Alexa has given up
+      // is a function burning money for an answer nobody will hear.
+      timeout: Duration.seconds(8),
+      logGroup: new LogGroup(this, 'AlexaSkillLogs', {
+        retention: RetentionDays.ONE_WEEK,
+        removalPolicy: RemovalPolicy.DESTROY,
+      }),
+      environment: {
+        LODGE_MCP_URL: mcpUrl,
+        LODGE_BEDROCK_MODEL: modelId,
+        // Checked inside the handler as well as here. The permission below says who may invoke;
+        // this says whose envelopes are answered, and a function that answers any envelope handed
+        // to it is answering somebody else's skill.
+        LODGE_SKILL_ID: props.alexaSkillId ?? '',
+      },
+      bundling: { format: OutputFormat.ESM, target: 'node24', minify: false, sourceMap: true },
+    });
+
+    // Scoped to this one skill, not to Alexa at large: `eventSourceToken` is what turns "anybody's
+    // skill may invoke this" into "ours may".
+    skill.addPermission('AlexaMayInvoke', {
+      principal: new ServicePrincipal('alexa-appkit.smapi.amazon.com'),
+      action: 'lambda:InvokeFunction',
+      eventSourceToken: props.alexaSkillId ?? '',
+    });
+
+    skill.addToRolePolicy(
+      new PolicyStatement({
+        actions: ['bedrock:InvokeModel'],
+        resources: [
+          `arn:aws:bedrock:${this.region}:${this.account}:inference-profile/${modelId}`,
+          `arn:aws:bedrock:*::foundation-model/${foundationModel}`,
+        ],
+      }),
+    );
+
+    new CfnOutput(this, 'AlexaEndpoint', {
+      value: skill.functionArn,
+      description: "Paste into the skill's endpoint field in the Alexa developer console",
     });
   }
 }

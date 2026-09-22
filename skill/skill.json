@@ -1,0 +1,43 @@
+{
+  "manifest": {
+    "manifestVersion": "1.0",
+    "publishingInformation": {
+      "locales": {
+        "es-ES": {
+          "name": "La conserjería",
+          "summary": "Pregunta por un aula libre, tu horario, un plazo o avisa de una avería.",
+          "description": "Un puente a Lodge, un servidor MCP autoalojado que responde a las preguntas del campus sobre los estándares que cualquier institución ya tiene. Los datos son de una universidad inventada.\n\nNo publicada: existe para probar el servidor contra un dispositivo real en modo desarrollo.",
+          "examplePhrases": [
+            "Alexa, abre la conserjería",
+            "Alexa, pregunta a la conserjería qué aula está libre ahora en Mendizábal",
+            "Alexa, pregunta a la conserjería qué tengo mañana"
+          ],
+          "keywords": ["campus", "aulas", "horario", "universidad"]
+        }
+      },
+      "isAvailableWorldwide": false,
+      "distributionCountries": ["ES"],
+      "distributionMode": "PRIVATE",
+      "category": "EDUCATION_AND_REFERENCE",
+      "testingInstructions": "Datos de una universidad inventada. Ningún sistema real detrás."
+    },
+    "apis": {
+      "custom": {
+        "endpoint": {
+          "uri": "REEMPLAZAR-CON-EL-ARN-DE-LA-FUNCION"
+        },
+        "interfaces": []
+      }
+    },
+    "privacyAndCompliance": {
+      "allowsPurchases": false,
+      "usesPersonalInfo": false,
+      "isChildDirected": false,
+      "isExportCompliant": true,
+      "containsAds": false,
+      "locales": {
+        "es-ES": {}
+      }
+    }
+  }
+}

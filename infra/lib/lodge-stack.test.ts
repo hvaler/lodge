@@ -167,3 +167,65 @@ describe('the development identity header', () => {
     expect(template.toJSON().Description).toMatch(/Anyone may claim any identity/);
   });
 });
+
+describe('the bridge to a real device', () => {
+  const SKILL = 'amzn1.ask.skill.00000000-0000-0000-0000-000000000000';
+  const ALEXA = { Principal: 'alexa-appkit.smapi.amazon.com' };
+  let bridged: Template;
+
+  // Synthesised once, like the others: each one bundles a function with esbuild, and paying
+  // several seconds per assertion is how a suite becomes something people skip.
+  beforeAll(() => {
+    bridged = Template.fromStack(
+      new LodgeStack(new App(), 'Bridge', { sandbox: true, alexaSkillId: SKILL, env: ENV }),
+    );
+  }, 120_000);
+
+  /** Permissions naming Alexa. Counting all of them would count the two function URLs as well. */
+  function alexaPermissions(template: Template): number {
+    return Object.values(
+      template.findResources('AWS::Lambda::Permission', { Properties: ALEXA }),
+    ).length;
+  }
+
+  it('is not deployed unless somebody names a skill', () => {
+    // It spends money per question and exists to record a video. Off is the only sane default, and
+    // the id cannot be known before the skill exists in the developer console anyway.
+    expect(alexaPermissions(templateOf(false))).toBe(0);
+    expect(alexaPermissions(templateOf(true))).toBe(0);
+  });
+
+  it('lets that one skill invoke it, and no other', () => {
+    // `eventSourceToken` is what turns "anybody's skill may invoke this" into "ours may".
+    bridged.hasResourceProperties('AWS::Lambda::Permission', {
+      Action: 'lambda:InvokeFunction',
+      Principal: 'alexa-appkit.smapi.amazon.com',
+      EventSourceToken: SKILL,
+    });
+    expect(alexaPermissions(bridged)).toBe(1);
+  });
+
+  it('has no function URL, because Alexa invokes it directly', () => {
+    // Two URLs in the stack — the server and the page — and the bridge is not a third. An HTTPS
+    // endpoint would mean a certificate to keep and Alexa's request signature to verify.
+    bridged.resourceCountIs('AWS::Lambda::Url', 2);
+  });
+
+  it('gives up before Alexa does, and knows whose envelopes to answer', () => {
+    // A function still working when Alexa has hung up is burning money for an answer nobody hears.
+    bridged.hasResourceProperties('AWS::Lambda::Function', {
+      Timeout: 8,
+      Environment: { Variables: Match.objectLike({ LODGE_SKILL_ID: SKILL }) },
+    });
+  });
+
+  it('is not deployed outside a sandbox even when a skill is named', () => {
+    // The bridge talks to the deployment that runs the identity bypass. Outside a sandbox that
+    // deployment does not exist, and a bridge to it would be a bridge to nowhere.
+    const outside = Template.fromStack(
+      new LodgeStack(new App(), 'BridgeProd', { sandbox: false, alexaSkillId: SKILL, env: ENV }),
+    );
+
+    expect(alexaPermissions(outside)).toBe(0);
+  }, 120_000);
+});

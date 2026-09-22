@@ -1,0 +1,159 @@
+/**
+ * The bridge to a real device: a classic Alexa custom skill over the same MCP server.
+ *
+ * **Say this out loud wherever this is shown: it is not Alexa+.** The Alexa+ add-on registry is
+ * limited to "select partners working directly with our team", so no entrant can register one, and
+ * the hackathon's own guidance is to simulate the experience in a web app — which is what
+ * `src/web/` is. This exists for one reason the web app cannot cover: a speaker on a table
+ * answering out loud is evidence that the server is real in a way a browser tab is not.
+ *
+ * It is deliberately thin. Alexa's envelope comes in, the orchestrator that already runs the
+ * demonstration answers it, and the envelope goes back out. Nothing about campuses, tools or models
+ * lives here: the same `createDemoApi` the page uses does all of it, so the device cannot drift
+ * from what the page shows.
+ *
+ * Identity: this talks to the sandbox deployment, which runs `LODGE_DEV_IDENTITY` and takes a
+ * subject from a header. That is an authentication bypass and it is fine *here* — the deployment it
+ * points at serves two invented universities — but it means the device demonstrates the voice path,
+ * not the identity path. Identity is demonstrated in the web app, where the sign-in is real
+ * (`src/web/idp.ts`).
+ */
+
+import { bedrockOptionsFrom, createBedrockModel } from '../orchestrator/index.ts';
+import { startTelemetry } from '../telemetry/setup.ts';
+import { createDemoApi } from '../web/api.ts';
+import { ASK_INTENT, historyIn, isOurSkill, questionIn, saySomethingFirst, speak } from './alexa.ts';
+import type { AlexaEnvelope, AlexaResponse } from './alexa.ts';
+
+/** Where Lodge is. Without it there is nothing to bridge to, so this fails loudly at init. */
+function lodgeUrl(): string {
+  const url = process.env['LODGE_MCP_URL'];
+  if (!url) {
+    throw new Error('LODGE_MCP_URL is not set. The skill is an MCP client and needs a server.');
+  }
+  return url.replace(/\/+$/, '');
+}
+
+/** Which institution the device answers for, and as whom. One of each: it is a demonstration. */
+const SLUG = process.env['LODGE_SKILL_INSTITUTION'] ?? 'san-telmo';
+const SUBJECT = process.env['LODGE_SKILL_SUBJECT'] ?? 'est-0001';
+const SKILL_ID = process.env['LODGE_SKILL_ID'];
+
+const WELCOME =
+  'Soy la conserjería. Puedes preguntarme por un aula libre, por tu horario, por un plazo o ' +
+  'avisar de una avería. ¿Qué necesitas?';
+const HELP =
+  'Pregúntame por ejemplo qué aula está libre ahora en Mendizábal, o qué tienes mañana.';
+const FILLER = 'Un momento, lo miro.';
+
+/** What the routing needs, so it can be driven without a model or a server behind it. */
+export interface SkillOptions {
+  readonly ask: (request: {
+    institution: string;
+    utterance: string;
+    subject: string;
+    history: readonly { role: 'user' | 'assistant'; text: string }[];
+  }) => Promise<{ said: string }>;
+  readonly slug: string;
+  readonly subject: string;
+  /** Absent skips the check, which is the local-testing case. */
+  readonly skillId?: string;
+  /** Injected so a test does not have to reach the directive service. */
+  readonly progressive?: typeof saySomethingFirst;
+  readonly onError?: (error: Error) => void;
+}
+
+/**
+ * The routing, apart from the wiring.
+ *
+ * Separated so it can be tested at all: the entry point below builds a Bedrock client and demands
+ * a server URL while the module is evaluated, and a test of a thing that cannot be imported without
+ * both is a test of nothing.
+ */
+export function createSkill(options: SkillOptions) {
+  return async function answer(envelope: AlexaEnvelope): Promise<AlexaResponse> {
+    try {
+      if (!isOurSkill(envelope, options.skillId)) {
+        return speak('Esta conserjería no responde a esa aplicación.', { end: true });
+      }
+
+      const type = envelope.request.type;
+      if (type === 'SessionEndedRequest') return speak('', { end: true });
+      if (type === 'LaunchRequest') return speak(WELCOME, { reprompt: HELP });
+
+      const name = envelope.request.intent?.name ?? '';
+      if (name === 'AMAZON.StopIntent' || name === 'AMAZON.CancelIntent') {
+        return speak('Hasta luego.', { end: true });
+      }
+      if (name === 'AMAZON.HelpIntent') return speak(HELP, { reprompt: HELP });
+
+      const question = questionIn(envelope);
+      if (name !== ASK_INTENT || !question) return speak(HELP, { reprompt: HELP });
+
+      // The filler goes out before the work starts, not after: its whole job is to fill the gap.
+      await (options.progressive ?? saySomethingFirst)(envelope, FILLER);
+
+      const history = historyIn(envelope);
+      const answered = await options.ask({
+        institution: options.slug,
+        utterance: question,
+        subject: options.subject,
+        history,
+      });
+
+      // Carried in the session so a second turn can act on the first — which is what makes filing
+      // a fault work by voice: the agent asks "¿lo abro?", somebody says "sí", and the model has
+      // its own question in front of it (ADR-011). Trimmed: a session attribute is not a database.
+      const carried = [
+        ...history,
+        { role: 'user' as const, text: question },
+        { role: 'assistant' as const, text: answered.said },
+      ].slice(-6);
+
+      return speak(answered.said, { attributes: { history: carried }, reprompt: '¿Algo más?' });
+    } catch (error) {
+      // A skill that throws says "there was a problem with the requested skill's response", which
+      // tells the person nothing and the author less.
+      options.onError?.(error as Error);
+      return speak('No he podido consultarlo ahora mismo. Inténtalo otra vez en un momento.', {
+        end: true,
+      });
+    }
+  };
+}
+
+// Built once per container: the model client and the catalogue cost nothing per invocation.
+const api = createDemoApi({
+  institutions: [
+    {
+      slug: SLUG,
+      name: SLUG,
+      locale: 'es-ES',
+      mcpUrl: `${lodgeUrl()}/mcp/${SLUG}`,
+      identities: [],
+      suggestions: [],
+    },
+  ],
+  model: createBedrockModel(bedrockOptionsFrom(process.env)),
+});
+
+const telemetry = await startTelemetry(process.env, 'lodge-skill');
+
+const answer = createSkill({
+  ask: (request) => api.ask(request),
+  slug: SLUG,
+  subject: SUBJECT,
+  ...(SKILL_ID ? { skillId: SKILL_ID } : {}),
+  onError: (error) => console.log(error.message),
+});
+
+export async function skillHandler(envelope: AlexaEnvelope): Promise<AlexaResponse> {
+  try {
+    return await answer(envelope);
+  } finally {
+    // Lambda freezes the container the instant this resolves.
+    await telemetry?.shutdown();
+  }
+}
+
+export { skillHandler as handler };

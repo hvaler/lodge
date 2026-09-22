@@ -13,7 +13,7 @@ in the [README](../README.md), in the order a question passes through them.
 | `cards/` | the visual cards (MCP Apps extension) that ride along with a spoken answer | `index.ts` |
 | `orchestrator/` | the client: Bedrock, the tool-call loop, and prompt caching | `index.ts`, `model.ts` |
 | `web/` | the voice demonstration and the public page, which talk to the server over HTTP like any client | `main.ts` |
-| `lambda/` | the two AWS entry points, over the same server | `handler.ts` |
+| `lambda/` | the AWS entry points — the server, the page, and the bridge to a real device | `handler.ts` |
 | `shared/`, `telemetry/` | time zones and language; OpenTelemetry continuing the client's trace | `time.ts` |
 
 Tests live **next to the code** they cover, as `<module>.test.ts`; there is no test folder. Every
