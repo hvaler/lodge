@@ -300,7 +300,7 @@
     ],
     "funcionalidades_en_progreso": [],
     "bloqueadores": [
-      "Creditos AWS (150 $) RECIBIDOS el 22-09. Queda canjearlos en la cuenta 401157843883, que es donde corre la pila: Billing and Cost Management -> Credits -> Redeem credit. Ojo con canjearlos en una cuenta personal por error."
+      "Creditos AWS: UNO aprobado y recibido el 22-09; el segundo RECHAZADO. Motivo que ellos mismos senalan: la descripcion no nombraba ningun track. El formulario exige escribir Fire TV, Alexa+, Bee o Ring EN LA PROPIA RESPUESTA, y el resumen enviado no lo hacia aunque el texto de Devpost si lo nombra. Se puede reenviar nombrando Alexa+. OJO: el mismo correo dice que es UN CREDITO POR PERSONA, asi que el segundo puede caer igual por esa via aunque se arregle el track. Canjear el aprobado en la cuenta 401157843883, que es donde corre la pila: Billing and Cost Management -> Credits -> Redeem credit."
     ],
     "proxima_entrega": "M6 - envio en Devpost (21 oct)",
     "notas_sprint": "M0 a M4 cerrados y M5 escrito el 16-09. El 17-09 se anadio lo que faltaba para que la promesa del runbook fuese cierta de verdad: los partes van al sistema que la institucion ya vigila (correo, webhook o Jira, exactamente uno; ADR-018), la interfaz congelada se enmendo DOS veces por su propio procedimiento (ADR-017 y ADR-019) y las aulas se pueden escribir en el propio fichero de configuracion. Ese mismo dia se barrio el repositorio publico: fuera el andamiaje del ecosistema que seguia dentro. EL CODIGO ESTA TERMINADO. Todo lo que queda hasta el envio es trabajo humano: grabar el video (guion a 2:55), que alguien AJENO valide la guia de adopcion con el cronometro, y revisar y pegar el texto ya redactado en Devpost."
