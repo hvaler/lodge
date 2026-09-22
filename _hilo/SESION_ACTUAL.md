@@ -6,7 +6,7 @@
 |-------|-------|
 | **Fecha** | 2026-09-22 |
 | **Hito activo** | M5 — el código está hecho; falta lo humano |
-| **Tests** | 456 en `src` + 20 de la pila CDK · CI verde · `tsc` limpio |
+| **Tests** | 439 en `src` + 20 de la pila CDK = 459 · CI verde · `tsc` limpio |
 | **Desplegado** | 22-09, eu-west-1: servidor, página pública y **puente a Alexa** |
 
 ---

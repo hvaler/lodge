@@ -95,10 +95,24 @@ both. Nobody should have to deploy a second place where their students' password
 credentials, reaching no cloud at all. And AWS — one Lambda, one DynamoDB table, one URL — because
 the managed path should be documented, not required.
 
-Because the Alexa+ add-on registry is limited to selected partners, we followed the hackathon's own
-guidance and built the voice experience as a web app. It ships as open source rather than as a
-throwaway, and it is an ordinary MCP client: it reads the tool catalogue from the live server over
-HTTP, which is exactly why switching institution changes what it can do.
+**The voice experience, twice, and neither of them is Alexa+.** The Alexa+ add-on registry is
+limited to "select partners working directly with our team", so no entrant can register one. We
+followed the hackathon's own guidance and built the experience as a web app: it ships as open source
+rather than as a throwaway, and it is an ordinary MCP client that reads the tool catalogue from the
+live server over HTTP, which is exactly why switching institution changes what it can do.
+
+Then we put it on a speaker as well, and we want to be exact about what that is: a **classic Alexa
+custom skill** — Alexa Skills Kit, private, uncertified — **not Alexa+**. It exists for the one
+thing a browser tab cannot do, which is answer out loud in a room. It reuses the same orchestrator
+the web app runs on, so the device cannot drift from what the page shows. One skill carries two
+locales, which means the language you speak picks the institution: English reaches Carrigmore and
+its three tools, Spanish reaches San Telmo and its six. Nothing was written to make that work — the
+catalogue is derived either way, so the device inherits the difference for free.
+
+What the speaker does *not* demonstrate is identity. It talks to the sandbox deployment, which
+resolves a fixed demonstration subject from a header. Identity is demonstrated in the web app, where
+the sign-in is a real authorization code flow with PKCE and tokens bound to each institution's
+canonical URI.
 
 ## Challenges we ran into
 
@@ -133,9 +147,14 @@ and not one of them needed the contract to change.
 **214 ms** end to end from Spain against the platform's 500 ms budget, network included, measured
 against the deployed server rather than a laptop.
 
-**Every acceptance criterion is a test.** Seven use cases, 425 tests over the source plus 15 over the
+**Every acceptance criterion is a test.** Seven use cases, 439 tests over the source plus 20 over the
 CloudFormation, run on every build — including under a distant timezone, because an iCalendar
 all-day date used to mean different things in Dublin and Auckland.
+
+**A speaker on a table answers.** A classic custom skill, because the add-on registry is closed to
+us — but a real device against the same MCP server: the greeting in 4.58 ms, a full room question in
+2 829 ms inside the function against Alexa's 8 s cut-off, and asking Carrigmore for a timetable gets
+a plain "I can't see that" because it never published the capability.
 
 **Least privilege we actually checked.** The function may run three DynamoDB operations, not the ten
 `grantReadWriteData` hands out, and invoke exactly one model. The stack tests assert it.
@@ -150,6 +169,13 @@ afternoon, and it is now the first thing the adapter guide tells anybody writing
 Second: a check that cannot fail is not a check. We verified every safety net in this project by
 deliberately breaking what it guards — the frozen interface, the token audience binding, the trace
 continuation — and watching the right test go red before believing it.
+
+We relearned it on the last build day. The speaker's deployment failed on a service principal we had
+spelled wrong, and twenty green stack tests had never stood a chance, because one of them asserted
+the same string the code did. A synthesised template can be compared with itself forever without
+noticing the value exists nowhere. Some values only the provider can validate — service names, model
+ARNs, runtimes — and for those the only test is a deployment. Which is an argument for deploying
+early, not for writing more tests.
 
 ## What's next for Lodge
 
@@ -178,13 +204,15 @@ ldap · docker · alexa
 |---|---|
 | Talk to it | https://5fugfo2nx7ajeymmf62fjqssou0bgdvq.lambda-url.eu-west-1.on.aws/ |
 | MCP endpoint | https://4joapeibeg357e7vyw2dj4pnwa0tmpay.lambda-url.eu-west-1.on.aws/mcp |
+| …the second institution | https://4joapeibeg357e7vyw2dj4pnwa0tmpay.lambda-url.eu-west-1.on.aws/mcp/carrigmore |
 | Source | https://github.com/hvaler/lodge |
 | Friction log | https://github.com/hvaler/lodge/blob/main/docs/friction-log.md |
 | Adoption guide | https://github.com/hvaler/lodge/blob/main/docs/adopting.md |
 
-> The page serves the generated campus and answers a bounded number of questions a day, because each
-> one calls a model. `npm run demo` runs the same thing locally with no limit — and with the second
-> institution, which is the part worth seeing.
+> The page answers a bounded number of questions a day, because each one calls a model. Both
+> institutions are live: `/mcp` is San Telmo with six tools, `/mcp/carrigmore` is Carrigmore with
+> three — ask that one for a timetable and watch it decline rather than guess. `npm run demo` runs
+> the same thing locally with no limit.
 
 ---
 

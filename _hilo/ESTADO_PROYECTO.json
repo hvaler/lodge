@@ -427,7 +427,7 @@
     "notas": "AWS_PROFILE=lrea (la cuenta 401157843883). El puente solo se despliega si se pasa -c alexaSkillId=<id>; sin el, ni funcion ni permiso, que es lo que se quiere fuera de sandbox."
   },
   "metricas": {
-    "cobertura_tests": "456 tests en src + 20 de la pila CDK · CI construye ademas el contenedor",
+    "cobertura_tests": "439 tests en src + 20 de la pila CDK = 459, contados el 22-09 (el 456 anterior estaba mal) · CI construye ademas el contenedor",
     "ultimo_build": "2026-09-22 (CI verde: typecheck, test, build)",
     "ultimo_deploy": "2026-09-22 (eu-west-1, sandbox, + puente a Alexa: tercera Lambda y permiso acotado por eventSourceToken)",
     "incidencias_abiertas": 0,
