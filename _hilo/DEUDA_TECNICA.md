@@ -100,6 +100,33 @@ Medido el 16-09-2026 con el orquestador real contra Bedrock, desde España a `us
 |---|---|---|---|
 | **El servidor MCP respondiendo a una llamada de herramienta** | p95 muy por debajo | **500 ms** (límite de plataforma Alexa+) | ✅ con mucho margen |
 | El turno completo del orquestador de demostración | 1 508 – 2 004 ms | — | n/a |
+| **El turno completo sobre el despliegue, en caliente** (22-09) | mediana **1 505 ms**, p90 2 691 ms, n=6 | **8 s** (corte de una skill clásica) | ✅ |
+| **El mismo turno en frío** (22-09) | **4 457 ms**, una medida | **8 s** | ✅ con ~3,5 s de margen |
+
+### El corte de ocho segundos, medido el 22-09-2026
+
+Antes de escribir una línea del puente a un dispositivo físico había que saber si el turno cabe en
+el presupuesto de una **skill clásica** de Alexa, que corta a los 8 s. Medido contra el despliegue
+real (Lambda → Lambda → Bedrock, desde España): **cabe.**
+
+- **En caliente**, mediana 1 505 ms y p90 2 691 ms sobre seis preguntas. Es *más rápido* que en
+  local, y tiene explicación: la función corre en eu-west-1, al lado de Bedrock, mientras que en
+  local la llamada al modelo sale desde España.
+- **En frío**, 4 457 ms. Es el número que decide, porque una skill que nadie ha invocado en un rato
+  arranca en frío justo cuando la enciende quien graba. Deja unos 3,5 s de margen, y ahí dentro
+  falta todavía la red entre el servicio de Alexa y nuestro extremo, que no podemos medir desde
+  aquí.
+
+**Dos cosas que conviene hacer si el puente se construye**, y ninguna es cara:
+
+1. **Respuesta progresiva.** La API de Alexa permite mandar un «dame un segundo» mientras se
+   trabaja. Es lo que hace cualquier skill seria y quita el riesgo del frío por completo.
+2. **Concurrencia aprovisionada**, una instancia, solo mientras dure la grabación. Elimina el
+   arranque en frío por unos euros.
+
+> **Por confirmar contra la documentación vigente de Alexa** antes de construir: los 8 s son la
+> cifra documentada para una skill clásica, pero no se ha verificado en esta ronda. Si fuese menos,
+> la respuesta progresiva pasa de recomendable a obligatoria.
 
 **La distinción importa y conviene no confundirla.** Los 500 ms que documenta Alexa+ son para *el
 servidor MCP respondiendo a una llamada*, no para el turno conversacional entero: en un despliegue
