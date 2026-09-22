@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <!-- Los tests describen escenarios; documentarlos en XML no aporta nada. -->
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <!--
+      CA1707 prohíbe guiones bajos en nombres de miembro. En el nombre de un test son la convención
+      de xUnit y hacen que el informe de fallos se lea como una frase en vez de como un identificador.
+      Se apaga aquí y en ningún otro sitio: en la biblioteca la regla sigue valiendo.
+    -->
+    <NoWarn>$(NoWarn);CA1707</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit.v3" Version="3.1.0" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/Lodge.Campus/Lodge.Campus.csproj" />
+  </ItemGroup>
+
+</Project>
