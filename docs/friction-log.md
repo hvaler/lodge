@@ -214,6 +214,68 @@ included.
 
 ---
 
+## Alexa.NET and the .NET Lambda tooling
+
+A second implementation of the client side, in C#, to answer whether an institution whose stack is
+.NET could work with this. Both entries below came from the same decision: use the ecosystem's
+standard Alexa library rather than hand-typing the envelope.
+
+### 🔴 `Alexa.NET` cannot be read by the serialiser every guide pairs it with
+
+**What happened.** `Alexa.NET`'s `SkillRequest.Request` is an abstract type, and the polymorphic
+reader that picks `LaunchRequest` or `IntentRequest` is a **Newtonsoft** converter. Paired with
+`Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer` — which is what the modern
+guides, the AWS templates and every summary we read reach for — the function refuses the envelope
+at the door:
+
+```
+Error converting the Lambda event JSON payload to type Alexa.NET.Request.SkillRequest:
+Deserialization of interface or abstract types is not supported.
+Type 'Alexa.NET.Request.Type.Request'. Path: $.request
+```
+
+**What it cost.** Nothing visible until the first real invocation. It compiles, it packages, it
+deploys, and every unit test passes, because the tests construct `SkillRequest` objects rather than
+deserialise them. The failure lives exactly in the gap a unit test cannot see — the same shape as
+our L-002, one ecosystem over.
+
+**What would have prevented it.** A line in `Alexa.NET`'s readme naming the serialiser it requires.
+Or, better, `Amazon.Lambda.Serialization.SystemTextJson` failing at *build* time on a handler whose
+event type has abstract members, rather than at the first invocation.
+
+**What we did instead.** `Amazon.Lambda.Serialization.Json` — the Newtonsoft one — and a comment in
+the project file saying why, because the obvious future "modernisation" is to swap it back.
+
+### 🟡 `Alexa.NET` brings a Newtonsoft.Json with a live advisory
+
+**What happened.** `Alexa.NET` 1.22.0, the current release, depends on `Newtonsoft.Json` 12.0.2.
+That version carries [GHSA-5crp-9r3c-p9vr](https://github.com/advisories/GHSA-5crp-9r3c-p9vr), a
+high-severity advisory fixed in 13.0.1. NuGet reports it as `NU1903`, which our build treats as an
+error, so the first build of the project failed on a package we had not chosen.
+
+**What it cost.** Ten minutes, because the build caught it. It is 🟡 rather than 🔴 for exactly that
+reason — a project without `TreatWarningsAsErrors` ships it and never knows.
+
+**What would have prevented it.** A release of `Alexa.NET` that floats its Newtonsoft dependency.
+
+**What we did instead.** A direct `PackageReference` to 13.0.4, which is how NuGet lets you lift a
+transitive dependency, with the advisory id in a comment next to it.
+
+### 🟢 What worked
+
+**The MCP C# SDK is a peer of the TypeScript one.** `HttpClientTransport` with
+`TransportMode = HttpTransportMode.StreamableHttp` and `AdditionalHeaders` covered everything the
+client needed, including the identity header, first time. The catalogue came back and the tools
+called, against the same deployment the TypeScript client talks to, with no adjustment on either
+side. That is the whole claim of this project, tested rather than asserted.
+
+**.NET 10 on Lambda costs nothing at start-up that Node does not.** We expected to publish a worse
+cold start and wrote that intention down beforehand. Measured on `dotnet10`/arm64 at 1024 MB:
+**324 ms and 357 ms** of init, against **373 ms** for the Node 24 function doing the same work.
+Two samples against one, so the honest claim is "no penalty observed" rather than "faster" — but the
+received wisdom that .NET must be pinned by Native AOT to be viable on Lambda did not survive
+contact with a measurement.
+
 ## AWS CDK and Lambda
 
 ### 🟡 `logRetention` silently deploys a second function
@@ -298,3 +360,4 @@ fields. The error message says exactly that, which is how it should go.
 | Amazon Bedrock | Sample code that runs, and per-model documentation of which Converse features are accepted |
 | Alexa+ | State the registry restriction on the page where people choose the track |
 | AWS CDK | Say that `logRetention` deploys a second function |
+| Alexa.NET | Name the serialiser the library requires, and float the Newtonsoft dependency off a version with a live advisory |

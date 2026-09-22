@@ -1,0 +1,17 @@
+{
+  "_comment": "Read by `dotnet lambda deploy-function`. Committed so the deployment is one command and not a memory. Nothing here is a secret: the MCP endpoint is public and the skill id identifies a private, uncertified skill.",
+  "_role": "Deliberately the same role the TypeScript bridge already uses. It grants basic execution and bedrock:InvokeModel on exactly one model, which is what this needs too — a second role would be a second thing to keep least-privileged.",
+  "_deploy": "AWS_PROFILE=<yours> dotnet lambda deploy-function --project-location dotnet/src/Lodge.Alexa",
+
+  "region": "eu-west-1",
+  "configuration": "Release",
+  "function-architecture": "arm64",
+  "function-runtime": "dotnet10",
+  "function-memory-size": 1024,
+  "function-timeout": 8,
+  "function-handler": "Lodge.Alexa::Lodge.Alexa.SkillFunction::HandlerAsync",
+  "function-name": "Lodge-AlexaSkill-dotnet",
+  "function-description": "A .NET backend for the same classic Alexa skill. Not Alexa+. Swap the ARN in the developer console to compare it with the TypeScript one.",
+  "function-role": "arn:aws:iam::401157843883:role/Lodge-AlexaSkillServiceRole7BD8B76A-r2tPAD4gisbU",
+  "environment-variables": "LODGE_MCP_URL=https://4joapeibeg357e7vyw2dj4pnwa0tmpay.lambda-url.eu-west-1.on.aws/;LODGE_SKILL_ID=amzn1.ask.skill.fe3d98fd-7b9c-4421-9e4a-912e467c593b;LODGE_BEDROCK_MODEL=eu.amazon.nova-2-lite-v1:0"
+}

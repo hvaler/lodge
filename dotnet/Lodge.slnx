@@ -1,8 +1,10 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/Lodge.Alexa/Lodge.Alexa.csproj" />
     <Project Path="src/Lodge.Campus/Lodge.Campus.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/Lodge.Alexa.Tests/Lodge.Alexa.Tests.csproj" />
     <Project Path="tests/Lodge.Campus.Tests/Lodge.Campus.Tests.csproj" />
   </Folder>
 </Solution>

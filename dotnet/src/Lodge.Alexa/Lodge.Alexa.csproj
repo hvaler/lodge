@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <AWSProjectType>Lambda</AWSProjectType>
+    <!-- What `dotnet lambda deploy-function` needs to produce a package Lambda will accept. -->
+    <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
+    <PublishReadyToRun>true</PublishReadyToRun>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- The .NET ecosystem's answer to Alexa envelopes. Using it rather than hand-typing the JSON
+         is part of the point: this folder exists to show what a .NET team would actually write. -->
+    <PackageReference Include="Alexa.NET" Version="1.22.0" />
+    <!--
+      Not used directly, and pinned twice over.
+
+      Alexa.NET drags in Newtonsoft.Json 12.0.2, which carries a known high-severity advisory
+      (GHSA-5crp-9r3c-p9vr, fixed in 13.0.1). A direct reference is how NuGet lets you lift a
+      transitive dependency, and the build refuses to proceed without it because
+      TreatWarningsAsErrors covers NU1903.
+    -->
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="Amazon.Lambda.Core" Version="3.3.0" />
+    <!--
+      The Newtonsoft serialiser, NOT Amazon.Lambda.Serialization.SystemTextJson, which most tutorials
+      reach for. Alexa.NET's SkillRequest.Request is abstract and its polymorphic reader is a
+      Newtonsoft converter, so System.Text.Json refuses the envelope at the door with
+      "Deserialization of interface or abstract types is not supported". That pairing deploys
+      cleanly, passes every unit test, and fails on the first real invocation — which is where we
+      found it. It is in the friction log.
+    -->
+    <PackageReference Include="Amazon.Lambda.Serialization.Json" Version="3.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Lodge.Campus/Lodge.Campus.csproj" />
+  </ItemGroup>
+
+</Project>

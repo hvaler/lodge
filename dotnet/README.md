@@ -20,8 +20,9 @@ it do" but "can our people work with this". The answer used to be a paragraph. N
 
 ## What it proves, and how you can watch it
 
-Seven of the eighteen tests talk to real services rather than to doubles. That is deliberate and it
-is the project's L-002: an MCP client with a stubbed transport proves nothing whatsoever.
+Seven of the thirty-three tests talk to real services rather than to doubles. That is deliberate and
+it is the project's L-002: an MCP client with a stubbed transport proves nothing whatsoever. The
+other twenty-six are the envelope handling, which needs no network and should not have one.
 
 | The test says | Which matters because |
 |---|---|
@@ -72,6 +73,10 @@ are three on purpose.
 | `SystemPrompt` | A literal translation of the TypeScript one. Those rules *are* the use cases |
 | `Institutions` | Language → institution → endpoint |
 | `Documents` | MCP's JSON ↔ Bedrock's `Document` |
+| `Skill` | Alexa's envelope in, speech out. No network, so it is driven by hand-built envelopes |
+| `Speech` | Everything the device says that the model did not write, in both languages |
+| `ProgressiveResponse` | The filler, which is never allowed to fail the turn |
+| `SkillFunction` | The Lambda entry point that wires the four together |
 
 ## Honest differences from the TypeScript side
 
@@ -88,11 +93,36 @@ This is a second implementation, not a port, and it is smaller on purpose:
 None of these are hidden by the tests. If one starts to matter, it will be because a measurement
 said so.
 
-## What is coming
+## On a physical device
 
-`Lodge.Alexa` — a Lambda handler that puts this behind a physical Echo, as a second backend for the
-same skill, so the two implementations can be compared by switching one ARN. When it lands, the cold
-start will be published next to Node's 373 ms whichever way it falls.
+`Lodge.Alexa` is a Lambda handler that puts this behind a real Echo, as a **second backend for the
+same skill**. Swap one ARN in the Alexa developer console and the device is answered by C# instead
+of TypeScript, with nothing else changing — same server, same institutions, same words.
+
+```bash
+AWS_PROFILE=<yours> dotnet lambda deploy-function --project-location src/Lodge.Alexa
+```
+
+`aws-lambda-tools-defaults.json` carries the rest, including the IAM role: deliberately the same one
+the TypeScript bridge uses, because it already grants basic execution and `bedrock:InvokeModel` on
+exactly one model.
+
+### What it measured
+
+We said we would publish the cold start next to Node's whichever way it fell. It fell the other way
+from the one we expected:
+
+| | .NET 10 | Node 24 |
+|---|---|---|
+| Init | **324 ms · 357 ms** | 373 ms |
+| Greeting, warm | 9.9 ms | 4.6 ms |
+| A full question | 1 080 ms · 1 795 ms | 2 829 ms |
+| Peak memory | 125 MB | 155 MB |
+
+`dotnet10` on arm64 at 1024 MB, no Native AOT. Read it carefully: **two samples against one**, and
+the full question is dominated by Bedrock, which varies more between calls than the runtimes differ
+from each other. The defensible claim is *no start-up penalty was observed*, not that either is
+faster. Alexa's cut-off is 8 s, and neither comes close.
 
 ## Licence
 
