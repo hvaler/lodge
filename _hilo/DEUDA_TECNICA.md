@@ -197,7 +197,7 @@ Lo del envio no puede hacerlo quien escribio el proyecto, y hay una decision de 
 | Probar el altavoz en un Echo fisico y elegir con que backend se graba | ⬜ el simulador ya no ensena nada nuevo | antes de grabar |
 | **Decidir si `dotnet/` entra en el texto de envio** | ⬜ se acordo dejarlo fuera; ahora existe y funciona, y callarlo tambien es una decision | antes del 21 oct |
 
-### 🟡 MEDIO · `campus.timetable` se inventa el motivo cuando no puede contestar
+### ✅ ARREGLADO (22-09) · MEDIO · `campus.timetable` se inventaba el motivo
 
 **Encontrado el 22-09, sin decidir.** La herramienta solo acepta `when: today | tomorrow`
 (`src/tools/index.ts:220`), cosa deliberada. Pero al pedirle «que tengo el jueves», el modelo
@@ -210,10 +210,30 @@ La causa probable es que el limite vive solo en el `enum` del esquema y no en la
 herramienta, que dice unicamente «Your own timetable. Resolves against who you are signed in as, not
 a name.». Nova 2 Lite no parece razonar del enum a «solo puedo con hoy o manana».
 
-**Arreglo candidato**: una linea en esa descripcion. No toca la interfaz congelada, pero SI es
-contrato publico y obliga a redesplegar y a volver a probar contra el modelo, porque lo unico que
-demuestra que cambia de respuesta es verlo. La pagina publica esta expuesta a cualquiera que la
-abra, incluido un jurado curioso.
+**ARREGLADO el mismo dia.** La descripcion pasa a decir el limite en prosa: «Your own timetable,
+for today or tomorrow only - it cannot look further ahead than that.» Una linea, sin tocar la
+interfaz congelada ni ningun test. Desplegado y verificado preguntando TRES veces, porque una sola
+respuesta de un modelo con temperatura no prueba nada:
+
+- «la agenda solo muestra horarios para hoy o manana, y el jueves no es uno de esos dias»
+- «no esta disponible desde esta herramienta. Solo puedo mostrar la de hoy o manana»
+
+Las tres nombran el limite real y NINGUNA dice «en este momento». La caida inventada desaparecio.
+
+### 🟡 MEDIO · El modelo nombra sitios donde mirar que no le consta que existan
+
+**Visto el 22-09 al verificar lo anterior.** Una de las tres respuestas remitio a «la intranet o
+**la aplicacion movil del campus**». San Telmo NO TIENE aplicacion movil: no aparece en docs/, ni en
+src/, ni en fixtures/. El modelo se la invento.
+
+Es la misma familia que lo anterior y toca la regla 1 del prompt de sistema, que autoriza sugerir
+«the registry» y nada mas. Declinar esta bien; inventarse donde mirar, no: un estudiante puede irse
+a buscar una aplicacion que no existe.
+
+**Arreglo candidato**: una frase en la regla 1 de `systemPrompt()` diciendo que no nombre ningun
+otro canal. Es mas caro de lo que parece — ese prompt gobierna TODAS las respuestas, en los dos
+idiomas y para las dos instituciones — asi que obliga a redesplegar y a repasar que no se haya
+estropeado nada de lo que ya funcionaba.
 
 ### Lo que estaba abierto y se cerro
 

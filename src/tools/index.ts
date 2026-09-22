@@ -215,7 +215,15 @@ function registerTimetable(server: McpServer, provider: Provider, resolve: Resol
     {
       // No name or student parameter, deliberately: the timetable returned is always the caller's
       // own. UC-02 requires that nobody can obtain another person's even by asking explicitly.
-      description: "Your own timetable. Resolves against who you are signed in as, not a name.",
+      //
+      // The two-day reach is said in prose as well as in the schema, and that repetition is the
+      // point. Asked "what have I got on Thursday", a model that sees the limit only in the `when`
+      // enum does not conclude "I can answer today and tomorrow" — it improvises a reason, and the
+      // one it improvised was "the Thursday timetable is not available at the moment", which
+      // invents an outage that is not happening. Declining is correct; inventing why is not.
+      description:
+        'Your own timetable, for today or tomorrow only — it cannot look further ahead than that. '
+        + 'Resolves against who you are signed in as, not a name.',
       inputSchema: z.object({
         when: z.enum(['today', 'tomorrow']).optional().describe('Defaults to today.'),
       }),
