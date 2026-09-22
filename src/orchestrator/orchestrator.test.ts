@@ -304,6 +304,13 @@ describe('the instruction the model works under', () => {
     expect(prompt).toMatch(/not on record/);
   });
 
+  it('forbids naming a place to look that nobody said exists', () => {
+    // Added after the model, asked for a Thursday timetable it cannot reach, sent somebody to "the
+    // campus mobile app". San Telmo has no mobile app. Declining is right; inventing where to go
+    // instead is the same failure wearing a helpful face, and it sends a real person walking.
+    expect(prompt).toMatch(/name no other place to look/);
+  });
+
   it('asks for one or two sentences, because it is spoken', () => {
     expect(prompt).toMatch(/one or two sentences/);
   });

@@ -422,13 +422,9 @@
     "proximoPaso": "REINICIAR Claude Code: el plugin hv@ovillo se actualizo de 1.2.5 a 1.18.0 y pide reinicio. Luego: decidir el arreglo de una linea en la descripcion de campus.timetable, probar el altavoz en un Echo fisico y elegir con que backend se graba, y decidir si dotnet/ entra en el texto de envio. Lo humano sigue igual: grabar, que alguien AJENO cronometre docs/adopting.md, y revisar el envio.",
     "resumenSesion": "Dia largo y en dos mitades. (1) EL ALTAVOZ FUNCIONA: skill clasica desplegada y verificada en el simulador en los dos idiomas, con UC-03 por voz y el historial entre turnos. Dos tropiezos instructivos: el principal de Alexa era alexa-appkit.amazon.com y no .smapi. (L-003), y el modelo de interaccion estaba guardado pero no construido. (2) SIN PLANIFICAR, dotnet/: un cliente MCP y un orquestador en C# que consumen Lodge sin TypeScript de por medio, mas un segundo backend de la misma skill, desplegado y medido. Se reviso ADEMAS si Alexa+ se habia abierto -no: la pagina de programa sigue diciendo «select partners» y @alexa/alexa-ai-cli da 404 en npm- y al comprobarlo aparecio la fuente de la restriccion de pais que yo habia retirado por no encontrarsela. Se fijo la imagen del runner de CI antes de que migre el 19-oct, dos dias antes del envio.",
     "archivosModificados": [
-      "dotnet/ (nuevo: Lodge.Campus, Lodge.Alexa y sus tests)",
-      ".github/workflows/dotnet.yml (nuevo) y ci.yml",
-      "infra/lib/lodge-stack.ts",
-      "docs/friction-log.md",
-      "docs/management/devpost-submission.md",
-      "README.md",
-      "_hilo/"
+      "dotnet/src/Lodge.Campus/SystemPrompt.cs",
+      "src/orchestrator/index.ts",
+      "src/orchestrator/orchestrator.test.ts"
     ],
     "notas": "AWS_PROFILE=lrea (cuenta 401157843883). En Git Bash, las rutas /aws/lambda/... las destroza la conversion de rutas de MSYS: usar MSYS_NO_PATHCONV=1 o los comandos de logs devuelven vacio sin decir por que. Y el puente en TypeScript solo se despliega con -c alexaSkillId=<id>."
   },
