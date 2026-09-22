@@ -124,9 +124,11 @@ invisible, and for an institution actually taking reports it is not good enough.
 an interface — `IssueStore`, two methods — so pointing the container at Postgres or the
 institution's own ticketing system is a small piece of work, and the right one.
 
-**The deployed page serves one institution.** Carrigmore's CSV and iCalendar files are not in that
-function's bundle, so the institution switch — the single most convincing thing Lodge does — is only
-visible in `npm run demo` and in the video. Bundling the fixtures would fix it.
+**~~The deployed page serves one institution.~~** ✅ **Fixed, 20 September.** Carrigmore's files
+were not in the managed function's bundle, so the institution switch — the single most convincing
+thing Lodge does — was only visible locally. A Lambda layer now mounts them read-only and the
+handler serves Carrigmore at `/mcp/carrigmore`, deliberately unequal: no LDAP inside a Lambda and no
+service desk to mail, so it publishes **three tools against San Telmo's six**. The switch is live.
 
 **The managed deployment has a generated URL.** It changes if the stack is recreated, which is
 survivable for a demonstration and not for OAuth: tokens are bound to a canonical URI. A real
