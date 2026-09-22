@@ -32,7 +32,7 @@ let createSkill: (options: {
     subject: string;
     history: readonly { role: 'user' | 'assistant'; text: string }[];
   }) => Promise<{ said: string }>;
-  slug: string;
+  institutions: Readonly<Record<string, string>>;
   subject: string;
   skillId?: string;
   progressive?: () => Promise<void>;
@@ -50,12 +50,16 @@ function envelope(request: AlexaEnvelope['request'], extra: Partial<AlexaEnvelop
   return { version: '1.0', request, ...extra };
 }
 
-function asking(question: string, attributes?: Record<string, unknown>): AlexaEnvelope {
+function asking(
+  question: string,
+  attributes?: Record<string, unknown>,
+  locale = 'es-ES',
+): AlexaEnvelope {
   return envelope(
     {
       type: 'IntentRequest',
       requestId: 'r-1',
-      locale: 'es-ES',
+      locale,
       intent: { name: ASK_INTENT, slots: { [QUESTION_SLOT]: { value: question } } },
     },
     attributes ? { session: { attributes } } : {},
@@ -68,7 +72,7 @@ function skillWith(
 ): Skill {
   return createSkill({
     ask: ask as never,
-    slug: 'san-telmo',
+    institutions: { es: 'san-telmo', en: 'carrigmore' },
     subject: 'est-0001',
     progressive: async () => {},
     ...options,
@@ -81,7 +85,9 @@ const echo = async (r: { utterance: string }): Promise<{ said: string }> => ({
 
 describe('opening and closing', () => {
   it('says what it can do when somebody just opens it', async () => {
-    const answered = await skillWith(echo)(envelope({ type: 'LaunchRequest', requestId: 'r-0' }));
+    const answered = await skillWith(echo)(
+      envelope({ type: 'LaunchRequest', requestId: 'r-0', locale: 'es-ES' }),
+    );
 
     expect(answered.response.outputSpeech.text).toContain('aula libre');
     // Left open: a skill that hangs up after hello is a skill nobody uses twice.
@@ -92,7 +98,7 @@ describe('opening and closing', () => {
   it('answers the built-ins every skill has to answer', async () => {
     const skill = skillWith(echo);
     const built = (name: string): AlexaEnvelope =>
-      envelope({ type: 'IntentRequest', requestId: 'r-2', intent: { name } });
+      envelope({ type: 'IntentRequest', requestId: 'r-2', locale: 'es-ES', intent: { name } });
 
     expect((await skill(built('AMAZON.StopIntent'))).response.shouldEndSession).toBe(true);
     expect((await skill(built('AMAZON.CancelIntent'))).response.shouldEndSession).toBe(true);
@@ -123,6 +129,7 @@ describe('a question', () => {
     const empty = envelope({
       type: 'IntentRequest',
       requestId: 'r-4',
+      locale: 'es-ES',
       intent: { name: ASK_INTENT, slots: { [QUESTION_SLOT]: { value: '   ' } } },
     });
 
@@ -137,7 +144,7 @@ describe('a question', () => {
         order.push('ask');
         return { said: 'ya está' };
       },
-      slug: 'san-telmo',
+      institutions: { es: 'san-telmo', en: 'carrigmore' },
       subject: 'est-0001',
       progressive: async () => {
         order.push('filler');
@@ -146,6 +153,61 @@ describe('a question', () => {
 
     await skill(asking('¿y mañana?'));
     expect(order).toEqual(['filler', 'ask']);
+  });
+});
+
+describe('one skill, two languages', () => {
+  it('reaches a different institution depending on what language it is spoken to', async () => {
+    // The same thing the page demonstrates with its institution switcher, and the same argument:
+    // one server answering for more than one place, with the client saying which. Carrigmore has
+    // no directory and no service desk, so it publishes three tools where San Telmo publishes six
+    // — the device inherits that difference for free.
+    const asked: string[] = [];
+    const skill = skillWith(async (r) => {
+      asked.push((r as unknown as { institution: string }).institution);
+      return { said: 'ok' };
+    });
+
+    await skill(asking('¿qué aula está libre?', undefined, 'es-ES'));
+    await skill(asking('which room is free?', undefined, 'en-GB'));
+
+    expect(asked).toEqual(['san-telmo', 'carrigmore']);
+  });
+
+  it('answers in the language it was asked in, before the model says a word', async () => {
+    const skill = skillWith(echo);
+    const open = (locale: string): AlexaEnvelope =>
+      envelope({ type: 'LaunchRequest', requestId: 'r-0', locale });
+
+    expect((await skill(open('es-ES'))).response.outputSpeech.text).toContain('conserjería');
+    expect((await skill(open('en-GB'))).response.outputSpeech.text).toContain('campus lodge');
+  });
+
+  it('treats any English locale as English, and anything unknown as English too', async () => {
+    // Alexa sends en-GB, en-US, en-IN… and Carrigmore is Irish, which is not even a locale Alexa
+    // has. The language is the part that decides; the country is not.
+    const asked: string[] = [];
+    const skill = skillWith(async (r) => {
+      asked.push((r as unknown as { institution: string }).institution);
+      return { said: 'ok' };
+    });
+
+    for (const locale of ['en-US', 'en-IN', 'de-DE']) {
+      await skill(asking('anything', undefined, locale));
+    }
+
+    // And with no locale at all. Built by hand rather than through the helper, whose default
+    // would have quietly supplied Spanish — the first version of this test did exactly that and
+    // was testing nothing.
+    await skill(
+      envelope({
+        type: 'IntentRequest',
+        requestId: 'r-9',
+        intent: { name: ASK_INTENT, slots: { [QUESTION_SLOT]: { value: 'anything' } } },
+      }),
+    );
+
+    expect(asked).toEqual(['carrigmore', 'carrigmore', 'carrigmore', 'carrigmore']);
   });
 });
 
@@ -198,7 +260,7 @@ describe('envelopes that are not ours', () => {
   it('refuses one addressed to another skill', async () => {
     const skill = skillWith(echo, { skillId: 'amzn1.ask.skill.nuestra' });
     const other = envelope(
-      { type: 'IntentRequest', requestId: 'r-5', intent: { name: ASK_INTENT, slots: {} } },
+      { type: 'IntentRequest', requestId: 'r-5', locale: 'es-ES', intent: { name: ASK_INTENT, slots: {} } },
       { context: { System: { application: { applicationId: 'amzn1.ask.skill.de-otro' } } } },
     );
 

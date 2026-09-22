@@ -11,8 +11,27 @@ against the very same MCP server everything else talks to. Say that plainly wher
 | File | What it is |
 | :-- | :-- |
 | `skill.json` | The manifest. `PRIVATE`, never published, never certified |
-| `interactionModels/custom/es-ES.json` | One intent carrying a whole question in an `AMAZON.SearchQuery` slot |
+| `interactionModels/custom/es-ES.json` | Spanish. Invocation name: **la conserjería** |
+| `interactionModels/custom/en-GB.json` | English. Invocation name: **campus lodge** |
 | [`src/lambda/skill.ts`](../src/lambda/skill.ts) | The endpoint. Thin: envelope in, the demonstration's own orchestrator answers, envelope out |
+
+### One skill, two languages — and that is the point
+
+**There is no second skill.** A skill carries several locales, and the language it is spoken to
+decides which institution it reaches:
+
+| Spoken in | Reaches | Publishes |
+| :-- | :-- | --: |
+| Spanish | Universidad de San Telmo | **6 tools** |
+| English | Carrigmore College | **3 tools** |
+
+That is the same thing the page demonstrates with its institution switcher, arriving at a device
+for free: one server answering for more than one place, with the *client* saying which. Carrigmore
+has no directory and no service desk, so it never offers to tell you your timetable — and the
+device inherits that without a line of code, because the catalogue is derived either way.
+
+`LODGE_SKILL_INSTITUTION` pins every language to one institution, for a deployment that serves only
+its own.
 
 ---
 
@@ -21,9 +40,13 @@ against the very same MCP server everything else talks to. Say that plainly wher
 The skill id cannot be known before the skill exists, so this goes in two passes.
 
 **1 · Create the skill.** In the [Alexa developer console](https://developer.amazon.com/alexa/console/ask):
-custom model, provisioned yourself, Spanish (ES). Paste
-`interactionModels/custom/es-ES.json` into the JSON editor and build the model. Copy the skill id
-from the endpoint page — it looks like `amzn1.ask.skill.xxxxxxxx-…`.
+custom model, provisioned yourself. Pick **one** primary locale to create it with, then add the
+other from *Build → Language settings*. For each one, paste the matching file from
+`interactionModels/custom/` into the JSON editor and build the model.
+
+Which one is primary matters only for the name shown in the console, so pick the audience: **English
+(UK)** for a jury that reads English, Spanish (ES) for an institution. Copy the skill id from the
+endpoint page — it looks like `amzn1.ask.skill.xxxxxxxx-…`.
 
 **2 · Deploy the bridge with that id.**
 
@@ -38,8 +61,10 @@ field, pick *AWS Lambda ARN*, and save.
 
 **3 · Try it.** The console's Test tab, or any Echo signed in to the same developer account:
 
-> «Alexa, abre la conserjería»
-> «Alexa, pregunta a la conserjería qué aula está libre ahora en Mendizábal»
+> «Alexa, abre la conserjería» · «Alexa, pregunta a la conserjería qué aula está libre ahora en
+> Mendizábal»
+>
+> «Alexa, open campus lodge» · «Alexa, ask campus lodge which room is free right now»
 
 ---
 

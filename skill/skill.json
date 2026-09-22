@@ -12,11 +12,36 @@
             "Alexa, pregunta a la conserjería qué aula está libre ahora en Mendizábal",
             "Alexa, pregunta a la conserjería qué tengo mañana"
           ],
-          "keywords": ["campus", "aulas", "horario", "universidad"]
+          "keywords": [
+            "campus",
+            "aulas",
+            "horario",
+            "universidad"
+          ]
+        },
+        "en-GB": {
+          "name": "Campus Lodge",
+          "summary": "Ask which room is free, what is on your timetable, or when a deadline closes.",
+          "description": "A bridge to Lodge, a self-hosted Model Context Protocol server that answers campus questions over the standards any institution already publishes. The data is an invented university.\n\nNot published: it exists to try the server against a real device in development mode.\n\nThis is a classic custom skill. The Alexa+ add-on registry is limited to selected partners, so no add-on could be registered.",
+          "examplePhrases": [
+            "Alexa, open campus lodge",
+            "Alexa, ask campus lodge which room is free right now",
+            "Alexa, ask campus lodge when registration closes"
+          ],
+          "keywords": [
+            "campus",
+            "rooms",
+            "timetable",
+            "university"
+          ]
         }
       },
       "isAvailableWorldwide": false,
-      "distributionCountries": ["ES"],
+      "distributionCountries": [
+        "ES",
+        "GB",
+        "IE"
+      ],
       "distributionMode": "PRIVATE",
       "category": "EDUCATION_AND_REFERENCE",
       "testingInstructions": "Datos de una universidad inventada. Ningún sistema real detrás."
