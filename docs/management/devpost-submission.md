@@ -96,7 +96,9 @@ credentials, reaching no cloud at all. And AWS — one Lambda, one DynamoDB tabl
 the managed path should be documented, not required.
 
 **The voice experience, twice, and neither of them is Alexa+.** The Alexa+ add-on registry is
-limited to "select partners working directly with our team", so no entrant can register one. We
+limited to "select partners working directly with our team", and its MCP Toolkit "is available in
+the United States" — we re-checked both at source on 22 September and neither had moved. No entrant
+can register an add-on, and a Spanish university could not use one if we could. We
 followed the hackathon's own guidance and built the experience as a web app: it ships as open source
 rather than as a throwaway, and it is an ordinary MCP client that reads the tool catalogue from the
 live server over HTTP, which is exactly why switching institution changes what it can do.

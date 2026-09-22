@@ -41,13 +41,26 @@ convirtiendo la genericidad en el momento espectacular en lugar de en una nota a
 
 ### 🟡 MEDIO · El registro de complementos de Alexa+ esta cerrado
 
-Limitado a socios seleccionados. La cita verificada el 14-09-2026, y la unica que hay, es
-*«Alexa+ for Builders is currently available to select partners working directly with our team»*.
+Dos restricciones, las dos citadas, **revisadas de nuevo el 22-09-2026 y sin cambios**:
+
+- **Quien.** *«Alexa+ for Builders is currently available to select partners working directly with
+  our team»* — [la pagina de programa](https://developer.amazon.com/alexaplus/).
+- **Donde.** *«The MCP Toolkit is available in the United States»* —
+  [la pagina del toolkit](https://developer.amazon.com/docs/alexaplus/add-ons/mcp-toolkit-overview.html),
+  actualizada el 3 de agosto de 2026.
+
 No se puede publicar un complemento oficial.
 
-> Este parrafo decia ademas «y a un solo pais (EE. UU.)». Ninguna otra fuente del repositorio lo
-> respalda ni lo cita, asi que se retira: una restriccion que no se ha verificado no se afirma.
-> Ver L-001, que es exactamente esta leccion.
+> **Historia de este parrafo, que es una leccion en si misma.** Decia «y a un solo pais (EE. UU.)»
+> sin cita; se retiro, porque una restriccion sin verificar no se afirma. El 22-09, al revisar si el
+> registro se habia abierto, aparecio la fuente oficial: **la afirmacion era correcta y quien la
+> retiro se equivoco al no buscarla mejor.** Retirar algo por falta de fuente es correcto; darlo por
+> falso no lo era. Queda repuesta con el enlace.
+
+> **Y la L-001 volvio a intentarlo el 22-09**, con el mismo mecanismo: un documento tecnico que
+> explica el toolkit, el CLI y el registro con todo detalle, sin mencionar el acceso ni una vez. La
+> ausencia de la restriccion en la documentacion tecnica no es su ausencia. Se comprobo en la pagina
+> de programa antes de cambiar nada, y no habia cambiado nada.
 
 **Mitigacion** — Las reglas admiten un servidor MCP autoalojado con la experiencia simulada en
 aplicacion web propia. Ese orquestador se construye una vez, **se publica**, y suma en el mini-reto
