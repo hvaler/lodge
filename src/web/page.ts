@@ -207,6 +207,8 @@ const el = (id) => document.getElementById(id);
 let catalogues = [];
 let current = null;
 let subject = '';
+let token = '';
+let quien = '';
 let speak = true;
 // Sent back with each question so the agent can act on what it just asked. Trimmed because a
 // conversation that grows without bound eventually pays for itself in latency.
@@ -232,15 +234,110 @@ function drawInstitutions() {
 function drawIdentities() {
   const box = el('identities');
   box.innerHTML = '';
-  const options = [{ subject: '', label: 'Not identified' }].concat(current.identities);
-  for (const id of options) {
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.setAttribute('aria-pressed', String(id.subject === subject));
-    b.innerHTML = esc(id.label) + (id.subject ? '<small>' + esc(id.subject) + '</small>' : '');
-    b.onclick = () => { subject = id.subject; drawIdentities(); };
-    box.appendChild(b);
+
+  // Without a sign-in endpoint the demonstration is running with --dev-identity, and identity is
+  // picked outright. That is the escape hatch, not the demonstration.
+  if (!current.signIn) {
+    const options = [{ subject: '', label: 'Not identified' }].concat(current.identities);
+    for (const id of options) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.setAttribute('aria-pressed', String(id.subject === subject));
+      b.innerHTML = esc(id.label) + (id.subject ? '<small>' + esc(id.subject) + '</small>' : '');
+      b.onclick = () => { subject = id.subject; drawIdentities(); };
+      box.appendChild(b);
+    }
+    return;
   }
+
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.setAttribute('aria-pressed', String(!!token));
+  b.innerHTML = token
+    ? esc(quien) + '<small>sesión iniciada · cerrar</small>'
+    : 'Iniciar sesión<small>sin sesión: el servidor responde 401</small>';
+  b.onclick = () => { token ? signOut() : startSignIn(); };
+  box.appendChild(b);
+}
+
+// ── El inicio de sesión, que es OAuth 2.1 de verdad ──────────────────────────
+function random(n) {
+  const bytes = new Uint8Array(n);
+  crypto.getRandomValues(bytes);
+  return b64url(bytes);
+}
+
+function b64url(bytes) {
+  let s = '';
+  for (const b of bytes) s += String.fromCharCode(b);
+  return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+async function startSignIn() {
+  const verifier = random(32);
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier));
+  // The verifier has to survive a full page load, because the provider sends the browser back here.
+  sessionStorage.setItem('lodge.pkce', JSON.stringify({ verifier, slug: current.slug }));
+
+  const u = new URL(current.signIn.authorizeUrl);
+  u.searchParams.set('response_type', 'code');
+  u.searchParams.set('client_id', 'lodge-demo');
+  u.searchParams.set('redirect_uri', location.origin + location.pathname);
+  u.searchParams.set('code_challenge', b64url(new Uint8Array(digest)));
+  u.searchParams.set('code_challenge_method', 'S256');
+  // What the token will be addressed to, and why it will not work at the other institution.
+  u.searchParams.set('resource', current.signIn.resource);
+  location.assign(u.toString());
+}
+
+function signOut() {
+  token = '';
+  quien = '';
+  reset();
+  drawIdentities();
+}
+
+/** Only to put a name on the button. The signature is Lodge's business, not this page's. */
+function nameIn(jwt) {
+  try {
+    const claims = JSON.parse(atob(jwt.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+    const found = (current.identities || []).find((i) => i.subject === claims.sub);
+    return found ? found.label : claims.sub;
+  } catch (e) {
+    return 'Sesión iniciada';
+  }
+}
+
+async function finishSignIn() {
+  const code = new URLSearchParams(location.search).get('code');
+  const saved = sessionStorage.getItem('lodge.pkce');
+  if (!code || !saved) return;
+
+  sessionStorage.removeItem('lodge.pkce');
+  window.history.replaceState(null, '', location.pathname);
+
+  const { verifier, slug } = JSON.parse(saved);
+  const where = catalogues.find((c) => c.slug === slug);
+  if (!where || !where.signIn) return;
+
+  const res = await fetch(where.signIn.tokenUrl, {
+    method: 'POST',
+    headers: { 'content-type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type: 'authorization_code',
+      code,
+      redirect_uri: location.origin + location.pathname,
+      client_id: 'lodge-demo',
+      code_verifier: verifier,
+    }),
+  });
+  if (!res.ok) return;
+
+  const granted = await res.json();
+  choose(slug);
+  token = granted.access_token;
+  quien = nameIn(token);
+  drawIdentities();
 }
 
 // Every tool any institution in this demo publishes, so the ones THIS one does not have are
@@ -273,6 +370,10 @@ function drawSuggestions() {
 function choose(slug) {
   current = catalogues.find((c) => c.slug === slug);
   subject = '';
+  // El token va dirigido a la institucion anterior (RFC 8707), asi que aqui no vale: la sesion
+  // no se arrastra, se cierra.
+  token = '';
+  quien = '';
   // Neither the conversation nor the identity carries across: they belong to the institution you
   // were talking to, and replaying them at another one would be quoting the wrong campus back.
   reset();
@@ -322,7 +423,7 @@ async function ask() {
     const res = await fetch('/api/ask', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ institution: current.slug, utterance, subject, history }),
+      body: JSON.stringify({ institution: current.slug, utterance, token, subject, history }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'la petición ha fallado');
@@ -407,6 +508,8 @@ function toggleMic() {
     return;
   }
   choose(catalogues[0].slug);
+  // Volvemos de la pantalla de acceso del proveedor con un codigo que canjear.
+  await finishSignIn();
 
   el('send').onclick = () => ask();
   el('utterance').onkeydown = (e) => { if (e.key === 'Enter') ask(); };

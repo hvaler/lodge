@@ -29,6 +29,19 @@ export interface DemoInstitution {
   readonly identities: readonly DemoIdentity[];
   /** Questions worth asking, so a demonstration does not depend on typing accurately. */
   readonly suggestions: readonly string[];
+  /**
+   * Where to sign in for this institution, when it is protected.
+   *
+   * Absent means the demonstration is running with `--dev-identity` and the page falls back to
+   * picking an identity outright. Present means a real authorization-code flow: the page sends
+   * somebody to `authorizeUrl`, exchanges the code at `tokenUrl`, and the token it gets back names
+   * `resource` as its audience — which is what stops it working at another institution.
+   */
+  readonly signIn?: {
+    readonly authorizeUrl: string;
+    readonly tokenUrl: string;
+    readonly resource: string;
+  };
 }
 
 export interface DemoIdentity {
@@ -39,7 +52,14 @@ export interface DemoIdentity {
 export interface AskRequest {
   readonly institution: string;
   readonly utterance: string;
-  /** Empty means an unauthenticated caller, which several tools correctly refuse. */
+  /**
+   * The access token from the sign-in, when there is one.
+   *
+   * Absent means an unauthenticated caller — which is now a real absence of credentials rather than
+   * a label, so the server answers 401 and several tools correctly refuse.
+   */
+  readonly token?: string;
+  /** Only with `--dev-identity`: the header bypass, kept for the day a recording cannot wait. */
   readonly subject?: string;
   /**
    * What was said before, oldest first.
@@ -75,6 +95,8 @@ export interface Catalogue {
   readonly tools: readonly { readonly name: string; readonly description: string }[];
   readonly identities: readonly DemoIdentity[];
   readonly suggestions: readonly string[];
+  /** Where to sign in, when this institution is protected. Never carries a token. */
+  readonly signIn?: DemoInstitution['signIn'];
 }
 
 /**
@@ -93,6 +115,14 @@ export interface DemoApiOptions {
   readonly institutions: readonly DemoInstitution[];
   /** Built per request rather than shared, so a model client is never reused across identities. */
   readonly model: Model;
+  /**
+   * Slug → the demonstration's own token, for reading tool catalogues.
+   *
+   * The page draws the catalogue before anyone signs in, and `tools/list` sits behind the same
+   * protected endpoint as everything else. So the backend is a client in its own right. These stay
+   * here and never reach the browser: what `/api/institutions` returns is `signIn`, not a token.
+   */
+  readonly serviceTokens?: ReadonlyMap<string, string>;
 }
 
 export function createDemoApi(options: DemoApiOptions): {
@@ -111,15 +141,23 @@ export function createDemoApi(options: DemoApiOptions): {
    */
   async function connect(
     institution: DemoInstitution,
-    subject: string | undefined,
+    credentials: { readonly token?: string; readonly subject?: string },
   ): Promise<Client> {
     const client = new Client(
       { name: 'lodge-demo', version: '0.0.0' },
       { capabilities: DEMO_CAPABILITIES },
     );
 
+    // A bearer token when the institution is protected; the development header only when the
+    // demonstration was started with `--dev-identity` and there is no token to carry.
+    const headers = credentials.token
+      ? { authorization: `Bearer ${credentials.token}` }
+      : credentials.subject
+        ? { [DEV_SUBJECT_HEADER]: credentials.subject }
+        : undefined;
+
     const transport = new StreamableHTTPClientTransport(new URL(institution.mcpUrl), {
-      requestInit: subject ? { headers: { [DEV_SUBJECT_HEADER]: subject } } : {},
+      requestInit: headers ? { headers } : {},
     });
 
     await client.connect(transport);
@@ -130,7 +168,8 @@ export function createDemoApi(options: DemoApiOptions): {
     async catalogues() {
       return Promise.all(
         options.institutions.map(async (institution) => {
-          const client = await connect(institution, undefined);
+          const service = options.serviceTokens?.get(institution.slug);
+          const client = await connect(institution, service ? { token: service } : {});
           try {
             const { tools } = await client.listTools();
             return {
@@ -140,6 +179,7 @@ export function createDemoApi(options: DemoApiOptions): {
               tools: tools.map((t) => ({ name: t.name, description: t.description ?? '' })),
               identities: institution.identities,
               suggestions: institution.suggestions,
+              ...(institution.signIn ? { signIn: institution.signIn } : {}),
             };
           } finally {
             await client.close();
@@ -152,7 +192,10 @@ export function createDemoApi(options: DemoApiOptions): {
       const institution = bySlug.get(request.institution);
       if (!institution) throw new UnknownInstitutionError(request.institution);
 
-      const client = await connect(institution, request.subject);
+      const client = await connect(institution, {
+        ...(request.token ? { token: request.token } : {}),
+        ...(request.subject ? { subject: request.subject } : {}),
+      });
 
       try {
         const orchestrator = createOrchestrator({ model: options.model, client });
