@@ -41,8 +41,13 @@ convirtiendo la genericidad en el momento espectacular en lugar de en una nota a
 
 ### 🟡 MEDIO · El registro de complementos de Alexa+ esta cerrado
 
-Limitado a socios seleccionados y a un solo pais (EE. UU.). No se puede publicar un complemento
-oficial.
+Limitado a socios seleccionados. La cita verificada el 14-09-2026, y la unica que hay, es
+*«Alexa+ for Builders is currently available to select partners working directly with our team»*.
+No se puede publicar un complemento oficial.
+
+> Este parrafo decia ademas «y a un solo pais (EE. UU.)». Ninguna otra fuente del repositorio lo
+> respalda ni lo cita, asi que se retira: una restriccion que no se ha verificado no se afirma.
+> Ver L-001, que es exactamente esta leccion.
 
 **Mitigacion** — Las reglas admiten un servidor MCP autoalojado con la experiencia simulada en
 aplicacion web propia. Ese orquestador se construye una vez, **se publica**, y suma en el mini-reto

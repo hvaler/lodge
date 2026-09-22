@@ -104,6 +104,26 @@ institutions that can measure it.
 **Questions about people, not rooms.** The directory is already configured and read. "Who teaches
 this module" and "where is this lecturer's office" are the same data and no new source.
 
+**The questions that live in prose, not in a system.** "How many exam sittings do I get", "how do
+I apply for credit transfer", "what happens if I fail three modules" — students ask these constantly
+and Lodge cannot answer any of them, because the answers are in the academic regulations rather than
+in a calendar or a room table. A `knowledge-base` capability reading a corpus of institutional
+documents would fit the existing shape exactly: declare it or do not, and the tool appears or does
+not.
+
+It is deliberately *not* built, and the reason is the interesting part. Retrieval's failure mode is
+the opposite of this server's: it always finds something and composes a plausible answer from it,
+where the rule here is that a fact not on record is reported as not on record (UC-03). The moment
+this demonstration is proudest of — asking an institution with no directory for a timetable and
+getting a refusal with **zero tool calls** — is only provable because there is nothing to retrieve.
+Any such tool would have to cite the document and article rather than paraphrase, and return "not on
+record" on weak retrieval, or it does not belong here.
+
+Two further reasons it waits: the corpus is prose and public, so it would not disturb the
+data-protection story, but an index over anything personal would be a *copy* of personal data with
+its own retention and breach surface; and adding a capability means amending a frozen interface
+(ADR-006), which is a deliberate act, not a convenience.
+
 **Scopes per tool.** Today an institution declares one scope list and a token either opens
 everything or nothing. Separating read from write — the fault report is the only write — is the
 first thing a security review would ask for.
