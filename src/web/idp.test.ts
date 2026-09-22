@@ -82,7 +82,12 @@ beforeAll(async () => {
   idpOrigin = await listen(provisionalIdp);
   await new Promise<void>((resolve) => provisionalIdp.close(() => resolve()));
 
-  idp = await createDemoIdp({ issuer: idpOrigin, institutions: INSTITUCIONES, scopes: ['lodge.read'] });
+  idp = await createDemoIdp({
+    issuer: idpOrigin,
+    institutions: INSTITUCIONES,
+    redirectUris: [REDIRECT],
+    scopes: ['lodge.read'],
+  });
   idpServer = serve((r) => idp.fetch(r), () => idpOrigin);
   await listen(idpServer, Number(new URL(idpOrigin).port));
 
@@ -217,6 +222,25 @@ describe('signing in', () => {
 
     expect(refused.status).toBe(400);
     expect(await refused.text()).toContain('S256');
+  });
+
+  it('refuses an unregistered redirect_uri instead of sending a code to it', async () => {
+    // An open redirector that hands out authorization codes. PKCE does not cover this: whoever
+    // crafts the link knows their own verifier, so the code they collect is one they can spend.
+    const p = new URLSearchParams({
+      response_type: 'code',
+      redirect_uri: 'https://en-otro-sitio.example/collect',
+      code_challenge: challengeFor(verifier()),
+      code_challenge_method: 'S256',
+      resource: guards.get('san-telmo')!.resource,
+      subject: 'est-0001',
+    });
+    const refused = await fetch(`${idpOrigin}/authorize?${p.toString()}`, { redirect: 'manual' });
+
+    expect(refused.status).toBe(400);
+    // Refused in place: no redirect at all, so nothing reaches the address that asked.
+    expect(refused.headers.get('location')).toBeNull();
+    expect(await refused.text()).not.toContain('code=');
   });
 
   it('will not start a flow without a resource, because there is nothing to bind the token to', async () => {

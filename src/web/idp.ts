@@ -16,6 +16,21 @@
  * What it is NOT: a product. There are no passwords, the login page says so, the codes live in
  * memory and the signing key is generated fresh on every start. It is a demonstration of the
  * *protocol*, not of authentication.
+ *
+ * Two things it deliberately leaves out, written down so nobody has to guess whether they were
+ * forgotten:
+ *
+ * - **The `client_credentials` grant authenticates no client.** Anything that can reach this port
+ *   can mint a token naming `lodge-demo`. It is a loopback service over invented data, and the
+ *   token it hands out cannot answer for a person — the tools that speak about somebody resolve
+ *   against the subject, and that subject is not one. A real provider would want a secret here.
+ * - **`state` is passed through but not required.** The page binds its callback with the PKCE
+ *   verifier it kept in `sessionStorage`, which covers the same ground for a public client. A real
+ *   provider should demand it.
+ *
+ * What is NOT optional, and is checked: the `redirect_uri` must be one that was registered. Without
+ * that this is an open redirector that hands out authorization codes, and PKCE does not help —
+ * whoever crafts the link knows their own verifier.
  */
 
 import { createHash, randomUUID } from 'node:crypto';
@@ -34,6 +49,15 @@ export interface DemoIdpOptions {
   readonly issuer: string;
   /** Institution slug → its name and who can sign in there. Absent from the map means nobody. */
   readonly institutions: ReadonlyMap<string, { readonly name: string; readonly people: readonly DemoLogin[] }>;
+  /**
+   * Exactly where a code may be sent back to. Compared as whole strings, never by prefix.
+   *
+   * Without this the provider is an open redirector that hands out authorization codes: anyone can
+   * craft `/authorize?…&redirect_uri=https://somewhere.else/` and collect the code of whoever
+   * follows the link. PKCE does not save you — an attacker who starts the flow knows their own
+   * verifier. The registered-URI check is the part that does, and it is why OAuth has one.
+   */
+  readonly redirectUris: readonly string[];
   /** Scopes minted into every token. Must cover whatever the institutions require. */
   readonly scopes?: readonly string[];
   /** Overridable so tests can drive expiry without waiting. */
@@ -182,6 +206,11 @@ export async function createDemoIdp(options: DemoIdpOptions): Promise<DemoIdp> {
     const state = p.get('state') ?? '';
 
     if (!redirectUri) return badRequest('Falta <code>redirect_uri</code>.');
+    // Refused here and not by redirecting: sending anything at all to an address we have not
+    // registered is the bug, so an unregistered one never gets a response it can read.
+    if (!options.redirectUris.includes(redirectUri)) {
+      return badRequest('Ese <code>redirect_uri</code> no está registrado.');
+    }
     if (!resource) return badRequest('Falta <code>resource</code>: sin él no hay a qué ligar el token.');
     if (!challenge || p.get('code_challenge_method') !== 'S256') {
       return badRequest('Hace falta PKCE con <code>code_challenge_method=S256</code>.');

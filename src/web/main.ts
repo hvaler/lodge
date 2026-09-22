@@ -139,6 +139,8 @@ const providers = configPath
 const idpOrigin = `http://127.0.0.1:${IDP_PORT}`;
 const idp = await createDemoIdp({
   issuer: idpOrigin,
+  // The page, and nothing else. Both spellings because a browser may be pointed at either.
+  redirectUris: [`http://localhost:${UI_PORT}/`, `http://127.0.0.1:${UI_PORT}/`],
   institutions: new Map(
     [...providers].map(([slug, provider]) => [
       slug,
