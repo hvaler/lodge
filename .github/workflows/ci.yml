@@ -16,7 +16,11 @@ concurrency:
 jobs:
   build:
     name: typecheck, test, build
-    runs-on: ubuntu-latest
+    # Pinned, not `ubuntu-latest`. That label migrates to Ubuntu 26 from 19 October 2026 — two days
+    # before this project is submitted and one day before the repository is frozen. `ubuntu-latest`
+    # resolved to exactly this image on 22 September, so pinning changes nothing today and removes a
+    # way for the build to break on a date nobody chose. Worth revisiting after the submission.
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
 
     steps:
@@ -68,7 +72,7 @@ jobs:
   # directories were added to the project.
   container:
     name: the container builds and answers
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04 # pinned for the reason given above
     timeout-minutes: 15
 
     steps:

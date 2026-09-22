@@ -24,7 +24,9 @@ concurrency:
 jobs:
   test:
     name: build and test
-    runs-on: ubuntu-latest
+    # Pinned for the same reason as in ci.yml: `ubuntu-latest` migrates to Ubuntu 26 from
+    # 19 October 2026, two days before the submission.
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
 
     steps:
