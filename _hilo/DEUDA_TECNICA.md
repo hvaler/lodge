@@ -184,17 +184,36 @@ los `improvement` (hoy solo UC-06) caen primero.
 
 ---
 
-## Abierto ahora mismo (a 17-09)
+## Abierto ahora mismo (a 22-09)
 
-**Nada de codigo.** Lo que queda son tres cosas que no puede hacer quien escribio el proyecto, y una
-administrativa:
+Lo del envio no puede hacerlo quien escribio el proyecto, y hay una decision de codigo sin tomar:
 
 | Asunto | Estado | Cuando |
 |---|---|---|
-| Grabar el video | ⬜ guion escrito y presupuestado a 2:55 sobre un limite duro de 3:00 | antes del 21 oct |
+| Grabar el video | ⬜ guion re-presupuestado a 2:47 sobre un limite duro de 3:00 | antes del 21 oct |
 | **Que alguien AJENO recorra `docs/adopting.md`** y rellene el cronometro | ⬜ el entregable lo pide explicitamente, y validarla desde dentro no vale | antes del 21 oct |
 | Revisar `docs/management/devpost-submission.md` antes de enviarlo | ⬜ lo redacto Claude y va con el nombre del autor | antes del 21 oct |
-| Creditos AWS de participacion (150 $) | ⬜ formulario sin enviar; pide la Devpost Profile URL | cuanto antes |
+| Reenviar el formulario de creditos nombrando **Alexa+** | ⬜ el primero se rechazo por no nombrar ningun track; es UNO POR PERSONA | cuanto antes |
+| Probar el altavoz en un Echo fisico y elegir con que backend se graba | ⬜ el simulador ya no ensena nada nuevo | antes de grabar |
+| **Decidir si `dotnet/` entra en el texto de envio** | ⬜ se acordo dejarlo fuera; ahora existe y funciona, y callarlo tambien es una decision | antes del 21 oct |
+
+### 🟡 MEDIO · `campus.timetable` se inventa el motivo cuando no puede contestar
+
+**Encontrado el 22-09, sin decidir.** La herramienta solo acepta `when: today | tomorrow`
+(`src/tools/index.ts:220`), cosa deliberada. Pero al pedirle «que tengo el jueves», el modelo
+improvisa que «la agenda del jueves no esta disponible **en este momento**» y remite a la intranet.
+
+No llega a violar UC-03 -no invento ningun horario-, pero **la excusa si es inventada**: sugiere una
+caida temporal que no existe. Y eso es justo lo que el proyecto promete no hacer.
+
+La causa probable es que el limite vive solo en el `enum` del esquema y no en la descripcion de la
+herramienta, que dice unicamente «Your own timetable. Resolves against who you are signed in as, not
+a name.». Nova 2 Lite no parece razonar del enum a «solo puedo con hoy o manana».
+
+**Arreglo candidato**: una linea en esa descripcion. No toca la interfaz congelada, pero SI es
+contrato publico y obliga a redesplegar y a volver a probar contra el modelo, porque lo unico que
+demuestra que cambia de respuesta es verlo. La pagina publica esta expuesta a cualquiera que la
+abra, incluido un jurado curioso.
 
 ### Lo que estaba abierto y se cerro
 

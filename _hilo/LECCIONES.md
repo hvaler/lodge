@@ -57,6 +57,21 @@ codigo anterior antes de darlo por bueno.
 sin `assert`: una comprobacion que no puede fallar no es una comprobacion. Un test que no recorre
 el camino real tampoco.
 
+**Volvio a pasar el 22-09, en otro lenguaje y otro ecosistema.** El puente de Alexa escrito en .NET
+compilaba, se empaquetaba, se desplegaba y pasaba sus quince tests, y fallaba en la PRIMERA
+invocacion real con `Deserialization of interface or abstract types is not supported`. Motivo:
+`Alexa.NET` necesita el serializador de Newtonsoft y estaba emparejado con el de System.Text.Json,
+que es el que recomienda cualquier guia moderna. Los tests no podian verlo porque **construyen el
+sobre como objeto en vez de deserializarlo**, que es justo lo que Lambda no hace.
+
+Mismo dia, mismo fichero, segunda vez: `HistoryIn` no sabia leer lo que el propio codigo escribia en
+la sesion, asi que la conversacion se perdia entre turnos. Eso si lo cazaron dos tests, porque
+recorrian el camino de escribir-y-volver-a-leer. La rama que faltaba -la de JSON, que es la que usa
+Lambda- se anadio despues, y hasta entonces no la tocaba nadie.
+
+La regla practica que queda: **si la plataforma serializa algo, al menos un test tiene que
+serializarlo.** Construir el objeto a mano prueba la logica y no prueba la frontera.
+
 ---
 
 ## L-003 · Un test que afirma la misma cadena que el codigo no prueba la cadena

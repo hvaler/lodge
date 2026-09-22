@@ -6,8 +6,8 @@
 |-------|-------|
 | **Fecha** | 2026-09-22 |
 | **Hito activo** | M5 — el código está hecho; falta lo humano |
-| **Tests** | 439 en `src` + 20 de la pila CDK = 459 · CI verde · `tsc` limpio |
-| **Desplegado** | 22-09, eu-west-1: servidor, página pública y **puente a Alexa** |
+| **Tests** | 459 en TypeScript · 33 en .NET · los dos CI verdes |
+| **Desplegado** | 22-09, eu-west-1: servidor, página pública y **dos puentes a Alexa** (TS y .NET) |
 
 ---
 
@@ -51,9 +51,36 @@ mismo servidor MCP.
 2. La skill respondía *«I'm not quite sure how to help you with that»* sin llegar a la Lambda: el
    modelo de interacción estaba **guardado pero no construido**.
 
+**Y algo que no estaba planificado: `dotnet/`.** Una segunda implementación de la mitad cliente, en
+C# sobre .NET 10 — cliente MCP con el SDK oficial, bucle de herramientas sobre Bedrock Converse, y
+un **segundo backend de la misma skill** desplegado como `Lodge-AlexaSkill-dotnet`. Se cambia un ARN
+en la consola y el altavoz lo contesta C#.
+
+Existe por una razón concreta: se va a presentar en Comillas, cuyo stack es .NET. La pregunta
+*«¿pueden los nuestros trabajar con esto?»* deja de ser un párrafo y pasa a ser `dotnet test`. **No
+es parte del servidor**: `src/` no importa nada de ahí, y Lodge no lo necesita.
+
+El arranque en frío salió **al revés de lo que predije**: 324 y 357 ms contra los 373 ms de Node.
+Dos muestras contra una, así que lo defendible es «sin penalización observada», no «más rápido».
+
+Dos fricciones nuevas, las dos de usar `Alexa.NET`: no se puede deserializar con el serializador que
+todas las guías le emparejan, y arrastra un `Newtonsoft.Json` con *advisory* vivo. Ambas en
+[`docs/friction-log.md`](../docs/friction-log.md), que es entregable.
+
+**Y se volvió a mirar si Alexa+ se había abierto.** No: la página de programa sigue diciendo *select
+partners*, y `@alexa/alexa-ai-cli` da **404 en npm** — la CLI existe pero no se distribuye, que es
+exactamente lo que significa el aviso. Al comprobarlo apareció la fuente de la restricción de país
+que yo había retirado de la deuda técnica por no encontrársela: estaba en lo cierto quien la escribió.
+
 ---
 
 ## Lo que queda
+
+### Pendiente de decidir
+- **Reiniciar Claude Code**: `hv@ovillo` pasó de 1.2.5 a **1.18.0** y pide reinicio
+- **¿Entra `dotnet/` en el texto de envío?** Se acordó que no. Ahora existe y funciona, y callarlo
+  también es una decisión
+- **Con qué backend se graba el vídeo**, una vez probado en un Echo físico
 
 ### En código
 Nada obligatorio. Lo considerado y descartado está en [`docs/roadmap.md`](../docs/roadmap.md).
