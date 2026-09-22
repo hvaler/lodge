@@ -3,19 +3,18 @@ using Xunit;
 namespace Lodge.Campus.Tests;
 
 /// <summary>
-/// El cliente MCP contra un servidor Lodge de verdad.
+/// The MCP client against a real Lodge server.
 /// </summary>
 /// <remarks>
 /// <para>
-/// <b>Estos tests salen a la red a propósito, y no se saltan si no pueden.</b> Es la L-002 del
-/// proyecto: un test que no recorre el transporte de producción no prueba el transporte de
-/// producción, y ya costó dos funcionalidades entregadas rotas. Un cliente MCP con el transporte
-/// simulado no prueba absolutamente nada — es la única clase de test que este proyecto necesita
-/// aquí.
+/// <b>These tests go over the network on purpose, and do not skip when they cannot.</b> It is this
+/// project's L-002: a test that does not travel production's transport is not testing production's
+/// transport, and it already cost two shipped features. An MCP client with a stubbed transport
+/// proves nothing at all — this is the only kind of test worth writing here.
 /// </para>
 /// <para>
-/// Por defecto apuntan al despliegue público de demostración, que no pide credenciales. Con
-/// <c>LODGE_DEPLOYMENT</c> se apunta a otro, incluido un <c>npm run demo</c> local.
+/// They point at the public demonstration deployment by default, which asks for no credentials.
+/// <c>LODGE_DEPLOYMENT</c> points them somewhere else, including a local <c>npm run demo</c>.
 /// </para>
 /// </remarks>
 public sealed class LodgeClientTests
@@ -24,11 +23,11 @@ public sealed class LodgeClientTests
         new(Environment.GetEnvironmentVariable("LODGE_DEPLOYMENT")
             ?? "https://4joapeibeg357e7vyw2dj4pnwa0tmpay.lambda-url.eu-west-1.on.aws/");
 
-    /// <summary>Una identidad del conjunto de datos generado. Sólo vale en modo sandbox.</summary>
+    /// <summary>An identity from the generated dataset. Only meaningful in sandbox mode.</summary>
     private const string Student = "est-0001";
 
     [Fact]
-    public async Task San_Telmo_publica_las_seis_herramientas()
+    public async Task san_telmo_publishes_all_six_tools()
     {
         await using var lodge = await LodgeClient.ConnectAsync(
             Institutions.EndpointFor(Deployment, null),
@@ -53,11 +52,12 @@ public sealed class LodgeClientTests
     }
 
     [Fact]
-    public async Task Carrigmore_publica_menos_porque_declara_menos()
+    public async Task carrigmore_publishes_fewer_because_it_declares_fewer()
     {
-        // Esto es UC-07 visto desde C#, y es el test que justifica toda esta carpeta: el catálogo no
-        // está escrito en ninguna parte del cliente. Se descubre. Un centro sin directorio LDAP al
-        // que atarse no publica «tu horario», así que un agente no declina consultarlo: no puede.
+        // This is UC-07 seen from C#, and it is the test that justifies this whole folder: the
+        // catalogue is written nowhere in the client. It is discovered. A college with no directory
+        // to bind to does not publish "your timetable", so an agent does not decline to read it —
+        // it cannot.
         await using var lodge = await LodgeClient.ConnectAsync(
             Institutions.EndpointFor(Deployment, Institutions.Carrigmore),
             Student,
@@ -74,7 +74,7 @@ public sealed class LodgeClientTests
     }
 
     [Fact]
-    public async Task Una_llamada_de_verdad_devuelve_texto_hablable()
+    public async Task a_real_call_comes_back_as_something_speakable()
     {
         await using var lodge = await LodgeClient.ConnectAsync(
             Institutions.EndpointFor(Deployment, Institutions.Carrigmore),
@@ -85,13 +85,13 @@ public sealed class LodgeClientTests
             "campus.find_room",
             cancellationToken: TestContext.Current.CancellationToken);
 
-        // Sin afirmar qué aula: depende de la hora, y un test que fija el resultado de un calendario
-        // vivo es un test que fallará solo a las nueve de la mañana de algún martes.
+        // Without asserting which room: that depends on the hour, and a test that pins the result of
+        // a live calendar is a test that fails on its own at nine o'clock on some Tuesday.
         Assert.NotEmpty(said);
     }
 
     [Fact]
-    public async Task Pedir_algo_que_la_institucion_no_publica_falla_diciendo_lo_que_si()
+    public async Task asking_for_what_this_institution_does_not_publish_fails_naming_what_it_does()
     {
         await using var lodge = await LodgeClient.ConnectAsync(
             Institutions.EndpointFor(Deployment, Institutions.Carrigmore),

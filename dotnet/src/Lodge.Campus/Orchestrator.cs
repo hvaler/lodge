@@ -7,29 +7,29 @@ using ModelContextProtocol.Client;
 
 namespace Lodge.Campus;
 
-/// <summary>Quién dijo qué en un turno anterior de la conversación.</summary>
-/// <param name="Role"><c>user</c> o <c>assistant</c>.</param>
-/// <param name="Text">Lo que se dijo.</param>
+/// <summary>Who said what on an earlier turn.</summary>
+/// <param name="Role"><c>user</c> or <c>assistant</c>.</param>
+/// <param name="Text">What was said.</param>
 public sealed record Turn(string Role, string Text);
 
-/// <summary>Una llamada a herramienta, tal y como ocurrió.</summary>
-/// <param name="Step">El orden dentro del intercambio, empezando en 1.</param>
-/// <param name="Tool">El nombre MCP de la herramienta.</param>
-/// <param name="Output">Lo que devolvió, o el error.</param>
-/// <param name="Milliseconds">Lo que tardó.</param>
-/// <param name="Failed">Si falló.</param>
+/// <summary>One tool call, as it happened.</summary>
+/// <param name="Step">Its order within the exchange, starting at 1.</param>
+/// <param name="Tool">The tool's MCP name.</param>
+/// <param name="Output">What it returned, or the error.</param>
+/// <param name="Milliseconds">How long it took.</param>
+/// <param name="Failed">Whether it failed.</param>
 public sealed record TraceStep(int Step, string Tool, string Output, double Milliseconds, bool Failed);
 
-/// <summary>Lo que costó un intercambio, en fichas.</summary>
-/// <param name="InputTokens">Fichas de entrada facturadas.</param>
-/// <param name="OutputTokens">Fichas de salida.</param>
+/// <summary>What an exchange cost, in tokens.</summary>
+/// <param name="InputTokens">Billed input tokens.</param>
+/// <param name="OutputTokens">Output tokens.</param>
 public sealed record Usage(int InputTokens, int OutputTokens);
 
-/// <summary>El resultado de una pregunta.</summary>
-/// <param name="Said">Lo que hay que decir en voz alta.</param>
-/// <param name="Trace">Las herramientas que se llamaron, en orden.</param>
-/// <param name="Elapsed">Lo que tardó el intercambio entero.</param>
-/// <param name="Usage">Lo que costó.</param>
+/// <summary>The result of one question.</summary>
+/// <param name="Said">What to say out loud.</param>
+/// <param name="Trace">The tools that were called, in order.</param>
+/// <param name="Elapsed">How long the whole exchange took.</param>
+/// <param name="Usage">What it cost.</param>
 public sealed record Exchange(
     string Said,
     IReadOnlyList<TraceStep> Trace,
@@ -37,25 +37,26 @@ public sealed record Exchange(
     Usage Usage);
 
 /// <summary>
-/// El orquestador: un modelo, un catálogo descubierto por MCP, y un bucle entre los dos.
+/// The orchestrator: a model, a catalogue discovered over MCP, and a loop between the two.
 /// </summary>
 /// <remarks>
 /// <para>
-/// Hace lo mismo que <c>createOrchestrator()</c> en <c>src/orchestrator/index.ts</c>, y se escribe
-/// aparte a propósito: el objetivo es demostrar que el camino entero —descubrir, decidir, llamar,
-/// hablar— cabe en .NET sin TypeScript de por medio.
+/// It does what <c>createOrchestrator()</c> does in <c>src/orchestrator/index.ts</c>, written
+/// separately on purpose: the point is to show that the whole path — discover, decide, call, speak
+/// — fits in .NET with no TypeScript in between.
 /// </para>
 /// <para>
-/// <b>La traza se devuelve siempre.</b> No es telemetría: es la única forma de que quien mira una
-/// demostración distinga «consultó el calendario y calculó» de «se lo ha inventado con buen estilo».
+/// <b>The trace comes back every time.</b> It is not telemetry: it is the only thing that lets
+/// somebody watching a demonstration tell "it read the calendar and worked it out" from "it made
+/// that up nicely".
 /// </para>
 /// </remarks>
 public sealed class Orchestrator
 {
-    /// <summary>El perfil de inferencia por defecto. No el id pelado: Nova 2 Lite no existe en región.</summary>
+    /// <summary>The default inference profile. Not the bare id: Nova 2 Lite has no in-region availability.</summary>
     public const string DefaultModelId = "eu.amazon.nova-2-lite-v1:0";
 
-    /// <summary>Dónde vive ese perfil.</summary>
+    /// <summary>Where that profile lives.</summary>
     public const string DefaultRegion = "eu-west-1";
 
     private readonly LodgeClient _lodge;
@@ -63,13 +64,13 @@ public sealed class Orchestrator
     private readonly string _modelId;
     private readonly int _maxRounds;
 
-    /// <summary>Construye un orquestador sobre un servidor y un modelo ya conectados.</summary>
-    /// <param name="lodge">El cliente MCP de la institución que va a responder.</param>
-    /// <param name="bedrock">El cliente de Bedrock.</param>
-    /// <param name="modelId">El perfil de inferencia; por defecto <see cref="DefaultModelId"/>.</param>
+    /// <summary>Builds an orchestrator over a server and a model that are already connected.</summary>
+    /// <param name="lodge">The MCP client of the institution that will answer.</param>
+    /// <param name="bedrock">The Bedrock client.</param>
+    /// <param name="modelId">The inference profile; <see cref="DefaultModelId"/> by default.</param>
     /// <param name="maxRounds">
-    /// Cuántas vueltas de «piensa, llama, vuelve a pensar» se permiten. Cuatro basta para las
-    /// preguntas del campus y acota lo que puede costar una pregunta rara.
+    /// How many rounds of "think, call, think again" are allowed. Four is enough for campus
+    /// questions and bounds what one strange question can cost.
     /// </param>
     public Orchestrator(
         LodgeClient lodge,
@@ -84,13 +85,13 @@ public sealed class Orchestrator
     }
 
     /// <summary>
-    /// Bedrock rechaza un nombre de herramienta que no sea <c>[a-zA-Z0-9_-]</c>, y todas las de
-    /// Lodge son <c>campus.x</c>.
+    /// Bedrock rejects a tool name that is not <c>[a-zA-Z0-9_-]</c>, and every Lodge tool is
+    /// <c>campus.x</c>.
     /// </summary>
     /// <remarks>
-    /// El punto es parte del contrato MCP y no se negocia en ese lado, así que la conversión ocurre
-    /// aquí y en ningún otro sitio: el modelo ve <c>campus_find_room</c>, el servidor conserva
-    /// <c>campus.find_room</c>, y ninguno tiene que saber de la restricción del otro.
+    /// The dot is part of the MCP contract and is not up for negotiation on that side, so the
+    /// mapping happens here and nowhere else: the model sees <c>campus_find_room</c>, the server
+    /// keeps <c>campus.find_room</c>, and neither has to know about the other's constraint.
     /// </remarks>
     public static string ToModelName(string mcpName)
     {
@@ -98,12 +99,12 @@ public sealed class Orchestrator
         return mcpName.Replace('.', '_');
     }
 
-    /// <summary>Responde a lo que alguien ha dicho, usando lo que la institución publique.</summary>
-    /// <param name="utterance">Lo que se ha preguntado.</param>
-    /// <param name="institution">Cómo se llama la institución, para que el modelo sepa quién es.</param>
-    /// <param name="locale">En qué idioma contestar.</param>
-    /// <param name="history">Turnos anteriores, si los hay. Es lo que permite confirmar en dos vueltas.</param>
-    /// <param name="cancellationToken">Para abandonar.</param>
+    /// <summary>Answers what somebody said, using whatever the institution publishes.</summary>
+    /// <param name="utterance">What was asked.</param>
+    /// <param name="institution">The institution's name, so the model knows who it is.</param>
+    /// <param name="locale">Which language to answer in.</param>
+    /// <param name="history">Earlier turns, if any. This is what makes a two-turn confirmation work.</param>
+    /// <param name="cancellationToken">To abandon.</param>
     public async Task<Exchange> AskAsync(
         string utterance,
         string institution,
@@ -193,8 +194,8 @@ public sealed class Orchestrator
     {
         var clock = Stopwatch.StartNew();
 
-        // Un nombre que el catálogo no contiene es el modelo inventándoselo. Decirlo es mejor que
-        // llamar a algo arbitrario, y en la traza se ve como lo que fue.
+        // A name the catalogue does not contain is the model inventing one. Saying so beats calling
+        // something arbitrary, and it shows up in the trace as what it was.
         if (!byModelName.TryGetValue(call.Name, out var mcpName))
         {
             var missing = $"There is no tool called {call.Name} at this institution.";
@@ -214,11 +215,11 @@ public sealed class Orchestrator
                 new TraceStep(step, mcpName, text, clock.Elapsed.TotalMilliseconds, Failed: false),
                 ResultBlock(call.ToolUseId, text, failed: false));
         }
-#pragma warning disable CA1031 // Una herramienta que falla es un turno que sigue, no un proceso que cae:
+#pragma warning disable CA1031 // A failing tool is a turn that continues, not a process that falls over:
         catch (Exception error)
 #pragma warning restore CA1031
         {
-            // el modelo recibe el fallo como resultado y lo cuenta, que es lo que haría un conserje.
+            // the model gets the failure as a result and says so, which is what a porter would do.
             var message = $"That did not work: {error.Message}";
             return (
                 new TraceStep(step, mcpName, message, clock.Elapsed.TotalMilliseconds, Failed: true),
@@ -237,10 +238,10 @@ public sealed class Orchestrator
     };
 
     /// <summary>
-    /// El catálogo vivo, traducido a lo que el modelo necesita para elegir entre las herramientas.
+    /// The live catalogue, turned into what the model needs to choose between the tools.
     /// </summary>
     /// <remarks>
-    /// Sin <c>cachePoint</c> dentro de <c>tools</c>: Nova 2 Lite lo rechaza de plano con
+    /// No <c>cachePoint</c> inside <c>tools</c>: Nova 2 Lite rejects it outright with
     /// <c>extraneous key [cachePoint] is not permitted</c>.
     /// </remarks>
     private static ToolConfiguration ToolConfigFor(IEnumerable<McpClientTool> catalogue) => new()

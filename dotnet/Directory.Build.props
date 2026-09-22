@@ -1,11 +1,11 @@
 <Project>
 
   <!--
-    Ajustes compartidos por todos los proyectos de dotnet/.
+    Shared by every project under dotnet/.
 
-    El equivalente de lo que tsconfig.json impone al lado TypeScript: nada implícito, nada nulo sin
-    querer, y un aviso es un error. Si el proyecto presume de `strict: true` en un lenguaje, no
-    puede ser laxo en el otro.
+    The counterpart of what tsconfig.json imposes on the TypeScript side: nothing implicit, nothing
+    null by accident, and a warning is an error. A project that boasts `strict: true` in one
+    language cannot be lax in the other.
   -->
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>

@@ -1,49 +1,49 @@
 namespace Lodge.Campus;
 
 /// <summary>
-/// Qué institución alcanza quien habla, y en qué URL vive.
+/// Which institution the speaker reaches, and where it lives.
 /// </summary>
 /// <remarks>
 /// <para>
-/// Espejo de <c>BY_LANGUAGE</c> y <c>languageOf()</c> en <c>src/lambda/skill.ts</c>. Se escribe dos
-/// veces a propósito: el objetivo de esta implementación es demostrar que un cliente .NET consume
-/// Lodge <em>sin</em> pasar por el lado TypeScript, así que compartir código lo invalidaría. Lo que
-/// no se duplica es el contrato — ése vive en el servidor y se descubre por MCP.
+/// A mirror of <c>BY_LANGUAGE</c> and <c>languageOf()</c> in <c>src/lambda/skill.ts</c>. Written
+/// twice on purpose: the point of this implementation is to show that a .NET client consumes Lodge
+/// <em>without</em> going through the TypeScript side, so sharing code would defeat it. What is not
+/// duplicated is the contract — that lives on the server and is discovered over MCP.
 /// </para>
 /// <para>
-/// El idioma decide, no el país: Alexa manda <c>en-GB</c>, <c>en-US</c>, <c>en-IN</c>… y Carrigmore
-/// es irlandés, que ni siquiera es un locale que Alexa tenga.
+/// The language decides, not the country: Alexa sends <c>en-GB</c>, <c>en-US</c>, <c>en-IN</c>… and
+/// Carrigmore is Irish, which is not even a locale Alexa has.
 /// </para>
 /// </remarks>
 public static class Institutions
 {
-    /// <summary>Donde vive el endpoint MCP. Una institución responde aquí; varias, debajo.</summary>
+    /// <summary>Where the MCP endpoint lives. One institution answers here; several answer beneath it.</summary>
     public const string McpPath = "/mcp";
 
-    /// <summary>La institución por defecto del despliegue: responde en <c>/mcp</c> pelado.</summary>
+    /// <summary>The deployment's default institution: it answers at a bare <c>/mcp</c>.</summary>
     public const string SanTelmo = "san-telmo";
 
-    /// <summary>La segunda institución, en <c>/mcp/carrigmore</c>.</summary>
+    /// <summary>The second institution, at <c>/mcp/carrigmore</c>.</summary>
     public const string Carrigmore = "carrigmore";
 
     /// <summary>
-    /// El idioma de un locale de Alexa, reducido a lo que decide: <c>es</c> o <c>en</c>.
-    /// Cualquier cosa desconocida, y la ausencia de locale, cuentan como inglés.
+    /// An Alexa locale reduced to the part that decides: <c>es</c> or <c>en</c>. Anything unknown,
+    /// and a missing locale, count as English.
     /// </summary>
     public static string LanguageOf(string? locale) =>
         locale?.StartsWith("es", StringComparison.OrdinalIgnoreCase) == true ? "es" : "en";
 
-    /// <summary>La institución que alcanza un idioma.</summary>
+    /// <summary>The institution a language reaches.</summary>
     public static string SlugFor(string? locale) =>
         LanguageOf(locale) == "es" ? SanTelmo : Carrigmore;
 
     /// <summary>
-    /// La URL del endpoint MCP de una institución dentro de un despliegue.
+    /// The MCP endpoint of one institution within a deployment.
     /// </summary>
-    /// <param name="deployment">La raíz del despliegue; se ignora todo lo que haya tras el host.</param>
+    /// <param name="deployment">The deployment root; everything after the host is ignored.</param>
     /// <param name="slug">
-    /// La institución. <see langword="null"/> pide <c>/mcp</c> pelado, que es la que el despliegue
-    /// haya declarado por defecto.
+    /// The institution. <see langword="null"/> asks for a bare <c>/mcp</c>, whichever one the
+    /// deployment declared as its default.
     /// </param>
     public static Uri EndpointFor(Uri deployment, string? slug)
     {

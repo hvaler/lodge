@@ -6,20 +6,19 @@ using Xunit;
 namespace Lodge.Campus.Tests;
 
 /// <summary>
-/// El bucle entero: descubrir el catálogo, decidir, llamar, y hablar.
+/// The whole loop: discover the catalogue, decide, call, speak.
 /// </summary>
 /// <remarks>
 /// <para>
-/// Estos tests <b>gastan dinero</b> — cada uno es una invocación de Nova 2 Lite — y necesitan
-/// credenciales de AWS. Son pocos y deliberados por eso. Lo que compran es la única prueba que vale
-/// de que el camino existe: un modelo eligiendo entre herramientas que no están escritas en ningún
-/// sitio de este proyecto, sino descubiertas por MCP contra un servidor real.
+/// These tests <b>cost money</b> — each one is a Nova 2 Lite invocation — and need AWS credentials.
+/// They are few and deliberate for that reason. What they buy is the only proof that counts: a
+/// model choosing between tools that are written nowhere in this project, discovered over MCP
+/// against a real server.
 /// </para>
 /// <para>
-/// Se ejecutan con <c>AWS_PROFILE=&lt;el vuestro&gt; dotnet test</c>.
+/// Run them with <c>AWS_PROFILE=&lt;yours&gt; dotnet test</c>.
 /// </para>
 /// </remarks>
-[Trait("Category", "Bedrock")]
 public sealed class OrchestratorTests
 {
     private static Uri Deployment =>
@@ -42,7 +41,8 @@ public sealed class OrchestratorTests
     }
 
     [Fact]
-    public async Task Una_pregunta_de_aula_llama_a_la_herramienta_y_devuelve_algo_que_se_puede_decir()
+    [Trait("Category", "Bedrock")]
+    public async Task a_room_question_calls_the_tool_and_comes_back_speakable()
     {
         var token = TestContext.Current.CancellationToken;
         var (lodge, orchestrator) = await AtCarrigmoreAsync(token);
@@ -59,17 +59,17 @@ public sealed class OrchestratorTests
         Assert.Contains(exchange.Trace, step => step.Tool == "campus.find_room");
         Assert.DoesNotContain(exchange.Trace, step => step.Failed);
 
-        // Regla 3 del prompt: lo que sale de aquí lo lee un sintetizador de voz, y los asteriscos
-        // los pronuncia.
+        // Rule 3 of the prompt: a speech synthesiser reads this out, and it pronounces asterisks.
         Assert.DoesNotContain('*', exchange.Said);
     }
 
     [Fact]
-    public async Task Lo_que_la_institucion_no_publica_se_declina_SIN_llamar_a_nada()
+    [Trait("Category", "Bedrock")]
+    public async Task what_the_institution_does_not_publish_is_declined_WITHOUT_calling_anything()
     {
-        // UC-03, que es el argumento entero del proyecto. Carrigmore no declara la capacidad de
-        // horario, así que su catálogo no trae la herramienta, así que el modelo no tiene nada que
-        // llamar. No es que se porte bien: es que no puede portarse mal.
+        // UC-03, which is the project's whole argument. Carrigmore does not declare the timetable
+        // capability, so its catalogue does not carry the tool, so the model has nothing to call.
+        // It is not that it behaves well: it cannot behave badly.
         var token = TestContext.Current.CancellationToken;
         var (lodge, orchestrator) = await AtCarrigmoreAsync(token);
         await using var _ = lodge;
@@ -86,7 +86,8 @@ public sealed class OrchestratorTests
     }
 
     [Fact]
-    public async Task El_historial_viaja_para_que_una_segunda_vuelta_sepa_de_la_primera()
+    [Trait("Category", "Bedrock")]
+    public async Task history_travels_so_a_second_turn_knows_about_the_first()
     {
         var token = TestContext.Current.CancellationToken;
         var (lodge, orchestrator) = await AtCarrigmoreAsync(token);
@@ -106,8 +107,8 @@ public sealed class OrchestratorTests
     }
 
     /// <summary>
-    /// Lo que dijo y a que llamo. Cuando uno de estos falla, es lo primero que se quiere leer, y
-    /// sin esto el informe solo dice que una cadena estaba vacia.
+    /// What it said and what it called. When one of these fails that is the first thing anybody
+    /// wants to read, and without it the report only says a string was empty.
     /// </summary>
     private static void Report(Exchange exchange)
     {
@@ -117,13 +118,19 @@ public sealed class OrchestratorTests
             return;
         }
 
-        output.WriteLine($"dijo: {exchange.Said}");
-        output.WriteLine($"llamo a: {(exchange.Trace.Count == 0 ? "nada" : string.Join(", ", exchange.Trace.Select(s => s.Tool)))}");
-        output.WriteLine($"tardo: {exchange.Elapsed.TotalMilliseconds:F0} ms | fichas: {exchange.Usage.InputTokens} entrada, {exchange.Usage.OutputTokens} salida");
+        var called = exchange.Trace.Count == 0
+            ? "nothing"
+            : string.Join(", ", exchange.Trace.Select(step => step.Tool));
+
+        output.WriteLine($"said: {exchange.Said}");
+        output.WriteLine($"called: {called}");
+        output.WriteLine(
+            $"took: {exchange.Elapsed.TotalMilliseconds:F0} ms | tokens: "
+            + $"{exchange.Usage.InputTokens} in, {exchange.Usage.OutputTokens} out");
     }
 
     [Fact]
-    public void Los_nombres_con_punto_viajan_al_modelo_con_guion_bajo() =>
-        // Bedrock rechaza cualquier cosa que no sea [a-zA-Z0-9_-], y el punto es contrato MCP.
+    public void dotted_names_reach_the_model_with_underscores() =>
+        // Bedrock rejects anything that is not [a-zA-Z0-9_-], and the dot is MCP contract.
         Assert.Equal("campus_find_room", Orchestrator.ToModelName("campus.find_room"));
 }

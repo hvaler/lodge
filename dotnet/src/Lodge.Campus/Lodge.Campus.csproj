@@ -1,10 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <!-- Converse API. Sin reasoningConfig: el razonamiento extendido cuadruplica la latencia y en
-         la API viene apagado por defecto (ADR-010). -->
+    <!-- Converse API. No reasoningConfig: extended thinking quadruples latency and is off by
+         default through the API anyway (ADR-010). -->
     <PackageReference Include="AWSSDK.BedrockRuntime" Version="4.0.101.7" />
-    <!-- SDK oficial de MCP para C#. 2.2.0 es estable: la política del proyecto no admite preview. -->
+    <!-- The official MCP C# SDK. 2.2.0 is stable: this project's version policy allows no previews. -->
     <PackageReference Include="ModelContextProtocol" Version="2.2.0" />
   </ItemGroup>
 

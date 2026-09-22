@@ -215,6 +215,7 @@ Function URL (no authorizer)         so a client needs an MCP client, not an AWS
 | [What could come next](docs/roadmap.md) | What we refused on purpose, what the protocol will unlock, and what is missing today |
 | [The University of San Telmo](docs/san-telmo.md) | The generated campus, in detail |
 | [Deployment reference](ops/environment/README.md) | Config file, OAuth, tracing, several institutions |
+| [A .NET client](dotnet/README.md) | The same claim, executed: C# on .NET 10 talking to the running server. Not part of Lodge, and Lodge does not need it |
 
 ## Data and privacy
 

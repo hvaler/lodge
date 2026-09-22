@@ -1,24 +1,24 @@
 namespace Lodge.Campus;
 
 /// <summary>
-/// La instrucción bajo la que trabaja el modelo.
+/// The instruction the model works under.
 /// </summary>
 /// <remarks>
 /// <para>
-/// Traducción literal de <c>systemPrompt()</c> en <c>src/orchestrator/index.ts</c>, y se mantiene
-/// literal a propósito: estas reglas <b>son</b> el comportamiento que exigen los casos de uso, no
-/// una guía de estilo. La regla 1 es UC-03 y la 4 es lo que hace que el catálogo derivado se note
-/// al hablar. Cambiar una palabra aquí cambia lo que el altavoz contesta.
+/// A literal translation of <c>systemPrompt()</c> in <c>src/orchestrator/index.ts</c>, and kept
+/// literal on purpose: these rules <b>are</b> the behaviour the use cases demand, not a style
+/// guide. Rule 1 is UC-03 and rule 4 is what makes the derived catalogue audible. Changing a word
+/// here changes what the speaker answers.
 /// </para>
 /// <para>
-/// Corta, y casi toda prohibiciones. Lo que importa en un asistente de voz de una institución es lo
-/// que <em>no</em> hace: no inventar una fecha, no responder largo, no arrogarse una capacidad que
-/// el catálogo no ofrece.
+/// Deliberately short and mostly prohibitions. What matters in an institution's voice assistant is
+/// what it does <em>not</em> do: do not invent a date, do not answer at length, do not claim a
+/// capability the catalogue does not offer.
 /// </para>
 /// </remarks>
 public static class SystemPrompt
 {
-    /// <summary>Construye la instrucción para una institución, un idioma y un catálogo.</summary>
+    /// <summary>Builds the instruction for one institution, one language and one catalogue.</summary>
     public static string For(string institution, string locale, IReadOnlyCollection<string> toolNames)
     {
         ArgumentNullException.ThrowIfNull(toolNames);

@@ -2,12 +2,12 @@
 
   <PropertyGroup>
     <IsPackable>false</IsPackable>
-    <!-- Los tests describen escenarios; documentarlos en XML no aporta nada. -->
+    <!-- Tests describe scenarios; XML-documenting them adds nothing. -->
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <!--
-      CA1707 prohíbe guiones bajos en nombres de miembro. En el nombre de un test son la convención
-      de xUnit y hacen que el informe de fallos se lea como una frase en vez de como un identificador.
-      Se apaga aquí y en ningún otro sitio: en la biblioteca la regla sigue valiendo.
+      CA1707 forbids underscores in member names. In a test name they are the xUnit convention and
+      they make a failure report read as a sentence rather than as an identifier. Switched off here
+      and nowhere else: the rule still applies in the library.
     -->
     <NoWarn>$(NoWarn);CA1707</NoWarn>
   </PropertyGroup>

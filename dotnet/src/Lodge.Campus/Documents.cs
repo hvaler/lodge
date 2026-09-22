@@ -5,18 +5,17 @@ using Amazon.Runtime.Documents;
 namespace Lodge.Campus;
 
 /// <summary>
-/// Traducción entre el <see cref="Document"/> de Bedrock y el JSON de MCP.
+/// Translation between Bedrock's <see cref="Document"/> and MCP's JSON.
 /// </summary>
 /// <remarks>
-/// Las dos mitades de este proceso hablan JSON y ninguna habla el JSON de la otra: MCP entrega
-/// esquemas y argumentos como <see cref="JsonElement"/>, y Converse los quiere como
-/// <see cref="Document"/>. Es todo el trabajo que hay aquí, y se hace con los constructores
-/// públicos de <see cref="Document"/> en vez de con los serializadores internos del SDK, que no
-/// forman parte de su contrato.
+/// Both halves of this process speak JSON and neither speaks the other's: MCP hands over schemas
+/// and arguments as <see cref="JsonElement"/>, and Converse wants them as <see cref="Document"/>.
+/// That is all the work there is here, and it is done with <see cref="Document"/>'s public
+/// constructors rather than the SDK's internal marshallers, which are not part of its contract.
 /// </remarks>
 internal static class Documents
 {
-    /// <summary>De JSON a lo que Converse entiende.</summary>
+    /// <summary>From JSON to what Converse understands.</summary>
     public static Document From(JsonElement element) => element.ValueKind switch
     {
         JsonValueKind.Object => new Document(
@@ -26,17 +25,16 @@ internal static class Documents
         JsonValueKind.Number => new Document(element.GetDouble()),
         JsonValueKind.True => new Document(true),
         JsonValueKind.False => new Document(false),
-        // Null, Undefined: un documento sin valor. Bedrock lo acepta y MCP lo emite.
+        // Null, Undefined: a document with no value. Bedrock accepts it and MCP emits it.
         _ => new Document(),
     };
 
     /// <summary>
-    /// De lo que el modelo devolvió a los argumentos de una llamada MCP.
+    /// From what the model returned to the arguments of an MCP call.
     /// </summary>
     /// <remarks>
-    /// Sólo el nivel superior se desenvuelve a diccionario, porque es lo que pide la firma de una
-    /// llamada a herramienta; lo de dentro se deja como valor plano y el serializador de MCP lo
-    /// vuelve a convertir.
+    /// Only the top level is unwrapped into a dictionary, because that is what a tool call's
+    /// signature asks for; what is inside stays a plain value and MCP's serialiser converts it back.
     /// </remarks>
     public static Dictionary<string, object?> ArgumentsOf(Document document)
     {

@@ -4,39 +4,36 @@ using ModelContextProtocol.Protocol;
 namespace Lodge.Campus;
 
 /// <summary>
-/// Un cliente MCP de un servidor Lodge.
+/// An MCP client for a Lodge server.
 /// </summary>
 /// <remarks>
 /// <para>
-/// Esta clase es la respuesta a una pregunta concreta: «¿puede nuestro stack consumir esto?».
-/// Habla Streamable HTTP contra el servidor real, lee el catálogo que el servidor deriva de las
-/// capacidades declaradas por el adaptador, y llama a lo que haya. No sabe nada de aulas, horarios
-/// ni averías — y eso es justo lo que se quiere demostrar: <b>el contrato es el protocolo</b>, no
-/// una interfaz escrita en un lenguaje concreto.
+/// This class answers one question: "can our stack consume this?". It speaks Streamable HTTP to the
+/// real server, reads the catalogue the server derives from what the adapter declares, and calls
+/// whatever is there. It knows nothing about rooms, timetables or faults — which is the point.
+/// <b>The contract is the protocol</b>, not an interface written in one language.
 /// </para>
 /// <para>
-/// <b>Identidad.</b> El despliegue de demostración resuelve la identidad con una cabecera porque
-/// corre en modo <c>sandbox</c> sobre dos universidades inventadas. Contra una institución de
-/// verdad no se pasa <c>subject</c>: se pasa un <c>Bearer</c> por <c>headers</c>, y el servidor lo
-/// verifica contra el emisor que ella haya declarado.
+/// <b>Identity.</b> The demonstration deployment resolves identity from a header because it runs in
+/// sandbox mode over two invented universities. Against a real institution you do not pass
+/// <c>subject</c>: you pass a bearer token in <c>headers</c>, and the server verifies it against the
+/// issuer that institution declared.
 /// </para>
 /// </remarks>
 public sealed class LodgeClient : IAsyncDisposable
 {
-    /// <summary>La cabecera de identidad del modo sandbox. No existe fuera de él.</summary>
+    /// <summary>The sandbox identity header. It does not exist outside sandbox mode.</summary>
     public const string DevSubjectHeader = "x-lodge-dev-subject";
 
     private readonly McpClient _client;
 
     private LodgeClient(McpClient client) => _client = client;
 
-    /// <summary>Conecta con un endpoint MCP y completa el saludo del protocolo.</summary>
-    /// <param name="endpoint">La URL del endpoint, normalmente de <see cref="Institutions.EndpointFor"/>.</param>
-    /// <param name="subject">
-    /// Quién dice ser quien llama, para un despliegue en modo sandbox. Omitir contra cualquier otro.
-    /// </param>
-    /// <param name="headers">Cabeceras adicionales; aquí va el <c>Authorization</c> real.</param>
-    /// <param name="cancellationToken">Para abandonar la conexión.</param>
+    /// <summary>Connects to an MCP endpoint and completes the protocol handshake.</summary>
+    /// <param name="endpoint">The endpoint, usually from <see cref="Institutions.EndpointFor"/>.</param>
+    /// <param name="subject">Who the caller claims to be, for a sandbox deployment. Omit for any other.</param>
+    /// <param name="headers">Extra headers; the real <c>Authorization</c> goes here.</param>
+    /// <param name="cancellationToken">To abandon the connection.</param>
     public static async Task<LodgeClient> ConnectAsync(
         Uri endpoint,
         string? subject = null,
@@ -62,8 +59,8 @@ public sealed class LodgeClient : IAsyncDisposable
         var transport = new HttpClientTransport(new HttpClientTransportOptions
         {
             Endpoint = endpoint,
-            // Sin negociación: Lodge sirve Streamable HTTP y nada más. Dejarlo automático invitaría
-            // a un intento de SSE que sólo puede fallar más tarde y peor.
+            // No negotiation: Lodge serves Streamable HTTP and nothing else. Leaving this automatic
+            // would invite an SSE attempt that can only fail later and worse.
             TransportMode = HttpTransportMode.StreamableHttp,
             AdditionalHeaders = all,
         });
@@ -75,18 +72,18 @@ public sealed class LodgeClient : IAsyncDisposable
     }
 
     /// <summary>
-    /// El catálogo que publica esta institución.
+    /// What this institution publishes.
     /// </summary>
     /// <remarks>
-    /// La lista cambia de una institución a otra dentro del mismo servidor, y ésa es la propiedad
-    /// que hay que mirar: un centro sin mesa de servicio no publica «avisar de una avería», así que
-    /// un agente no declina hacerlo — <em>no puede</em>, porque nunca estuvo en la lista.
+    /// The list differs between institutions served by the same process, and that is the property
+    /// to watch: a place with no service desk does not publish "report a fault", so an agent does
+    /// not decline to file one — it <em>cannot</em>, because the tool was never in the list.
     /// </remarks>
     public ValueTask<IList<McpClientTool>> CatalogueAsync(CancellationToken cancellationToken = default) =>
         _client.ListToolsAsync(cancellationToken: cancellationToken);
 
-    /// <summary>Llama a una herramienta por su nombre y devuelve lo que diga, en texto.</summary>
-    /// <exception cref="InvalidOperationException">Si el catálogo no publica esa herramienta.</exception>
+    /// <summary>Calls a tool by name and returns what it said, as text.</summary>
+    /// <exception cref="InvalidOperationException">If the catalogue does not publish that tool.</exception>
     public async Task<string> CallAsync(
         string name,
         IReadOnlyDictionary<string, object?>? arguments = null,
@@ -95,7 +92,7 @@ public sealed class LodgeClient : IAsyncDisposable
         var catalogue = await CatalogueAsync(cancellationToken).ConfigureAwait(false);
         var tool = catalogue.FirstOrDefault(t => t.Name == name)
             ?? throw new InvalidOperationException(
-                $"Esta institución no publica '{name}'. Publica: {string.Join(", ", catalogue.Select(t => t.Name))}.");
+                $"This institution does not publish '{name}'. It publishes: {string.Join(", ", catalogue.Select(t => t.Name))}.");
 
         var result = await tool.CallAsync(
             arguments is null
@@ -107,8 +104,8 @@ public sealed class LodgeClient : IAsyncDisposable
     }
 
     /// <summary>
-    /// El texto de un resultado. Lodge responde en prosa hablable, de modo que los demás tipos de
-    /// bloque — imágenes, audio, recursos — no aparecen, y se ignoran en vez de fingir que sí.
+    /// The text of a result. Lodge answers in speakable prose, so the other block kinds — images,
+    /// audio, resources — do not appear, and are ignored rather than pretended about.
     /// </summary>
     public static string TextOf(CallToolResult result)
     {

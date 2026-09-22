@@ -1,0 +1,60 @@
+name: .NET client
+
+# Separate from ci.yml on purpose. That workflow guards the thing being submitted; this one guards a
+# second implementation that nothing depends on. Keeping them apart means the .NET side cannot turn
+# the submission path red, and a failure here says exactly what it is.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'dotnet/**'
+      - '.github/workflows/dotnet.yml'
+  pull_request:
+    paths:
+      - 'dotnet/**'
+      - '.github/workflows/dotnet.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dotnet-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: build and test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      # Pinned by commit SHA, not by tag, for the same reason as in ci.yml: a tag can be moved and
+      # this repository is public and meant to be adopted.
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore
+        working-directory: dotnet
+
+      # Directory.Build.props sets TreatWarningsAsErrors, so this is the linter as well as the
+      # compiler. There is no separate style step because there is nothing left for one to catch.
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+        working-directory: dotnet
+
+      # Everything but the Bedrock tests, which need credentials and cost money per run. What
+      # survives the filter still talks to the live MCP server over real Streamable HTTP — an MCP
+      # client with a stubbed transport proves nothing, which is this project's L-002.
+      #
+      # That makes this job a canary for the public demonstration as well as a test of the client:
+      # if the deployment is torn down after the hackathon, this goes red and the filter is where to
+      # fix it, by pointing LODGE_DEPLOYMENT at a locally started server instead.
+      - name: Test
+        run: dotnet test --no-build --configuration Release --filter "Category!=Bedrock"
+        working-directory: dotnet
