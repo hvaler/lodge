@@ -299,8 +299,13 @@ export class LodgeStack extends Stack {
 
     // Scoped to this one skill, not to Alexa at large: `eventSourceToken` is what turns "anybody's
     // skill may invoke this" into "ours may".
+    //
+    // `alexa-appkit.amazon.com`, with no `smapi` in it. SMAPI is the skill *management* API, a
+    // different service that never invokes anything, and Lambda rejects the made-up name at deploy
+    // time with "The provided principal was invalid" — a string no test in this file could have
+    // caught, because a test can only assert the same string back. This one cost a rollback.
     skill.addPermission('AlexaMayInvoke', {
-      principal: new ServicePrincipal('alexa-appkit.smapi.amazon.com'),
+      principal: new ServicePrincipal('alexa-appkit.amazon.com'),
       action: 'lambda:InvokeFunction',
       eventSourceToken: props.alexaSkillId ?? '',
     });

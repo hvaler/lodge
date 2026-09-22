@@ -170,7 +170,7 @@ describe('the development identity header', () => {
 
 describe('the bridge to a real device', () => {
   const SKILL = 'amzn1.ask.skill.00000000-0000-0000-0000-000000000000';
-  const ALEXA = { Principal: 'alexa-appkit.smapi.amazon.com' };
+  const ALEXA = { Principal: 'alexa-appkit.amazon.com' };
   let bridged: Template;
 
   // Synthesised once, like the others: each one bundles a function with esbuild, and paying
@@ -199,7 +199,7 @@ describe('the bridge to a real device', () => {
     // `eventSourceToken` is what turns "anybody's skill may invoke this" into "ours may".
     bridged.hasResourceProperties('AWS::Lambda::Permission', {
       Action: 'lambda:InvokeFunction',
-      Principal: 'alexa-appkit.smapi.amazon.com',
+      Principal: 'alexa-appkit.amazon.com',
       EventSourceToken: SKILL,
     });
     expect(alexaPermissions(bridged)).toBe(1);
