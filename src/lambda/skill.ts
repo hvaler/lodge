@@ -173,6 +173,9 @@ const api = createDemoApi({
     slug,
     name: slug,
     locale: slug === 'san-telmo' ? 'es-ES' : 'en-IE',
+    // Declared here rather than discovered because this entry point has no provider to ask; the
+    // deployment publishes it at /health, and these two are the only institutions it serves.
+    timeZone: slug === 'san-telmo' ? 'Europe/Madrid' : 'Europe/Dublin',
     mcpUrl: `${base}/mcp/${slug}`,
     identities: [],
     suggestions: [],

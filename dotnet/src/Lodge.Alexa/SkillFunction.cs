@@ -82,6 +82,7 @@ public sealed class SkillFunction
             utterance,
             NameOf(institution),
             LocaleOf(institution),
+            ZoneOf(institution),
             history,
             cancellationToken).ConfigureAwait(false);
 
@@ -99,6 +100,10 @@ public sealed class SkillFunction
 
     /// <summary>The institution's own locale, which is the institution's to declare, not Alexa's.</summary>
     private static string LocaleOf(string slug) => slug == Institutions.SanTelmo ? "es-ES" : "en-IE";
+
+    /// <summary>And its own zone. The deployment publishes both at <c>/health</c>.</summary>
+    private static string ZoneOf(string slug) =>
+        slug == Institutions.SanTelmo ? "Europe/Madrid" : "Europe/Dublin";
 
     /// <summary>Without this there is nothing to bridge to, so it fails loudly at load.</summary>
     private static string Required(string name) =>

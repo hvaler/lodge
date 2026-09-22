@@ -220,7 +220,7 @@ respuesta de un modelo con temperatura no prueba nada:
 
 Las tres nombran el limite real y NINGUNA dice «en este momento». La caida inventada desaparecio.
 
-### 🟡 MEDIO · El modelo nombra sitios donde mirar que no le consta que existan
+### ✅ ARREGLADO (22-09) · MEDIO · El modelo nombraba sitios donde mirar que no constaban
 
 **Visto el 22-09 al verificar lo anterior.** Una de las tres respuestas remitio a «la intranet o
 **la aplicacion movil del campus**». San Telmo NO TIENE aplicacion movil: no aparece en docs/, ni en
@@ -230,10 +230,39 @@ Es la misma familia que lo anterior y toca la regla 1 del prompt de sistema, que
 «the registry» y nada mas. Declinar esta bien; inventarse donde mirar, no: un estudiante puede irse
 a buscar una aplicacion que no existe.
 
-**Arreglo candidato**: una frase en la regla 1 de `systemPrompt()` diciendo que no nombre ningun
-otro canal. Es mas caro de lo que parece — ese prompt gobierna TODAS las respuestas, en los dos
-idiomas y para las dos instituciones — asi que obliga a redesplegar y a repasar que no se haya
-estropeado nada de lo que ya funcionaba.
+**Se probo primero la frase en la regla 1**, prohibiendole nombrar otro canal. REDUJO EL PROBLEMA Y
+NO LO ELIMINO: una de cada tres respuestas seguia mandando a «tu portal o aplicacion movil».
+
+**La causa era otra, y la destapo el propio repaso.** `systemPrompt()` recibia institucion, idioma y
+herramientas, y NO LA FECHA; el `now` del orquestador es un reloj monotono para medir tiempos, no un
+calendario. **El modelo no sabia que dia era**, asi que cualquier pregunta que nombrase un dia de la
+semana le obligaba a adivinar — y una respuesta llego a decir «hoy es miercoles» siendo martes, y
+acto seguido se contradijo. Prohibirle inventar no le daba la informacion que le faltaba.
+
+**Arreglado dandole la fecha**, en el idioma y la zona horaria de la institucion, igual que `dayOf()`
+en la capa de herramientas. Verificado preguntando por el jueves CUATRO veces: las cuatro aciertan
+que el jueves es el 24, que manana es miercoles 23, explican el limite real, y **ninguna inventa un
+portal ni se equivoca de dia**. Dos dan ademas el consejo util: «vuelve a preguntar manana».
+
+Repasados despues los cuatro planos del guion, porque ese prompt gobierna todas las respuestas:
+aula libre, horario, las DOS vueltas del parte de averia (la segunda escribe y devuelve
+INC-2026-0033) y el plano 5 en Carrigmore, este ultimo en las DOS implementaciones.
+
+### 🟡 MEDIO · Los tests de TypeScript no se typechequean
+
+**Encontrado el 22-09 por accidente, y es la leccion de la casa otra vez.** `tsconfig.json` tiene
+`exclude: ['src/**/*.test.ts']`, asi que los 441 tests compilan pero **no pasan por el compilador**.
+Se noto al hacer obligatorio un parametro de `systemPrompt()`: los tests seguian llamandola con uno
+menos, seguian en verde, y el prompt que estaban comprobando decia literalmente «Today is undefined».
+
+Peor: una docena de llamadas a `ask()` pasaban un contexto sin `timeZone`, es decir una forma que en
+produccion no puede existir. Esas doce estan arregladas porque eran de este cambio.
+
+**Lo que queda**: al quitar el `exclude` salen **8 errores mas**, todos previos y mecanicos — un
+import que debe ser `type-only`, dos sobrecargas, cuatro conversiones desde `undefined` y un tipo de
+aula en linea. Arreglarlos y quitar el `exclude` cerraria el agujero. No se hace ahora porque toca
+ficheros de test ajenos al cambio a cuatro semanas del envio, y porque conviene decidirlo con la
+cifra delante en vez de a ciegas.
 
 ### Lo que estaba abierto y se cerro
 

@@ -23,6 +23,8 @@ export interface DemoInstitution {
   readonly slug: string;
   readonly name: string;
   readonly locale: string;
+  /** Its own time zone, so the model is told the date the institution is actually living in. */
+  readonly timeZone: string;
   /** Absolute URL of its MCP endpoint, e.g. `http://localhost:3000/mcp/san-telmo`. */
   readonly mcpUrl: string;
   /** Who the demo can pretend to be there. Empty when the institution needs no identity. */
@@ -201,7 +203,11 @@ export function createDemoApi(options: DemoApiOptions): {
         const orchestrator = createOrchestrator({ model: options.model, client });
         const exchange = await orchestrator.ask(
           request.utterance,
-          { institution: institution.name, locale: institution.locale },
+          {
+            institution: institution.name,
+            locale: institution.locale,
+            timeZone: institution.timeZone,
+          },
           request.history ?? [],
         );
 

@@ -52,6 +52,7 @@ public sealed class OrchestratorTests
             "what room is free right now?",
             "Carrigmore College",
             "en-IE",
+            "Europe/Dublin",
             cancellationToken: token);
 
         Report(exchange);
@@ -78,6 +79,7 @@ public sealed class OrchestratorTests
             "what is on my timetable tomorrow?",
             "Carrigmore College",
             "en-IE",
+            "Europe/Dublin",
             cancellationToken: token);
 
         Report(exchange);
@@ -97,6 +99,7 @@ public sealed class OrchestratorTests
             "and the one after that?",
             "Carrigmore College",
             "en-IE",
+            "Europe/Dublin",
             [
                 new Turn("user", "when does registration close?"),
                 new Turn("assistant", "Registration closes on the fourteenth of October."),
@@ -128,6 +131,20 @@ public sealed class OrchestratorTests
             $"took: {exchange.Elapsed.TotalMilliseconds:F0} ms | tokens: "
             + $"{exchange.Usage.InputTokens} in, {exchange.Usage.OutputTokens} out");
     }
+
+    [Theory]
+    // The institution's date in the institution's words, which is what the model is told. Pinned
+    // because it depends on ICU and on tzdata being present, and Lambda's Linux image is not the
+    // machine this was written on.
+    [InlineData("es-ES", "Europe/Madrid", "martes, 22 de septiembre de 2026")]
+    [InlineData("en-IE", "Europe/Dublin", "Tuesday 22 September 2026")]
+    public void the_date_is_written_the_way_the_institution_would_write_it(
+        string locale,
+        string zone,
+        string expected) =>
+        Assert.Equal(
+            expected,
+            SystemPrompt.TodayAt(locale, zone, new DateTimeOffset(2026, 9, 22, 12, 0, 0, TimeSpan.Zero)));
 
     [Fact]
     public void dotted_names_reach_the_model_with_underscores() =>

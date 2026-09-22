@@ -66,6 +66,7 @@ beforeAll(async () => {
       slug: 'san-telmo',
       name: 'Universidad de San Telmo',
       locale: 'es-ES',
+      timeZone: 'Europe/Madrid',
       mcpUrl: `http://127.0.0.1:${address.port}/`,
       identities: [{ subject: 'est-0001', label: 'Derecho' }],
       suggestions: ['¿Qué aula está libre?'],

@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace Lodge.Campus;
 
 /// <summary>
@@ -18,8 +20,27 @@ namespace Lodge.Campus;
 /// </remarks>
 public static class SystemPrompt
 {
+    /// <summary>
+    /// The date, as the institution would write it: its own locale and its own time zone, not the
+    /// server's. Matches <c>todayAt()</c> on the TypeScript side.
+    /// </summary>
+    public static string TodayAt(string locale, string timeZone, DateTimeOffset now)
+    {
+        var zone = TimeZoneInfo.FindSystemTimeZoneById(timeZone);
+        return TimeZoneInfo.ConvertTime(now, zone)
+            .ToString("D", CultureInfo.GetCultureInfo(locale));
+    }
+
     /// <summary>Builds the instruction for one institution, one language and one catalogue.</summary>
-    public static string For(string institution, string locale, IReadOnlyCollection<string> toolNames)
+    /// <param name="institution">Whose desk this is.</param>
+    /// <param name="locale">Which language to answer in.</param>
+    /// <param name="toolNames">What this institution publishes.</param>
+    /// <param name="today">The institution's date, from <see cref="TodayAt"/>.</param>
+    public static string For(
+        string institution,
+        string locale,
+        IReadOnlyCollection<string> toolNames,
+        string today)
     {
         ArgumentNullException.ThrowIfNull(toolNames);
 
@@ -32,6 +53,13 @@ public static class SystemPrompt
             $"You are the porter's desk at {institution}. You answer students and staff out loud.",
             "",
             $"Answer in the language of this locale: {locale}. Match it exactly, including for numbers and dates.",
+            "",
+            // Required, not optional, because forgetting it is the bug. Without a date the model has
+            // no way to place a named weekday, so it guesses — and it guessed wrong, out loud:
+            // "hoy es miércoles" on a Tuesday. A rule telling it not to invent cannot supply a fact
+            // it was never given.
+            $"Today is {today} at this institution. Work out any day somebody names from that date, and",
+            "never guess what day it is.",
             "",
             "Rules, in order of importance:",
             "1. Never invent a fact about the campus. Rooms, timetables, deadlines and faults come only from",

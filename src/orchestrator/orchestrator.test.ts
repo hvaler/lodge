@@ -26,6 +26,11 @@ import { join } from 'node:path';
 
 const NOW = campusInstant('2026-10-06', '16:30');
 
+// The institution's own zone, not the runner's. The suite also runs under TZ=Pacific/Auckland in CI,
+// and the date the model is told has to be the institution's date on both sides of the world.
+const MADRID = 'Europe/Madrid';
+const DUBLIN = 'Europe/Dublin';
+
 /** A model that replays a script, and records what it was asked. */
 function scriptedModel(script: Partial<ModelTurn>[]): Model & {
   readonly seenTools: ToolSpec[][];
@@ -88,7 +93,7 @@ describe('the tools come from the server, not from this file', () => {
     const model = scriptedModel([{ text: 'Vale.' }]);
     const orchestrator = createOrchestrator({ model, client: await sanTelmo() });
 
-    await orchestrator.ask('hola', { institution: 'San Telmo', locale: 'es-ES' });
+    await orchestrator.ask('hola', { institution: 'San Telmo', locale: 'es-ES', timeZone: MADRID });
 
     expect(model.seenTools[0]?.map((t) => t.name).sort()).toEqual([
       'campus.deadlines',
@@ -116,7 +121,7 @@ describe('the tools come from the server, not from this file', () => {
     const model = scriptedModel([{ text: 'Right.' }]);
     const orchestrator = createOrchestrator({ model, client: await connect(carrigmore) });
 
-    await orchestrator.ask('hello', { institution: 'Carrigmore College', locale: 'en-IE' });
+    await orchestrator.ask('hello', { institution: 'Carrigmore College', locale: 'en-IE', timeZone: DUBLIN });
 
     const names = model.seenTools[0]?.map((t) => t.name) ?? [];
     expect(names).toHaveLength(3);
@@ -127,7 +132,7 @@ describe('the tools come from the server, not from this file', () => {
     const model = scriptedModel([{ text: 'ok' }]);
     const orchestrator = createOrchestrator({ model, client: await sanTelmo() });
 
-    await orchestrator.ask('hola', { institution: 'San Telmo', locale: 'es-ES' });
+    await orchestrator.ask('hola', { institution: 'San Telmo', locale: 'es-ES', timeZone: MADRID });
     const findRoom = model.seenTools[0]?.find((t) => t.name === 'campus.find_room');
 
     expect(findRoom?.description).toBeTruthy();
@@ -152,6 +157,7 @@ describe('tool names cross the boundary in both directions', () => {
     const exchange = await orchestrator.ask('¿cuándo acaban las convalidaciones?', {
       institution: 'San Telmo',
       locale: 'es-ES',
+      timeZone: MADRID,
     });
 
     expect(exchange.trace[0]?.tool).toBe('campus.deadlines');
@@ -165,7 +171,7 @@ describe('tool names cross the boundary in both directions', () => {
     ]);
     const orchestrator = createOrchestrator({ model, client: await sanTelmo() });
 
-    const exchange = await orchestrator.ask('un café', { institution: 'San Telmo', locale: 'es-ES' });
+    const exchange = await orchestrator.ask('un café', { institution: 'San Telmo', locale: 'es-ES', timeZone: MADRID });
 
     expect(exchange.trace[0]?.failed).toBe(true);
     expect(exchange.trace[0]?.output).toMatch(/no tool called campus_order_coffee/);
@@ -188,7 +194,7 @@ describe('the call trace M3 asks for', () => {
     ]);
     const orchestrator = createOrchestrator({ model, client: await sanTelmo() });
 
-    const exchange = await orchestrator.ask('¿qué hay?', { institution: 'San Telmo', locale: 'es-ES' });
+    const exchange = await orchestrator.ask('¿qué hay?', { institution: 'San Telmo', locale: 'es-ES', timeZone: MADRID });
 
     expect(exchange.trace).toHaveLength(2);
     expect(exchange.trace.map((e) => e.step)).toEqual([1, 2]);
@@ -212,7 +218,7 @@ describe('the call trace M3 asks for', () => {
     ]);
     const orchestrator = createOrchestrator({ model, client: await sanTelmo() });
 
-    const exchange = await orchestrator.ask('¿plazos?', { institution: 'San Telmo', locale: 'es-ES' });
+    const exchange = await orchestrator.ask('¿plazos?', { institution: 'San Telmo', locale: 'es-ES', timeZone: MADRID });
 
     expect(exchange.usage).toEqual({
       inputTokens: 174,
@@ -233,7 +239,7 @@ describe('cards travel around the model, not through it', () => {
     ]);
     const orchestrator = createOrchestrator({ model, client: await sanTelmo() });
 
-    const exchange = await orchestrator.ask('¿aula libre?', { institution: 'San Telmo', locale: 'es-ES' });
+    const exchange = await orchestrator.ask('¿aula libre?', { institution: 'San Telmo', locale: 'es-ES', timeZone: MADRID });
 
     expect(exchange.cards).toHaveLength(1);
     expect(exchange.cards[0]?.mimeType).toBe(CARD_MIME);
@@ -254,7 +260,7 @@ describe('the loop is bounded', () => {
     const model = scriptedModel(forever);
     const orchestrator = createOrchestrator({ model, client: await sanTelmo(), maxRounds: 3 });
 
-    const exchange = await orchestrator.ask('¿y?', { institution: 'San Telmo', locale: 'es-ES' });
+    const exchange = await orchestrator.ask('¿y?', { institution: 'San Telmo', locale: 'es-ES', timeZone: MADRID });
 
     expect(model.seenTurns).toHaveLength(3);
     expect(exchange.trace).toHaveLength(3);
@@ -265,7 +271,7 @@ describe('the loop is bounded', () => {
     const model = scriptedModel([{ text: 'Buenos días.' }]);
     const orchestrator = createOrchestrator({ model, client: await sanTelmo() });
 
-    const exchange = await orchestrator.ask('hola', { institution: 'San Telmo', locale: 'es-ES' });
+    const exchange = await orchestrator.ask('hola', { institution: 'San Telmo', locale: 'es-ES', timeZone: MADRID });
 
     expect(model.seenTurns).toHaveLength(1);
     expect(exchange.trace).toEqual([]);
@@ -282,7 +288,7 @@ describe('a tool that fails is reported, not thrown', () => {
     ]);
     const orchestrator = createOrchestrator({ model, client: await sanTelmo(null) });
 
-    const exchange = await orchestrator.ask('¿qué tengo hoy?', { institution: 'San Telmo', locale: 'es-ES' });
+    const exchange = await orchestrator.ask('¿qué tengo hoy?', { institution: 'San Telmo', locale: 'es-ES', timeZone: MADRID });
 
     expect(exchange.trace[0]?.output).toMatch(/identificarte/);
     expect(exchange.said).toBe('Necesitas identificarte.');
@@ -290,7 +296,12 @@ describe('a tool that fails is reported, not thrown', () => {
 });
 
 describe('the instruction the model works under', () => {
-  const prompt = systemPrompt('Universidad de San Telmo', 'es-ES', ['campus.find_room']);
+  const prompt = systemPrompt(
+    'Universidad de San Telmo',
+    'es-ES',
+    ['campus.find_room'],
+    'martes, 22 de septiembre de 2026',
+  );
 
   it('names the institution and the language it must answer in', () => {
     expect(prompt).toContain('Universidad de San Telmo');
@@ -311,6 +322,14 @@ describe('the instruction the model works under', () => {
     expect(prompt).toMatch(/name no other place to look/);
   });
 
+  it('tells the model what day it is, because otherwise it guesses', () => {
+    // It did guess, out loud and in Spanish: "hoy es miércoles" on a Tuesday, then an instruction
+    // that contradicted itself. The model has no clock; without this line every question naming a
+    // weekday is answered from nothing.
+    expect(prompt).toContain('martes, 22 de septiembre de 2026');
+    expect(prompt).not.toContain('undefined');
+  });
+
   it('asks for one or two sentences, because it is spoken', () => {
     expect(prompt).toMatch(/one or two sentences/);
   });
@@ -321,7 +340,9 @@ describe('the instruction the model works under', () => {
   });
 
   it('says plainly when an institution has none', () => {
-    expect(systemPrompt('Minimal College', 'en-IE', [])).toMatch(/no tools here/);
+    expect(systemPrompt('Minimal College', 'en-IE', [], 'Tuesday 22 September 2026')).toMatch(
+      /no tools here/,
+    );
   });
 });
 

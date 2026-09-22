@@ -55,6 +55,31 @@ export interface OrchestratorOptions {
    */
   readonly maxRounds?: number;
   readonly now?: () => number;
+  /**
+   * The wall clock, which is a different thing from `now`.
+   *
+   * `now` is monotonic and exists to measure how long a call took; it cannot tell you what day it
+   * is. Separate so a test can fix the date without freezing the stopwatch.
+   */
+  readonly today?: () => Date;
+}
+
+/**
+ * The date, as the institution would write it.
+ *
+ * In the institution's own locale and time zone rather than the server's, and matching `dayOf()` in
+ * the tool layer, so the date the model is told and the date a tool reads back are the same words.
+ * An iCalendar all-day date already meant different things in Dublin and Auckland once; a campus
+ * assistant that thinks it is yesterday would be the same bug wearing a different hat.
+ */
+export function todayAt(locale: string, timeZone: string, now: Date): string {
+  return new Intl.DateTimeFormat(locale, {
+    timeZone,
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(now);
 }
 
 /**
@@ -64,11 +89,23 @@ export interface OrchestratorOptions {
  * use cases demand, and every one of those is a thing *not* to do: do not invent a date, do not
  * answer at length, do not claim a capability the catalogue does not offer.
  */
-export function systemPrompt(institution: string, locale: string, toolNames: readonly string[]): string {
+export function systemPrompt(
+  institution: string,
+  locale: string,
+  toolNames: readonly string[],
+  today: string,
+): string {
   return [
     `You are the porter's desk at ${institution}. You answer students and staff out loud.`,
     '',
     `Answer in the language of this locale: ${locale}. Match it exactly, including for numbers and dates.`,
+    '',
+    // Required, not optional, because forgetting it is the bug. Without a date the model has no way
+    // to place a named weekday, so it guesses one — and it guessed wrong, out loud, in Spanish:
+    // "hoy es miércoles" on a Tuesday, followed by an instruction that contradicted itself. A rule
+    // telling it not to invent cannot supply a fact it was never given.
+    `Today is ${today} at this institution. Work out any day somebody names from that date, and`,
+    'never guess what day it is.',
     '',
     'Rules, in order of importance:',
     '1. Never invent a fact about the campus. Rooms, timetables, deadlines and faults come only from',
@@ -172,13 +209,14 @@ export interface PriorTurn {
 export function createOrchestrator(options: OrchestratorOptions): {
   ask(
     utterance: string,
-    context: { institution: string; locale: string },
+    context: { institution: string; locale: string; timeZone: string },
     history?: readonly PriorTurn[],
   ): Promise<Exchange>;
 } {
   const { model, client } = options;
   const maxRounds = options.maxRounds ?? 4;
   const now = options.now ?? ((): number => performance.now());
+  const today = options.today ?? ((): Date => new Date());
 
   return {
     async ask(utterance, context, history = []) {
@@ -186,7 +224,12 @@ export function createOrchestrator(options: OrchestratorOptions): {
 
       const tools = await readCatalogue(client);
       const byModelName = modelNameLookup(tools.map((tool) => tool.name));
-      const system = systemPrompt(context.institution, context.locale, tools.map((t) => t.name));
+      const system = systemPrompt(
+        context.institution,
+        context.locale,
+        tools.map((t) => t.name),
+        todayAt(context.locale, context.timeZone, today()),
+      );
 
       const turns: Turn[] = [
         ...history.map((turn): Turn =>

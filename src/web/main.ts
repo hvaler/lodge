@@ -187,6 +187,7 @@ const institutions: DemoInstitution[] = [...providers].map(([slug, provider]) =>
   slug,
   name: provider.descriptor.institution,
   locale: provider.descriptor.locale,
+  timeZone: provider.descriptor.timeZone,
   mcpUrl: `http://127.0.0.1:${MCP_PORT}/mcp/${slug}`,
   identities: SCRIPTS[slug]?.identities ?? [],
   suggestions: SCRIPTS[slug]?.suggestions ?? [],

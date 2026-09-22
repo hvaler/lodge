@@ -53,6 +53,7 @@ const INSTITUTIONS: readonly Omit<DemoInstitution, 'mcpUrl'>[] = [
     slug: 'san-telmo',
     name: 'Universidad de San Telmo',
     locale: 'es-ES',
+    timeZone: 'Europe/Madrid',
     identities: [
       { subject: 'est-0001', label: 'Estudiante de Derecho' },
       { subject: 'est-0002', label: 'Estudiante de Informática' },
@@ -70,6 +71,7 @@ const INSTITUTIONS: readonly Omit<DemoInstitution, 'mcpUrl'>[] = [
     slug: 'carrigmore',
     name: 'Carrigmore College',
     locale: 'en-IE',
+    timeZone: 'Europe/Dublin',
     // Empty on purpose. There is no directory in front of this one, so there is nobody to be: the
     // three tools it publishes are the three that do not need to know who is asking. Offering
     // identities that change nothing would be a control that lies.

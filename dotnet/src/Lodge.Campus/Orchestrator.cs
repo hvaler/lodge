@@ -103,12 +103,14 @@ public sealed class Orchestrator
     /// <param name="utterance">What was asked.</param>
     /// <param name="institution">The institution's name, so the model knows who it is.</param>
     /// <param name="locale">Which language to answer in.</param>
+    /// <param name="timeZone">The institution's own zone, so the date it is told is its date.</param>
     /// <param name="history">Earlier turns, if any. This is what makes a two-turn confirmation work.</param>
     /// <param name="cancellationToken">To abandon.</param>
     public async Task<Exchange> AskAsync(
         string utterance,
         string institution,
         string locale,
+        string timeZone,
         IReadOnlyList<Turn>? history = null,
         CancellationToken cancellationToken = default)
     {
@@ -116,7 +118,11 @@ public sealed class Orchestrator
 
         var catalogue = await _lodge.CatalogueAsync(cancellationToken).ConfigureAwait(false);
         var byModelName = catalogue.ToDictionary(t => ToModelName(t.Name), t => t.Name, StringComparer.Ordinal);
-        var system = SystemPrompt.For(institution, locale, [.. catalogue.Select(t => t.Name)]);
+        var system = SystemPrompt.For(
+            institution,
+            locale,
+            [.. catalogue.Select(t => t.Name)],
+            SystemPrompt.TodayAt(locale, timeZone, DateTimeOffset.UtcNow));
 
         var messages = new List<Message>();
         foreach (var turn in history ?? [])
