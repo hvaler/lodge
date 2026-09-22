@@ -56,11 +56,16 @@ mismo servidor MCP.
 ## Lo que queda
 
 ### En código
-Una sola cosa, y es de consola más que de código: **dar de alta la locale `es-ES`** en
-Build → *Language settings*, pegando `skill/interactionModels/custom/es-ES.json` y el nombre
-«La conserjería». El fichero ya está escrito y versionado.
+Nada obligatorio. Lo considerado y descartado está en [`docs/roadmap.md`](../docs/roadmap.md).
 
-Lo demás considerado y descartado está en [`docs/roadmap.md`](../docs/roadmap.md), con el porqué.
+**Una rugosidad encontrada el 22-09, sin decidir:** `campus.timetable` sólo acepta
+`when: 'today' | 'tomorrow'` (`src/tools/index.ts:220`), lo cual es deliberado. Pero al preguntarle
+«qué tengo el jueves» el modelo improvisa «la agenda del jueves no está disponible **en este
+momento**» y remite a la intranet — es decir, **se inventa una caída temporal que no existe**. No
+llega a violar UC-03 (no inventó ningún horario), pero la excusa sí es inventada. La causa probable
+es que el límite vive sólo en el `enum` del esquema y no en la descripción de la herramienta.
+Arreglo candidato: una línea en esa descripción. Obliga a redesplegar y a volver a probar contra el
+modelo, porque lo único que demuestra que cambia de respuesta es verlo.
 
 ### Lo tuyo, y no es código
 1. [ ] **Grabar el vídeo.** Guion en [`docs/management/video-script.md`](../docs/management/video-script.md), a 2:47 contra un límite duro de 3:00. **Rotular en pantalla que el altavoz es una skill CLÁSICA, no Alexa+**
