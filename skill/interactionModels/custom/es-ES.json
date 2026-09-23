@@ -36,7 +36,17 @@
             "tengo {pregunta}",
             "avisa {pregunta}",
             "abre un aviso {pregunta}",
-            "no funciona {pregunta}"
+            "no funciona {pregunta}",
+            "el {pregunta}",
+            "la {pregunta}",
+            "los {pregunta}",
+            "las {pregunta}",
+            "se ha roto {pregunta}",
+            "se ha estropeado {pregunta}",
+            "tengo un problema {pregunta}",
+            "hay un problema {pregunta}",
+            "quiero abrir un aviso {pregunta}",
+            "quiero dar un parte {pregunta}"
           ]
         },
         { "name": "AMAZON.HelpIntent", "samples": [] },

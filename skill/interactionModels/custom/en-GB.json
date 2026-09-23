@@ -33,7 +33,11 @@
             "I want {pregunta}",
             "I need {pregunta}",
             "report {pregunta}",
-            "book {pregunta}"
+            "book {pregunta}",
+            "the {pregunta}",
+            "there is a problem {pregunta}",
+            "something is broken {pregunta}",
+            "I want to report {pregunta}"
           ]
         },
         { "name": "AMAZON.HelpIntent", "samples": [] },
