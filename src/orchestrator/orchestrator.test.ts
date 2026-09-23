@@ -324,6 +324,15 @@ describe('the instruction the model works under', () => {
     expect(prompt).toMatch(/name no other place to look/);
   });
 
+  it('calls the one place it may name by its Spanish name, and only when nothing is on record', () => {
+    // Found by voice on 23-09: "la MEN-301 no tiene proyector… pregúntele al registro". "Registro"
+    // is a literal translation nobody at a Spanish university uses, it was tacked on to an answer
+    // that was already complete, and it said "usted" to somebody the skill had just called "tú".
+    expect(prompt).toMatch(/secretaría/);
+    expect(prompt).toMatch(/When a tool gave a clear\s+answer, give it and stop/);
+    expect(prompt).toMatch(/never "usted"/);
+  });
+
   it('tells the model what day it is, because otherwise it guesses', () => {
     // It did guess, out loud and in Spanish: "hoy es miércoles" on a Tuesday, then an instruction
     // that contradicted itself. The model has no clock; without this line every question naming a

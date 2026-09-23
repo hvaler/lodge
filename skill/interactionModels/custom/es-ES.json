@@ -37,6 +37,7 @@
             "avisa {pregunta}",
             "abre un aviso {pregunta}",
             "no funciona {pregunta}",
+            "algo {pregunta}",
             "el {pregunta}",
             "la {pregunta}",
             "los {pregunta}",
