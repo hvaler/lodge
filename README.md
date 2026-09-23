@@ -86,19 +86,23 @@ Full plan, architecture, pinned versions and cut rules: **[`RUNBOOK.md`](RUNBOOK
 ## Architecture
 
 ```
-MCP client (Alexa+ / our own orchestrator / any agent)
-        │
-        ▼
-MCP server  ──  Streamable HTTP, stateless, server/discover
-        │
-        ▼
-Provider interface  ──  capabilities + locale
-        │
-   ┌────┴────┐
-   ▼         ▼
-synthetic  standards
-(San Telmo) (iCalendar · LDAP · CSV)
+  a classic Alexa skill  ·  the web demonstration  ·  a .NET client  ·  your own agent
+                    └──────────────┬──────────────┘
+                                   ▼
+            MCP server  ──  Streamable HTTP, stateless, OAuth 2.1
+                                   │
+                                   ▼
+            Provider interface  ──  capabilities + locale  [FROZEN]
+                          ┌────────┴────────┐
+                          ▼                 ▼
+                      synthetic          standards
+                     (San Telmo)   (iCalendar · LDAP · CSV)
 ```
+
+Four clients, written in two languages, none of which the server knows about. Alexa+ is not among
+them and cannot be: its add-on registry is limited to selected partners. What each client would take
+— including Copilot Studio, which needs no change at all — is in
+[Lodge from other clients](docs/integrating.md).
 
 **The core runs anywhere; AWS is a destination, not a requirement.** A project that hopes to be
 adopted by any institution cannot demand a cloud account. Two first-class deployment targets:
