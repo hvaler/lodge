@@ -75,9 +75,10 @@ through the adoption guide.
 | M5 | Installable by a stranger | 20 Oct | 🚧 written, not yet validated from outside |
 | M6 | Submitted | 21 Oct | |
 
-338 tests over the source and 8 over the deployment stack, run on every build — including the
+441 tests over the source and 20 over the deployment stack, run on every build — including the
 contract tests derived from [`docs/use-cases.md`](docs/use-cases.md) and the latency measurement
-against the platform's 500 ms budget.
+against the platform's 500 ms budget. A further 35 cover [the .NET client](dotnet/README.md), seven
+of them against the running server.
 
 Full plan, architecture, pinned versions and cut rules: **[`RUNBOOK.md`](RUNBOOK.md)**
 ([versión en español](RUNBOOK.es.md)).
@@ -210,6 +211,7 @@ Function URL (no authorizer)         so a client needs an MCP client, not an AWS
 |---|---|
 | [Adopting Lodge](docs/adopting.md) | Running it against **your** campus. Timed, so you can tell us if it lies |
 | [Writing an adapter](docs/writing-an-adapter.md) | When your sources are not CSV, iCalendar and LDAP |
+| [Lodge from other clients](docs/integrating.md) | Alexa classic and Alexa+, Copilot Studio and the Power Platform, business systems, analytics, and why retrieval is not here |
 | [Use cases](docs/use-cases.md) | The acceptance criteria. Each one is a contract test |
 | [Friction log](docs/friction-log.md) | What every API we used did to us, and what worked |
 | [What could come next](docs/roadmap.md) | What we refused on purpose, what the protocol will unlock, and what is missing today |

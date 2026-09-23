@@ -5,6 +5,7 @@
 | [`adopting.md`](adopting.md) | **start here if you want to install it.** From a clean clone to answering questions, timed |
 | [`use-cases.md`](use-cases.md) | the seven use cases with their acceptance criteria. Each one is a test |
 | [`writing-an-adapter.md`](writing-an-adapter.md) | how to write a third adapter against sources that are not iCalendar, LDAP and CSV |
+| [`integrating.md`](integrating.md) | which clients can talk to it, what each one would take, and what is gated by somebody else |
 | [`san-telmo.md`](san-telmo.md) | the fictional university behind the synthetic adapter: buildings, programmes, calendar |
 | [`roadmap.md`](roadmap.md) | what is missing, ordered by how often we think it would come up |
 | [`friction-log.md`](friction-log.md) | friction with every API used, written down while it hurt |
