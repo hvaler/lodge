@@ -446,6 +446,18 @@ describe('campus.book_room', () => {
     ).toContain('no está abierto');
   });
 
+  it('reads "a las ocho y media" said in the afternoon as 20:30, not the 08:30 that has gone', async () => {
+    // NOW is 16:30. A model hearing "las ocho y media" writes 08:30; the person meant 20:30.
+    // Santa Clara closes at 20:00, so the room here is in Farmacia, open until 22:00.
+    expect(await call('campus.book_room', { room: 'FAR-101', at: '08:30' })).toBe(
+      '¿Reservo FAR-101 a las 20:30 durante 60 minutos?',
+    );
+    // "A las tres" at 16:30: both 03:00 and 15:00 have gone, and the one meant is named.
+    expect(await call('campus.book_room', { room: 'FAR-101', at: '03:00' })).toBe(
+      'Las 15:00 ya han pasado hoy. Solo puedo reservar de ahora en adelante.',
+    );
+  });
+
   it('will not hold a time already gone today, and does not guess tomorrow', async () => {
     // NOW is 16:30.
     expect(await call('campus.book_room', { room: 'FAR-101', at: '15:00' })).toBe(

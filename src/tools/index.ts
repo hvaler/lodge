@@ -289,7 +289,10 @@ function registerBookRoom(server: McpServer, provider: Provider, resolve: Resolv
           .string()
           .regex(/^\d{2}:\d{2}$/)
           .optional()
-          .describe('Start time today as HH:MM on the institution\'s clock. Defaults to now.'),
+          .describe(
+            'Start time today as 24-hour HH:MM on the institution\'s clock. Defaults to now. '
+              + '"Las ocho" said in the afternoon means 20:00.',
+          ),
         forMinutes: z
           .number()
           .int()
@@ -311,7 +314,7 @@ function registerBookRoom(server: McpServer, provider: Provider, resolve: Resolv
 
       try {
         room = await roomOnRecord(provider, ctx, room);
-        const start = at ? atToday(at, ctx.now, provider) : ctx.now;
+        const start = at ? startFor(at, ctx.now, provider) : ctx.now;
         // "At five" said at six means five today, which has gone. Said out loud it is easy to
         // mean tomorrow, but guessing which day somebody meant is exactly what UC-03 forbids.
         // A few minutes of slack, so "at 18:00" said at 18:02 still means now.
@@ -371,6 +374,23 @@ async function roomOnRecord(provider: Provider, ctx: RequestContext, said: strin
   const key = (id: string): string => id.replace(/[^\p{L}\p{N}]/gu, '').toUpperCase();
   const matches = rooms.filter((room) => key(room.id) === key(said));
   return matches.length === 1 ? matches[0]!.id : said;
+}
+
+/**
+ * The start a spoken clock time means.
+ *
+ * "A las ocho" said at seven in the evening means 20:00, and a model hearing it writes 08:00.
+ * So a morning time that has already gone, whose afternoon twin has not, is the afternoon one:
+ * nobody books a room for a time that is over. This is reading a clock the way the person
+ * speaks it, not guessing a fact. When both have gone the afternoon one is still what was meant,
+ * so the refusal names it: "las 17:00 ya han pasado", not "las 05:00".
+ */
+function startFor(hhmm: string, now: Date, provider: Provider): Date {
+  const said = atToday(hhmm, now, provider);
+  const [hours, minutes] = hhmm.split(':');
+  if (Number(hours) >= 12 || said.getTime() >= now.getTime() - PAST_SLACK_MS) return said;
+
+  return atToday(`${Number(hours) + 12}:${minutes}`, now, provider);
 }
 
 /** How late a start time may be and still mean "now". */
