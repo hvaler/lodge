@@ -269,6 +269,16 @@ describe('the conversation between turns', () => {
     expect(answered.response.outputSpeech?.text).toMatch(/^Pregúntame/);
   });
 
+  it('never hands a speaker markdown', async () => {
+    const answered = await skillWith(async () => ({
+      said: 'Sorry, there is no room called **FAR-101**.\n- Try `QUA-G01` instead.',
+    }))(asking('is FAR-101 free', undefined, 'en-GB'));
+
+    expect(answered.response.outputSpeech?.text).toBe(
+      'Sorry, there is no room called FAR-101.\nTry QUA-G01 instead.',
+    );
+  });
+
   it('keeps the session small, because it is not a database', async () => {
     let carried: Record<string, unknown> | undefined;
     for (let turn = 0; turn < 6; turn++) {

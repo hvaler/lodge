@@ -55,6 +55,21 @@ export interface AlexaResponse {
 export const ASK_INTENT = 'PreguntarAlCampusIntent';
 export const QUESTION_SLOT = 'pregunta';
 
+/**
+ * Text as a speaker should say it.
+ *
+ * The model writes for a screen now and then — `**FAR-101**`, a bulleted list — and a speaker
+ * either reads the asterisks out or stumbles over them. Emphasis and list markers carry nothing
+ * a voice can use, so they go; the words stay exactly as written.
+ */
+export function forSpeech(text: string): string {
+  return text
+    .replace(/\*\*|__|[*`#]/g, '')
+    .replace(/^\s*[-•]\s+/gm, '')
+    .replace(/[ \t]{2,}/g, ' ')
+    .trim();
+}
+
 export function speak(
   text: string,
   options: { readonly end?: boolean; readonly reprompt?: string; readonly attributes?: Record<string, unknown> } = {},
@@ -63,7 +78,7 @@ export function speak(
     version: '1.0',
     ...(options.attributes ? { sessionAttributes: options.attributes } : {}),
     response: {
-      outputSpeech: { type: 'PlainText', text },
+      outputSpeech: { type: 'PlainText', text: forSpeech(text) },
       ...(options.reprompt
         ? { reprompt: { outputSpeech: { type: 'PlainText', text: options.reprompt } } }
         : {}),

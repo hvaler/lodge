@@ -273,12 +273,26 @@ public sealed class Skill
     private static SkillResponse Ask(string text, string reprompt) =>
         Respond(text, reprompt, end: false);
 
+    /// <summary>
+    /// Text as a speaker should say it: the model writes for a screen now and then
+    /// (<c>**FAR-101**</c>, a bulleted list), and emphasis and list markers carry nothing a voice
+    /// can use. A mirror of <c>forSpeech</c> in <c>src/lambda/alexa.ts</c>.
+    /// </summary>
+    public static string ForSpeech(string text)
+    {
+        var plain = System.Text.RegularExpressions.Regex.Replace(text, @"\*\*|__|[*`#]", string.Empty);
+        plain = System.Text.RegularExpressions.Regex.Replace(
+            plain, @"^\s*[-•]\s+", string.Empty, System.Text.RegularExpressions.RegexOptions.Multiline);
+        plain = System.Text.RegularExpressions.Regex.Replace(plain, @"[ \t]{2,}", " ");
+        return plain.Trim();
+    }
+
     private static SkillResponse Respond(string text, string? reprompt, bool end) => new()
     {
         Version = "1.0",
         Response = new ResponseBody
         {
-            OutputSpeech = new PlainTextOutputSpeech(text),
+            OutputSpeech = new PlainTextOutputSpeech(ForSpeech(text)),
             Reprompt = reprompt is null ? null : new Reprompt(reprompt),
             ShouldEndSession = end,
         },

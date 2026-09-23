@@ -242,6 +242,14 @@ public sealed class SkillTests
     }
 
     [Fact]
+    public void a_speaker_is_never_handed_markdown()
+    {
+        Assert.Equal(
+            "Sorry, there is no room called FAR-101.\nTry QUA-G01 instead.",
+            Skill.ForSpeech("Sorry, there is no room called **FAR-101**.\n- Try `QUA-G01` instead."));
+    }
+
+    [Fact]
     public async Task a_bare_yes_is_the_answer_to_what_it_just_asked()
     {
         // Nobody says "pregunta sí" to confirm a booking. A bare yes arrives as AMAZON.YesIntent,
