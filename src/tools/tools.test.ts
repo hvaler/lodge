@@ -478,6 +478,16 @@ describe('campus.book_room', () => {
     ).rejects.toThrow(/ya ha pasado/);
   });
 
+  it('refuses a supervised lab and a shut building before asking, not after the yes', async () => {
+    // Found on the phone on 23-09: "resérvame la SCL-101" answered "¿Reservo SCL-101…?" for a
+    // supervised lab, in a building that had shut twenty minutes earlier.
+    expect(await call('campus.book_room', { room: 'SCL-101' })).toBe(
+      'SCL-101 no se puede reservar a las 16:30: o el edificio está cerrado a esa hora o la sala no admite reservas.',
+    );
+    // Santa Clara closes at 20:00.
+    expect(await call('campus.book_room', { room: 'SCL-001', at: '19:30' })).toMatch(/^SCL-001 no se puede reservar/);
+  });
+
   it('refuses a supervised lab, however empty', async () => {
     expect(await call('campus.book_room', { room: 'SCL-101', confirmed: true })).toContain('supervisada');
   });

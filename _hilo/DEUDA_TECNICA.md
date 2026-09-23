@@ -279,7 +279,11 @@ verdad: un buzón de recurso de Exchange rechaza el conflicto él mismo, y ese e
 adaptador de producción usaría. Para la demostración, sobre datos ficticios y con una persona
 reservando, se acepta y se dice.
 
-### 🟢 BAJO · La primera vuelta de `campus.book_room` no mira el horario del edificio (23-09)
+### ✅ ARREGLADO (23-09) · BAJO · La primera vuelta de `campus.book_room` no mira el horario del edificio
+
+> **Cerrado el mismo día**, al verlo en el móvil con un laboratorio supervisado en un edificio ya
+> cerrado. Sin enmienda: `findFreeRooms` ya excluye justo esas salas, así que la primera vuelta
+> comprueba que la sala esté entre las libres de esa franja antes de preguntar.
 
 La primera llamada valida que la sala existe y que nadie la ocupa; que el edificio esté abierto solo
 lo comprueba `bookRoom` en la segunda. Así que a las 19:30 en Santa Clara se pregunta «¿la reservo?»

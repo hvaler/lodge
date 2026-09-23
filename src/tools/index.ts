@@ -336,6 +336,20 @@ function registerBookRoom(server: McpServer, provider: Provider, resolve: Resolv
           if (busy.length > 0) {
             return say(m.roomTakenUntil(room, timeOf(busy[busy.length - 1]!.end, provider)).trim());
           }
+
+          // Nothing booked there, and it may still not be holdable: a supervised lab, or a building
+          // that is shut for part of it. The interface has no "could this be booked?", but it has
+          // something that already answers it: `findFreeRooms` leaves out exactly those rooms. So a
+          // room with an empty diary that is not among the free ones is refused here, before the
+          // question, instead of after somebody has said yes.
+          const free = await provider.findFreeRooms!(ctx, {
+            window: { start, end: new Date(start.getTime() + minutes * 60_000) },
+            building: target.building,
+          });
+          if (!free.some((candidate) => candidate.id === room)) {
+            return say(m.notBookable(room, timeOf(start, provider)));
+          }
+
           return say(m.confirmBooking(room, timeOf(start, provider), minutes));
         }
 
