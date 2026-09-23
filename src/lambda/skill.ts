@@ -35,6 +35,9 @@ function lodgeUrl(): string {
 }
 
 const SKILL_ID = process.env['LODGE_SKILL_ID'];
+
+const YES_INTENT = 'AMAZON.YesIntent';
+const NO_INTENT = 'AMAZON.NoIntent';
 const SUBJECT = process.env['LODGE_SKILL_SUBJECT'] ?? 'est-0001';
 
 /**
@@ -55,14 +58,16 @@ const PINNED = process.env['LODGE_SKILL_INSTITUTION'];
 const SPEECH = {
   es: {
     welcome:
-      'Soy la conserjería. Puedes preguntarme por un aula libre, por tu horario, por un plazo o ' +
-      'avisar de una avería. ¿Qué necesitas?',
+      'Soy la conserjería. Puedes preguntarme por un aula libre, reservar una sala, tu horario, ' +
+      'un plazo o avisar de una avería. ¿Qué necesitas?',
     help: 'Pregúntame por ejemplo qué aula está libre ahora en Mendizábal, o qué tienes mañana.',
     filler: 'Un momento, lo miro.',
     bye: 'Hasta luego.',
     more: '¿Algo más?',
     broken: 'No he podido consultarlo ahora mismo. Inténtalo otra vez en un momento.',
     notOurs: 'Esta conserjería no responde a esa aplicación.',
+    yes: 'sí',
+    no: 'no',
   },
   en: {
     welcome:
@@ -74,6 +79,8 @@ const SPEECH = {
     more: 'Anything else?',
     broken: 'I could not look that up just now. Try again in a moment.',
     notOurs: 'This lodge does not answer that application.',
+    yes: 'yes',
+    no: 'no',
   },
 } as const;
 
@@ -128,13 +135,19 @@ export function createSkill(options: SkillOptions) {
       }
       if (name === 'AMAZON.HelpIntent') return speak(says.help, { reprompt: says.help });
 
-      const question = questionIn(envelope);
-      if (name !== ASK_INTENT || !question) return speak(says.help, { reprompt: says.help });
+      // A bare "sí" or "no" arrives as Amazon's own intent, not as a question: the model has no
+      // carrier phrase in it to match. It only means something as the answer to what Lodge just
+      // asked — "¿reservo la FAR-101?" — so with nothing asked yet it gets the help, not a turn.
+      const history = historyIn(envelope);
+      const answer = name === YES_INTENT ? says.yes : name === NO_INTENT ? says.no : null;
+      const question = answer ?? (name === ASK_INTENT ? questionIn(envelope) : null);
+      if (!question || (answer && history.length === 0)) {
+        return speak(says.help, { reprompt: says.help });
+      }
 
       // The filler goes out before the work starts, not after: its whole job is to fill the gap.
       await (options.progressive ?? saySomethingFirst)(envelope, says.filler);
 
-      const history = historyIn(envelope);
       const answered = await options.ask({
         institution: slug,
         utterance: question,

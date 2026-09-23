@@ -234,6 +234,41 @@ describe('the conversation between turns', () => {
     ]);
   });
 
+  it('takes a bare "sí" as the answer to what it just asked', async () => {
+    // Nobody says "pregunta sí" to confirm a booking. A bare yes arrives as AMAZON.YesIntent, with
+    // no slot, and has to reach the model as "sí" with the question it answers in front of it.
+    const first = await skillWith(async () => ({ said: '¿Reservo FAR-101 a las 20:30?' }))(
+      asking('resérvame la FAR-101 a las ocho y media'),
+    );
+    const bare = (name: string): AlexaEnvelope =>
+      envelope(
+        { type: 'IntentRequest', requestId: 'r-3', locale: 'es-ES', intent: { name } },
+        { session: { attributes: first.sessionAttributes ?? {} } },
+      );
+
+    const seen: { utterance: string; history: readonly unknown[] }[] = [];
+    const skill = skillWith(async (r) => {
+      seen.push(r);
+      return { said: 'Hecho.' };
+    });
+    await skill(bare('AMAZON.YesIntent'));
+    await skill(bare('AMAZON.NoIntent'));
+
+    expect(seen.map((r) => r.utterance)).toEqual(['sí', 'no']);
+    expect(seen[0]?.history).toHaveLength(2);
+  });
+
+  it('gives the help for a bare "sí" when nothing has been asked yet', async () => {
+    const seen: string[] = [];
+    const answered = await skillWith(async (r) => {
+      seen.push(r.utterance);
+      return { said: 'no debería llegar' };
+    })(envelope({ type: 'IntentRequest', requestId: 'r-4', locale: 'es-ES', intent: { name: 'AMAZON.YesIntent' } }));
+
+    expect(seen).toEqual([]);
+    expect(answered.response.outputSpeech?.text).toMatch(/^Pregúntame/);
+  });
+
   it('keeps the session small, because it is not a database', async () => {
     let carried: Record<string, unknown> | undefined;
     for (let turn = 0; turn < 6; turn++) {

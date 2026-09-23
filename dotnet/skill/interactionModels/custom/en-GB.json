@@ -1,7 +1,7 @@
 {
   "interactionModel": {
     "languageModel": {
-      "invocationName": "campus lodge",
+      "invocationName": "campus lodge dot net",
       "intents": [
         {
           "name": "PreguntarAlCampusIntent",

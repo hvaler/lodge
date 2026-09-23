@@ -17,8 +17,8 @@ against the very same MCP server everything else talks to. Say that plainly wher
 
 ### One skill, two languages — and that is the point
 
-**There is no second skill.** A skill carries several locales, and the language it is spoken to
-decides which institution it reaches:
+**Language does not need a second skill.** A skill carries several locales, and the language it is
+spoken to decides which institution it reaches:
 
 | Spoken in | Reaches | Publishes |
 | :-- | :-- | --: |
@@ -32,6 +32,19 @@ device inherits that without a line of code, because the catalogue is derived ei
 
 `LODGE_SKILL_INSTITUTION` pins every language to one institution, for a deployment that serves only
 its own.
+
+### The one second skill there is: the same model, answered in C#
+
+[`dotnet/skill/`](../dotnet/skill) holds a copy of this model under another invocation name —
+**conserjería punto net** and **campus lodge dot net** — pointed at the C# backend,
+`Lodge-AlexaSkill-dotnet` ([`dotnet/`](../dotnet)). The model is identical on purpose; only the
+invocation name differs, so both can live on one account and be asked in the same room: *«abre la
+conserjería»* is answered by TypeScript, *«abre conserjería punto net»* by C#. Swapping the ARN on a
+single skill proves the same thing, but not out loud.
+
+A bare *«sí»* or *«no»* confirms or declines what the skill just asked (a booking, a fault):
+both models carry `AMAZON.YesIntent` and `AMAZON.NoIntent`, and both backends pass them to the
+model as the answer to its own question. With nothing asked yet, they get the help.
 
 ---
 

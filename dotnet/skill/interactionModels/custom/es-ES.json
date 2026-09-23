@@ -1,7 +1,7 @@
 {
   "interactionModel": {
     "languageModel": {
-      "invocationName": "campus lodge",
+      "invocationName": "conserjería punto net",
       "intents": [
         {
           "name": "PreguntarAlCampusIntent",
@@ -12,12 +12,12 @@
             }
           ],
           "samples": [
-            "ask {pregunta}",
-            "about {pregunta}",
-            "tell me {pregunta}",
-            "I want to know {pregunta}",
-            "I need to know {pregunta}",
-            "find out {pregunta}"
+            "pregunta {pregunta}",
+            "pregúntale {pregunta}",
+            "dime {pregunta}",
+            "quiero saber {pregunta}",
+            "necesito saber {pregunta}",
+            "consulta {pregunta}"
           ]
         },
         { "name": "AMAZON.HelpIntent", "samples": [] },

@@ -242,6 +242,43 @@ public sealed class SkillTests
     }
 
     [Fact]
+    public async Task a_bare_yes_is_the_answer_to_what_it_just_asked()
+    {
+        // Nobody says "pregunta sí" to confirm a booking. A bare yes arrives as AMAZON.YesIntent,
+        // with no slot, and reaches the model as "sí" with its own question in front of it.
+        var token = TestContext.Current.CancellationToken;
+        var first = await new Skill((_, _, _, _) => Task.FromResult("¿Reservo FAR-101 a las 20:30?"))
+            .AnswerAsync(Asking("resérvame la FAR-101 a las ocho y media"), token);
+
+        var seen = new List<(string Utterance, int Turns)>();
+        var skill = new Skill((_, utterance, history, _) =>
+        {
+            seen.Add((utterance, history.Count));
+            return Task.FromResult("Hecho.");
+        });
+
+        foreach (var name in new[] { "AMAZON.YesIntent", "AMAZON.NoIntent" })
+        {
+            var bare = BuiltIn(name);
+            bare.Session = new Session { Attributes = first.SessionAttributes };
+            await skill.AnswerAsync(bare, token);
+        }
+
+        Assert.Equal([("sí", 2), ("no", 2)], seen);
+    }
+
+    [Fact]
+    public async Task a_bare_yes_with_nothing_asked_gets_the_help()
+    {
+        var reached = false;
+        var answered = await new Skill((_, _, _, _) => { reached = true; return Task.FromResult("no"); })
+            .AnswerAsync(BuiltIn("AMAZON.YesIntent"), TestContext.Current.CancellationToken);
+
+        Assert.False(reached);
+        Assert.Equal(Speech.Spanish.Help, Said(answered));
+    }
+
+    [Fact]
     public async Task the_conversation_survives_the_json_Lambda_actually_puts_it_through()
     {
         // The tests above hand the session straight back as .NET objects. Lambda does not: it

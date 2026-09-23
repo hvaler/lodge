@@ -142,8 +142,18 @@ public sealed class Skill
             return Ask(says.Help, says.Help);
         }
 
-        var question = QuestionIn(intent);
-        if (name != AskIntent || question is null)
+        // A bare "sí" or "no" arrives as Amazon's own intent, with no carrier phrase to match. It
+        // only means something as the answer to what Lodge just asked, so with nothing asked yet
+        // it gets the help rather than a turn of its own.
+        var history = HistoryIn(envelope);
+        var answer = name switch
+        {
+            "AMAZON.YesIntent" => says.Yes,
+            "AMAZON.NoIntent" => says.No,
+            _ => null,
+        };
+        var question = answer ?? (name == AskIntent ? QuestionIn(intent) : null);
+        if (question is null || (answer is not null && history.Count == 0))
         {
             return Ask(says.Help, says.Help);
         }
@@ -154,7 +164,6 @@ public sealed class Skill
             await _progressive(envelope, says.Filler, cancellationToken).ConfigureAwait(false);
         }
 
-        var history = HistoryIn(envelope);
         var said = await _ask(slug, question, history, cancellationToken).ConfigureAwait(false);
 
         // Carried in the session so a second turn can act on the first — which is what makes filing

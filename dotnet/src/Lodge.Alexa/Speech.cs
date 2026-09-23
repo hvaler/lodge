@@ -16,18 +16,22 @@ public sealed record Speech(
     string Bye,
     string More,
     string Broken,
-    string NotOurs)
+    string NotOurs,
+    string Yes,
+    string No)
 {
     /// <summary>Spanish, which reaches the University of San Telmo.</summary>
     public static Speech Spanish { get; } = new(
-        Welcome: "Soy la conserjería. Puedes preguntarme por un aula libre, por tu horario, por un "
-            + "plazo o avisar de una avería. ¿Qué necesitas?",
+        Welcome: "Soy la conserjería. Puedes preguntarme por un aula libre, reservar una sala, tu "
+            + "horario, un plazo o avisar de una avería. ¿Qué necesitas?",
         Help: "Pregúntame por ejemplo qué aula está libre ahora en Mendizábal, o qué tienes mañana.",
         Filler: "Un momento, lo miro.",
         Bye: "Hasta luego.",
         More: "¿Algo más?",
         Broken: "No he podido consultarlo ahora mismo. Inténtalo otra vez en un momento.",
-        NotOurs: "Esta conserjería no responde a esa aplicación.");
+        NotOurs: "Esta conserjería no responde a esa aplicación.",
+        Yes: "sí",
+        No: "no");
 
     /// <summary>English, which reaches Carrigmore College.</summary>
     public static Speech English { get; } = new(
@@ -38,7 +42,9 @@ public sealed record Speech(
         Bye: "Goodbye.",
         More: "Anything else?",
         Broken: "I could not look that up just now. Try again in a moment.",
-        NotOurs: "This lodge does not answer that application.");
+        NotOurs: "This lodge does not answer that application.",
+        Yes: "yes",
+        No: "no");
 
     /// <summary>The one to use for a language, as <see cref="Campus.Institutions.LanguageOf"/> reports it.</summary>
     public static Speech For(string language) => language == "es" ? Spanish : English;
