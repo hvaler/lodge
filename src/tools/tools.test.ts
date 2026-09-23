@@ -351,7 +351,7 @@ describe('campus.room_schedule', () => {
     expect(answer).toMatch(/^FAR-101 está libre (todo el día|hasta las \d{2}:\d{2})\.$/);
   });
 
-  it('counts a booking as taken, and names its purpose', async () => {
+  it('counts a booking as taken, and names its purpose only to whoever booked it', async () => {
     await connect(
       createSyntheticProvider(
         new InMemoryIssueStore(),
@@ -368,6 +368,12 @@ describe('campus.room_schedule', () => {
       ),
     );
 
+    // A stranger learns it is taken, and nothing about what for: the purpose is free text.
+    expect(await call('campus.room_schedule', { room: 'FAR-101' })).toMatch(
+      /^FAR-101 está ocupada hasta las 18:00\. /,
+    );
+
+    principal = 'doc-0007';
     expect(await call('campus.room_schedule', { room: 'FAR-101' })).toMatch(
       /^FAR-101 está ocupada hasta las 18:00, con Tribunal de tesis\. /,
     );

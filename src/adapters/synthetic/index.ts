@@ -141,7 +141,7 @@ export class SyntheticProvider implements Provider {
    * departmental meeting is exactly as unavailable as one with a lecture in it, and an answer that
    * only knew about one of them would send somebody to a door that does not open.
    */
-  async roomSchedule(_ctx: RequestContext, query: RoomScheduleQuery): Promise<readonly Busy[]> {
+  async roomSchedule(ctx: RequestContext, query: RoomScheduleQuery): Promise<readonly Busy[]> {
     if (query.window.end <= query.window.start) {
       throw new InvalidRequestError('The time window ends before it starts.');
     }
@@ -152,9 +152,10 @@ export class SyntheticProvider implements Provider {
       .map((b) => ({
         start: b.start,
         end: b.end,
-        // Only when the person who booked it said what for. "Busy" and "busy with the credit
-        // transfer committee" are different claims, and only one of them is on record.
-        ...(b.purpose ? { label: b.purpose } : {}),
+        // The purpose only to whoever booked it. It is free text somebody typed, and "tutoring
+        // with <a student's name>" read aloud to a stranger in a corridor is a leak. To anybody
+        // else the room is just taken — which is all they asked.
+        ...(b.purpose && ctx.principal?.subject === b.bookedBy ? { label: b.purpose } : {}),
       }));
 
     return [...busyPeriodsFor(query.roomId, query.window), ...booked].sort(
