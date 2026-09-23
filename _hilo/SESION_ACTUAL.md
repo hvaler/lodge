@@ -4,10 +4,10 @@
 
 | Campo | Valor |
 |-------|-------|
-| **Fecha** | 2026-09-22 |
+| **Fecha** | 2026-09-23 |
 | **Hito activo** | M5 — el código está hecho; falta lo humano |
-| **Tests** | 459 en TypeScript · 33 en .NET · los dos CI verdes |
-| **Desplegado** | 22-09, eu-west-1: servidor, página pública y **dos puentes a Alexa** (TS y .NET) |
+| **Tests** | 480 en TypeScript (+20 CDK) · 35 en .NET |
+| **Desplegado** | 23-09, eu-west-1: servidor con **reservas** (tabla Bookings), página y dos puentes a Alexa |
 
 ---
 
@@ -15,7 +15,7 @@
 
 ```
 M0  ██████████  repositorio · San Telmo · Bedrock
-M1  ██████████  núcleo · interfaz CONGELADA · adaptador sintético · 6 herramientas · servidor
+M1  ██████████  núcleo · interfaz CONGELADA (3 enmiendas) · adaptador sintético · 8 herramientas
 M2  ██████████  iCalendar · LDAP · inventario · contenedor · UC-07
 M3  ██████████  localización · tarjetas · orquestador · demostrador web
 M4  ██████████  pila CDK · OAuth 2.1 · OpenTelemetry · desplegado y medido
@@ -24,6 +24,28 @@ M6  ░░░░░░░░░░  envío en Devpost — 21 de octubre
 ```
 
 ---
+
+## Lo que se hizo el 23-09
+
+**Varias sedes, «¿está libre esa sala?» y reservarla** — tercera enmienda de la interfaz (ADR-020),
+por el procedimiento de siempre. San Telmo tiene ahora dos sedes (Campus Centro y Campus del Mar),
+`campus.find_room` acepta `site`, y hay dos herramientas nuevas:
+
+- `campus.room_schedule` — el diario de una sala para el resto del día: libre hasta, u ocupada
+  hasta y qué hueco queda después.
+- `campus.book_room` — en dos vueltas como el parte: pregunta, y solo reserva con `confirmed`.
+  Niega sala ocupada, edificio cerrado, laboratorio supervisado y a quien no se identifica.
+
+Las reservas van detrás de `BookingStore`: memoria en el contenedor, **DynamoDB en la nube**
+(segunda tabla, enmienda ADR-014). Verificado en vivo: se reserva, y la invocación siguiente niega
+la misma franja. **La prueba dejó `RES-2026-0004` en la tabla** (FAR-102, 20:00 del 23-09).
+
+Lo que encontraron los tests y la documentación: «ocupada hasta las 16:50… libre **hasta**» (quería
+decir desde); el diario miraba 24 h en vez del resto del día; y, al escribir el anexo de datos
+personales, que **el motivo de una reserva se leía a cualquiera** — ahora solo a quien reservó.
+
+Comillas: propuesta con **fase 4 · salas de reuniones** (Exchange vía Graph; depende de la fase 2),
+sedes y «¿está libre esta sala?» en la fase 1, diapositivas y anexo al día.
 
 ## Lo que se hizo el 22-09
 
@@ -126,6 +148,7 @@ modelo, porque lo único que demuestra que cambia de respuesta es verlo.
 
 | Fecha | Trabajo principal |
 |-------|-------------------|
+| 2026-09-23 | Sedes, diario de sala y reservas (ADR-020); tabla Bookings; privacidad del motivo; fase 4 de Comillas |
 | 2026-09-22 | Puente a un Echo real desplegado y verificado; IdP de demostración con PKCE; el principal de Alexa (L-003); guion re-presupuestado a 2:47 |
 | 2026-09-20 | Carrigmore servido también en la nube (`/mcp/carrigmore`); los README de carpeta y la página, a inglés |
 | 2026-09-17 | Destinos de un parte (ADR-018); dos enmiendas a la interfaz congelada (ADR-017, ADR-019); aulas en línea; barrido del repositorio público |
