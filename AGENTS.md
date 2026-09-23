@@ -158,7 +158,7 @@ Este archivo guía a Codex (Codex.ai/code) cuando trabaja con código en este re
 ```
 Lodge/
 ├── RUNBOOK.md       ← documento vivo        ├── src/     ← CÓDIGO FUENTE (TypeScript)
-├── AGENTS.md        ← este archivo          ├── docs/    ← lo que se lee (use-cases.md, architecture/…)
+├── AGENTS.md        ← este archivo          ├── docs/    ← lo que se lee (use-cases.md, integrating.md…)
 ├── _hilo/           ← memoria del proyecto  └── ops/     ← lo que se ejecuta (environment/, cicd/, testing/)
 ├── _patron/         ← base de conocimiento
 └── .Codex/         ← skills, agents, hooks y reglas

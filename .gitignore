@@ -221,7 +221,6 @@ docs/management/requirements/
 # que aqui no existen (diagramas de /hv:analizar, coverlet.runsettings, runbooks de pipeline...).
 # Lo que Lodge tiene que decir de su arquitectura, sus pruebas y su CI ya esta en README.md,
 # docs/adopting.md, docs/use-cases.md y ops/environment/README.md.
-docs/architecture/
 docs/support/
 docs/testing/
 ops/cicd/

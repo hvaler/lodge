@@ -158,15 +158,15 @@ Este archivo guía a Claude Code (claude.ai/code) cuando trabaja con código en 
 ```
 Lodge/
 ├── RUNBOOK.md       ← documento vivo        ├── src/     ← CÓDIGO FUENTE (TypeScript)
-├── CLAUDE.md        ← este archivo          ├── docs/    ← lo que se lee (use-cases.md, architecture/…)
+├── CLAUDE.md        ← este archivo          ├── docs/    ← lo que se lee (use-cases.md, integrating.md…)
 ├── _hilo/           ← memoria del proyecto  └── ops/     ← lo que se ejecuta (environment/, cicd/, testing/)
 ├── _patron/         ← base de conocimiento
 └── .claude/         ← skills, agents, hooks y reglas
 ```
 
 ```
-Cliente MCP (Alexa+ / orquestador propio / cualquier agente)
-        ↓
+skill clásica de Alexa · demostración web · cliente .NET · cualquier agente
+        ↓        (Alexa+ NO: su registro está limitado a socios seleccionados)
 Servidor MCP  ──  Streamable HTTP, sin estado (opción de transporte)
         ↓
 Interfaz de proveedor  ──  capacidades + idioma   [CONGELADA 16-09-2026]
