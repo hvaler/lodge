@@ -239,6 +239,7 @@ function registerRoomSchedule(server: McpServer, provider: Provider, resolve: Re
       const endOfDay = instantAt(localParts(ctx.now, zone).isoDate, '23:59', zone);
 
       try {
+        room = await roomOnRecord(provider, ctx, room);
         const busy = await provider.roomSchedule!(ctx, {
           roomId: room,
           window: { start: ctx.now, end: endOfDay },
@@ -309,6 +310,7 @@ function registerBookRoom(server: McpServer, provider: Provider, resolve: Resolv
       const minutes = forMinutes ?? 60;
 
       try {
+        room = await roomOnRecord(provider, ctx, room);
         const start = at ? atToday(at, ctx.now, provider) : ctx.now;
         // "At five" said at six means five today, which has gone. Said out loud it is easy to
         // mean tomorrow, but guessing which day somebody meant is exactly what UC-03 forbids.
@@ -347,6 +349,28 @@ function registerBookRoom(server: McpServer, provider: Provider, resolve: Resolv
       }
     },
   );
+}
+
+/**
+ * The room id as the inventory spells it, for one that arrived spoken.
+ *
+ * A voice never carries punctuation: "FAR-101" said aloud comes back as "FAR101" or "far 101",
+ * and refusing it as a room that does not exist is technically true and useless. So an id that
+ * is not on record as said is compared with the inventory ignoring case, spaces and hyphens —
+ * against the institution's own ids, not a guessed pattern, because "how many letters is a
+ * building code" is the institution's business (Carrigmore's rooms are `QUA-G01`).
+ *
+ * Anything that still matches nothing is returned untouched, so the adapter refuses it by the
+ * name the person used. Only a single exact match is taken: this never picks between two.
+ */
+async function roomOnRecord(provider: Provider, ctx: RequestContext, said: string): Promise<string> {
+  if (!provider.listRooms) return said;
+  const rooms = await provider.listRooms(ctx);
+  if (rooms.some((room) => room.id === said)) return said;
+
+  const key = (id: string): string => id.replace(/[^\p{L}\p{N}]/gu, '').toUpperCase();
+  const matches = rooms.filter((room) => key(room.id) === key(said));
+  return matches.length === 1 ? matches[0]!.id : said;
 }
 
 /** How late a start time may be and still mean "now". */
@@ -470,6 +494,7 @@ function registerWayfind(server: McpServer, provider: Provider, resolve: Resolve
       const m = wordsFor(provider);
 
       try {
+        to = await roomOnRecord(provider, ctx, to);
         const route = await provider.wayfind!(ctx, { to, ...(from ? { from } : {}) });
         if (!route) return say(m.unknownPlace(to));
 
@@ -538,6 +563,7 @@ function registerReportIssue(server: McpServer, provider: Provider, resolve: Res
         // wastes the person's turn and makes the confirmation look like a formality.
         if (!ctx.principal) return say(m.mustSignIn());
 
+        room = await roomOnRecord(provider, ctx, room);
         const target = await provider.getRoom!(ctx, room);
         if (!target) return say(m.noSuchRoom(room));
 

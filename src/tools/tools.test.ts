@@ -483,6 +483,33 @@ describe('campus.book_room', () => {
   });
 });
 
+describe('a room id that arrived by voice', () => {
+  it('finds FAR-101 said as FAR101, far 101 or Far-101', async () => {
+    // Alexa hands the model what it heard, and speech has no hyphens. Refusing "FAR101" as a room
+    // that does not exist is true and useless.
+    for (const said of ['FAR101', 'far 101', 'Far-101']) {
+      expect(await call('campus.room_schedule', { room: said })).toMatch(/^FAR-101 está /);
+    }
+  });
+
+  it('does the same for a booking, a fault and directions', async () => {
+    principal = 'doc-0007';
+    await connect(createSyntheticProvider(new InMemoryIssueStore(), new InMemoryBookingStore([])));
+
+    expect(await call('campus.book_room', { room: 'far101', at: '17:00' })).toBe(
+      '¿Reservo FAR-101 a las 17:00 durante 60 minutos?',
+    );
+    expect(await call('campus.report_issue', { room: 'men 203', equipment: 'proyector' })).toBe(
+      '¿Abro un aviso por proyector en MEN-203?',
+    );
+    expect(await call('campus.wayfind', { to: 'FAR104' })).not.toMatch(/^No conozco/);
+  });
+
+  it('still refuses a room that is not there, by the name that was said', async () => {
+    expect(await call('campus.room_schedule', { room: 'FAR999' })).toContain('FAR999');
+  });
+});
+
 describe('campus.find_room across sites', () => {
   it('keeps the answer to one site when asked', async () => {
     const answer = await call('campus.find_room', { site: 'mar' });
