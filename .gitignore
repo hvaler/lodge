@@ -231,3 +231,6 @@ ops/testing/
 # tiene el proyecto que contar.
 
 ecosystem.config.example.json
+
+# Ficheros de trabajo del navegador de Playwright. Se generan al renderizar el icono.
+.playwright-mcp/
