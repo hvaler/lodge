@@ -355,6 +355,9 @@ export class SyntheticProvider implements Provider {
 }
 
 /** Convenience for the server and the tests. */
-export function createSyntheticProvider(issues?: IssueStore): SyntheticProvider {
-  return new SyntheticProvider(issues);
+export function createSyntheticProvider(
+  issues?: IssueStore,
+  bookings?: BookingStore,
+): SyntheticProvider {
+  return new SyntheticProvider(issues, bookings);
 }

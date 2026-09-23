@@ -155,11 +155,12 @@ function registerFindRoom(server: McpServer, provider: Provider, resolve: Resolv
       description: 'Find a room that is free right now, or for the next while.',
       inputSchema: z.object({
         building: z.string().optional().describe('Building code, e.g. MEN. Omit to search the whole campus.'),
+        site: z.string().optional().describe('Site id, for an institution with more than one campus. Omit to search them all.'),
         forMinutes: z.number().int().min(15).max(480).optional().describe('How long it is needed for. Defaults to an hour.'),
         minCapacity: z.number().int().min(1).optional().describe('Minimum seats.'),
       }),
     },
-    async ({ building, forMinutes, minCapacity }, toolCtx): Promise<CallToolResult> => {
+    async ({ building, site, forMinutes, minCapacity }, toolCtx): Promise<CallToolResult> => {
       const ctx = resolve(toolCtx);
       const m = wordsFor(provider);
       const window = {
@@ -171,6 +172,7 @@ function registerFindRoom(server: McpServer, provider: Provider, resolve: Resolv
         const rooms = await provider.findFreeRooms!(ctx, {
           window,
           ...(building ? { building } : {}),
+          ...(site ? { site } : {}),
           ...(minCapacity !== undefined ? { minCapacity } : {}),
         });
 
@@ -189,7 +191,9 @@ function registerFindRoom(server: McpServer, provider: Provider, resolve: Resolv
         if (!clientShowsCards(server, toolCtx)) return spokenAnswer;
 
         const all = await provider.listRooms!(ctx);
-        const inScope = building ? all.filter((room) => room.building === building) : all;
+        const inScope = all.filter(
+          (room) => (!building || room.building === building) && (!site || room.site === site),
+        );
         const freeIds = new Set(rooms.map((room) => room.id));
         const until = timeOf(window.end, provider);
 
@@ -231,8 +235,8 @@ function registerRoomSchedule(server: McpServer, provider: Provider, resolve: Re
 
       // The rest of today, in the institution's own clock. Not the next twenty-four hours: "free
       // until nine tomorrow morning" is true and useless to somebody standing in a corridor.
-      const endOfDay = new Date(ctx.now);
-      endOfDay.setUTCHours(endOfDay.getUTCHours() + 24);
+      const zone = provider.descriptor.timeZone;
+      const endOfDay = instantAt(localParts(ctx.now, zone).isoDate, '23:59', zone);
 
       try {
         const busy = await provider.roomSchedule!(ctx, {
@@ -255,11 +259,12 @@ function registerRoomSchedule(server: McpServer, provider: Provider, resolve: Re
           if (slot.start <= freeFrom && slot.end > freeFrom) freeFrom = slot.end;
         }
 
-        const taken = m.roomTakenUntil(room, timeOf(current.end, provider), current.label);
+        if (freeFrom >= endOfDay) return say(m.roomTakenAllDay(room));
+
+        const next = busy.find((slot) => slot.start >= freeFrom);
         return say(
-          freeFrom >= endOfDay
-            ? m.roomTakenAllDay(room)
-            : taken + m.roomFreeUntil(room, timeOf(freeFrom, provider)),
+          m.roomTakenUntil(room, timeOf(freeFrom, provider), current.label)
+            + (next ? m.thenFreeUntil(timeOf(next.start, provider)) : m.thenFreeAllDay()),
         );
       } catch (error) {
         return spoken(error, m);

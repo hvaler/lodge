@@ -13,6 +13,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   InvalidRequestError,
+  NotFoundError,
   UnauthenticatedError,
   assertProviderCoherent,
   toolCatalogue,
@@ -219,6 +220,48 @@ describe('finding a free room at Carrigmore', () => {
     });
 
     expect(room).not.toHaveProperty('supervised');
+  });
+});
+
+describe('one room’s diary at Carrigmore', () => {
+  const tuesday = {
+    start: instantAt('2026-10-06', '08:00', DUBLIN),
+    end: instantAt('2026-10-06', '23:59', DUBLIN),
+  };
+
+  it('reads what the feed says is teaching there, labelled with the course', async () => {
+    const provider = await createStandardsProvider(CARRIGMORE, directory);
+    const busy = await provider.roomSchedule!(ctx(), { roomId: 'QUA-201', window: tuesday });
+
+    // Tuesday 14:00–15:50 is CS201 in QUA-201.
+    expect(busy).toContainEqual(
+      expect.objectContaining({ start: instantAt('2026-10-06', '14:00', DUBLIN), label: 'CS201' }),
+    );
+  });
+
+  it('is empty for a room nothing is scheduled in', async () => {
+    const provider = await createStandardsProvider(CARRIGMORE, directory);
+    const night = {
+      start: instantAt('2026-10-06', '22:00', DUBLIN),
+      end: instantAt('2026-10-06', '23:00', DUBLIN),
+    };
+
+    expect(await provider.roomSchedule!(ctx(), { roomId: 'QUA-201', window: night })).toEqual([]);
+  });
+
+  it('refuses a room it has never heard of rather than calling it free', async () => {
+    const provider = await createStandardsProvider(CARRIGMORE, directory);
+
+    await expect(
+      provider.roomSchedule!(ctx(), { roomId: 'QUA-999', window: tuesday }),
+    ).rejects.toThrow(NotFoundError);
+  });
+
+  it('does not offer to book: a timetable feed is not a room diary', async () => {
+    const provider = await createStandardsProvider(CARRIGMORE, directory);
+
+    expect(provider.descriptor.capabilities).not.toContain('room-booking');
+    expect(provider.bookRoom).toBeUndefined();
   });
 });
 

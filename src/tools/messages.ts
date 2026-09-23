@@ -54,6 +54,9 @@ export interface Messages {
   roomFreeUntil(room: string, until: string): string;
   roomTakenUntil(room: string, until: string, by?: string): string;
   roomTakenAllDay(room: string): string;
+  /** What follows a taken slot: the gap, or the rest of the day. */
+  thenFreeUntil(until: string): string;
+  thenFreeAllDay(): string;
   /** Booking, in two turns like a fault report. */
   confirmBooking(room: string, at: string, minutes: number): string;
   booked(room: string, at: string, reference: string): string;
@@ -126,6 +129,8 @@ const english: Messages = {
   roomTakenUntil: (room, until, by) =>
     by ? `${room} is taken until ${until}, with ${by}. ` : `${room} is taken until ${until}. `,
   roomTakenAllDay: (room) => `${room} is taken for the rest of the day.`,
+  thenFreeUntil: (until) => `After that it is free until ${until}.`,
+  thenFreeAllDay: () => 'After that it is free for the rest of the day.',
   confirmBooking: (room, at, minutes) => `Shall I hold ${room} at ${at} for ${minutes} minutes?`,
   booked: (room, at, reference) => `Done. ${room} is yours at ${at}. The reference is ${reference}.`,
   faultFiled: (reference, equipment, room) =>
@@ -202,6 +207,8 @@ const spanish: Messages = {
   roomTakenUntil: (room, until, by) =>
     by ? `${room} está ocupada hasta las ${until}, con ${by}. ` : `${room} está ocupada hasta las ${until}. `,
   roomTakenAllDay: (room) => `${room} está ocupada el resto del día.`,
+  thenFreeUntil: (until) => `Después queda libre hasta las ${until}.`,
+  thenFreeAllDay: () => 'Después queda libre el resto del día.',
   confirmBooking: (room, at, minutes) => `¿Reservo ${room} a las ${at} durante ${minutes} minutos?`,
   booked: (room, at, reference) => `Hecho. ${room} es tuya a las ${at}. La referencia es ${reference}.`,
   faultFiled: (reference, equipment, room) =>

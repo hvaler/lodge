@@ -12,6 +12,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { createSyntheticProvider } from '../adapters/synthetic/index.ts';
 import { campusInstant } from '../adapters/synthetic/campus.ts';
+import { InMemoryBookingStore } from '../adapters/synthetic/bookings.ts';
 import { InMemoryIssueStore } from '../adapters/synthetic/issues.ts';
 import type { Provider, RequestContext } from '../provider/index.ts';
 import { registerTools } from './index.ts';
@@ -333,5 +334,134 @@ describe('campus.issue_status', () => {
 
   it('refuses an unauthenticated caller', async () => {
     expect(await call('campus.issue_status')).toMatch(/tienes que identificarte/);
+  });
+});
+
+describe('campus.room_schedule', () => {
+  it('says a named room is taken, by what, and when the gap after it closes', async () => {
+    // MEN-101 has INF-101 at 16:00 and again at 17:00: taken now, then a ten-minute gap.
+    expect(await call('campus.room_schedule', { room: 'MEN-101' })).toBe(
+      'MEN-101 está ocupada hasta las 16:50, con INF-101. Después queda libre hasta las 17:00.',
+    );
+  });
+
+  it('says a free room is free, and until when', async () => {
+    const answer = await call('campus.room_schedule', { room: 'FAR-101' });
+
+    expect(answer).toMatch(/^FAR-101 está libre (todo el día|hasta las \d{2}:\d{2})\.$/);
+  });
+
+  it('counts a booking as taken, and names its purpose', async () => {
+    await connect(
+      createSyntheticProvider(
+        new InMemoryIssueStore(),
+        new InMemoryBookingStore([
+          {
+            reference: 'RES-2026-0001',
+            roomId: 'FAR-101',
+            start: campusInstant('2026-10-06', '16:00'),
+            end: campusInstant('2026-10-06', '18:00'),
+            purpose: 'Tribunal de tesis',
+            bookedBy: 'doc-0007',
+          },
+        ]),
+      ),
+    );
+
+    expect(await call('campus.room_schedule', { room: 'FAR-101' })).toMatch(
+      /^FAR-101 está ocupada hasta las 18:00, con Tribunal de tesis\. /,
+    );
+  });
+
+  it('says it has no such room rather than calling it free', async () => {
+    const answer = await call('campus.room_schedule', { room: 'MEN-999' });
+
+    expect(answer).toContain('MEN-999');
+    expect(answer).not.toContain('libre');
+  });
+});
+
+describe('campus.book_room', () => {
+  beforeEach(async () => {
+    principal = 'doc-0007';
+    // An empty diary, so every "taken" below comes from the timetable or from this test.
+    await connect(createSyntheticProvider(new InMemoryIssueStore(), new InMemoryBookingStore([])));
+  });
+
+  it('asks before holding, and holds nothing while it is asking', async () => {
+    const answer = await call('campus.book_room', { room: 'FAR-101', at: '17:00' });
+
+    expect(answer).toBe('¿Reservo FAR-101 a las 17:00 durante 60 minutos?');
+    expect(await call('campus.room_schedule', { room: 'FAR-101' })).not.toContain('ocupada');
+  });
+
+  it('holds the room once confirmed, and speaks the reference back', async () => {
+    const answer = await call('campus.book_room', {
+      room: 'FAR-101',
+      at: '17:00',
+      purpose: 'Reunión de grupo',
+      confirmed: true,
+    });
+
+    expect(answer).toBe('Hecho. FAR-101 es tuya a las 17:00. La referencia es RES-2026-0004.');
+    expect(await call('campus.room_schedule', { room: 'FAR-101' })).toBe(
+      'FAR-101 está libre hasta las 17:00.',
+    );
+  });
+
+  it('takes a booked room out of the free-room answer', async () => {
+    const free = async (): Promise<string[]> =>
+      (
+        await provider.findFreeRooms!(
+          { principal: null, now: NOW, locale: 'es-ES' },
+          { window: { start: NOW, end: new Date(NOW.getTime() + 3_600_000) }, building: 'FAR' },
+        )
+      ).map((room) => room.id);
+
+    expect(await free()).toContain('FAR-101');
+    await call('campus.book_room', { room: 'FAR-101', confirmed: true });
+
+    expect(await free()).not.toContain('FAR-101');
+  });
+
+  it('says a taken room is taken before asking anything, and refuses it if pressed', async () => {
+    expect(await call('campus.book_room', { room: 'MEN-101', at: '17:00' })).toMatch(
+      /^MEN-101 está ocupada hasta las/,
+    );
+    expect(await call('campus.book_room', { room: 'MEN-101', at: '17:00', confirmed: true })).toContain(
+      'already taken',
+    );
+  });
+
+  it('refuses a building that is shut for part of it', async () => {
+    // Santa Clara closes at 20:00.
+    expect(
+      await call('campus.book_room', { room: 'SCL-001', at: '19:30', confirmed: true }),
+    ).toContain('not open');
+  });
+
+  it('refuses a supervised lab, however empty', async () => {
+    expect(await call('campus.book_room', { room: 'SCL-101', confirmed: true })).toContain('supervised');
+  });
+
+  it('says there is no such room before asking', async () => {
+    expect(await call('campus.book_room', { room: 'MEN-999' })).toBe('No tengo ningún aula llamada MEN-999.');
+  });
+
+  it('will not hold anything for somebody who is not signed in', async () => {
+    principal = null;
+
+    expect(await call('campus.book_room', { room: 'FAR-101', confirmed: true })).toBe(
+      'Para eso tienes que identificarte.',
+    );
+  });
+});
+
+describe('campus.find_room across sites', () => {
+  it('keeps the answer to one site when asked', async () => {
+    const answer = await call('campus.find_room', { site: 'mar' });
+
+    expect(answer).toContain('FAR-');
+    expect(answer).not.toMatch(/MEN-|SCL-/);
   });
 });
