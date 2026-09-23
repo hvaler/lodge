@@ -10,7 +10,7 @@
  * hour demos beautifully and proves nothing.
  */
 
-import type { Session, TimeWindow } from '../../provider/index.ts';
+import type { Busy, Session, TimeWindow } from '../../provider/index.ts';
 import { PROGRAMMES, SEMESTER_1, isHoliday } from './academic.ts';
 import type { Person } from './academic.ts';
 import { ROOMS, campusInstant, campusLocalParts } from './campus.ts';
@@ -231,6 +231,32 @@ export function sessionsForPerson(person: Person, window: TimeWindow): Session[]
 }
 
 /** Ids of rooms with a class overlapping `window`. Anything here is not free. */
+/**
+ * When one room is taken by teaching, over a window.
+ *
+ * The same walk as {@link busyRoomIds} from the other end: that one asks "which rooms are busy at
+ * all", this one asks "when is this room busy". Kept as two functions rather than one general
+ * shape because the callers want different things and a single function returning both would make
+ * every caller filter.
+ */
+export function busyPeriodsFor(roomId: string, window: TimeWindow): Busy[] {
+  const busy: Busy[] = [];
+
+  for (const isoDate of datesIn(window)) {
+    if (!isTeachingDay(isoDate)) continue;
+    const weekday = campusLocalParts(campusInstant(isoDate, '12:00')).weekday;
+    for (const entry of weeklyPattern()) {
+      if (entry.weekday !== weekday || entry.roomId !== roomId) continue;
+      const session = toSession(entry, isoDate);
+      if (session.start < window.end && session.end > window.start) {
+        busy.push({ start: session.start, end: session.end, label: session.courseCode });
+      }
+    }
+  }
+
+  return busy.sort((a, b) => a.start.getTime() - b.start.getTime());
+}
+
 export function busyRoomIds(window: TimeWindow): Set<string> {
   const busy = new Set<string>();
 

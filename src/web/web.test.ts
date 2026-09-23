@@ -92,7 +92,7 @@ describe('the catalogue the page draws', () => {
     const { tools } = (await apiWith([]).catalogues())[0]!;
 
     expect(tools.map((t) => t.name)).toContain('campus.report_issue');
-    expect(tools).toHaveLength(6);
+    expect(tools).toHaveLength(8);
     // Descriptions too: they are what the model chooses between.
     expect(tools[0]?.description).not.toBe('');
   });

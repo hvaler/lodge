@@ -63,14 +63,16 @@ afterEach(async () => {
 });
 
 describe('the catalogue is derived from capabilities', () => {
-  it('publishes all six tools for San Telmo, which can answer everything', async () => {
+  it('publishes all eight tools for San Telmo, which can answer everything', async () => {
     const { tools } = await client.listTools();
 
     expect(tools.map((t) => t.name).sort()).toEqual([
+      'campus.book_room',
       'campus.deadlines',
       'campus.find_room',
       'campus.issue_status',
       'campus.report_issue',
+      'campus.room_schedule',
       'campus.timetable',
       'campus.wayfind',
     ]);
@@ -86,6 +88,7 @@ describe('the catalogue is derived from capabilities', () => {
         capabilities: ['room-inventory', 'room-availability', 'deadlines'],
       },
       findFreeRooms: limited.findFreeRooms.bind(limited),
+      roomSchedule: limited.roomSchedule.bind(limited),
       getRoom: limited.getRoom.bind(limited),
       deadlines: limited.deadlines.bind(limited),
     };
@@ -94,8 +97,15 @@ describe('the catalogue is derived from capabilities', () => {
 
     const names = (await client.listTools()).tools.map((t) => t.name);
 
-    expect(names.sort()).toEqual(['campus.deadlines', 'campus.find_room']);
+    expect(names.sort()).toEqual([
+      'campus.deadlines',
+      'campus.find_room',
+      'campus.room_schedule',
+    ]);
     expect(names).not.toContain('campus.report_issue');
+    // And nothing about booking: it can say a room is free and has nowhere to write that it is
+    // taken, which is the whole difference between reading a calendar and owning one.
+    expect(names).not.toContain('campus.book_room');
   });
 
   it('describes the timetable tool without any parameter for whose it is', async () => {

@@ -19,6 +19,9 @@
 
 import type { Capability, Provider, ProviderDescriptor } from './provider.ts';
 import type {
+  BookRoomQuery,
+  Booking,
+  Busy,
   Deadline,
   DeadlineQuery,
   FreeRoomQuery,
@@ -27,8 +30,10 @@ import type {
   RequestContext,
   Room,
   RoomKind,
+  RoomScheduleQuery,
   Route,
   Session,
+  Site,
   Ticket,
   TimeWindow,
   TimetableQuery,
@@ -47,6 +52,14 @@ export const FROZEN_ON = '2026-09-16';
 /**
  * Amendments since, newest first. Each one was deliberate and is recorded in ADR-006.
  *
+ * - **2026-09-23** — sites, one room diary and `room-booking`, in one amendment because they are
+ *   one change: a university with several campuses is the normal case, "is *that* room free and
+ *   when" is the question somebody asks when they have one in mind, and holding it is what they
+ *   wanted next. `site` and `sites` are optional, so every adapter written before this keeps
+ *   working untouched. `roomSchedule` belongs to `room-availability` rather than to booking —
+ *   reading a calendar and writing to one are different permissions and usually different systems,
+ *   so an institution publishing iCalendar can say when a room is free without pretending it can
+ *   hold it (ADR-020).
  * - **2026-09-17** — `rooms` split into `room-inventory` and `room-availability`. Filing a fault
  *   needs to know what rooms exist; requiring occupancy as well meant an institution that could not
  *   export its timetable could not report a broken projector either (ADR-019).
@@ -54,7 +67,7 @@ export const FROZEN_ON = '2026-09-16';
  *   reached by email can receive a fault report and cannot answer "how is mine going", and the
  *   single capability forced such an institution to publish a tool that could not work (ADR-017).
  */
-export const AMENDED_ON: readonly string[] = ['2026-09-17'];
+export const AMENDED_ON: readonly string[] = ['2026-09-23', '2026-09-17'];
 
 // ── The checks ───────────────────────────────────────────────────────────────
 
@@ -101,8 +114,15 @@ interface FrozenTimeWindow {
 
 type FrozenRoomKind = 'lecture' | 'seminar' | 'lab' | 'computer-lab' | 'study' | 'auditorium';
 
+interface FrozenSite {
+  readonly id: string;
+  readonly name: string;
+  readonly timeZone?: string;
+}
+
 interface FrozenRoom {
   readonly id: string;
+  readonly site?: string;
   readonly building: string;
   readonly floor: number;
   readonly kind: FrozenRoomKind;
@@ -111,9 +131,36 @@ interface FrozenRoom {
 }
 
 interface FrozenFreeRoomQuery {
+  readonly site?: string;
   readonly building?: string;
   readonly window: FrozenTimeWindow;
   readonly minCapacity?: number;
+}
+
+interface FrozenRoomScheduleQuery {
+  readonly roomId: string;
+  readonly window: FrozenTimeWindow;
+}
+
+interface FrozenBusy {
+  readonly start: Date;
+  readonly end: Date;
+  readonly label?: string;
+}
+
+interface FrozenBookRoomQuery {
+  readonly roomId: string;
+  readonly start: Date;
+  readonly minutes: number;
+  readonly purpose?: string;
+}
+
+interface FrozenBooking {
+  readonly reference: string;
+  readonly roomId: string;
+  readonly start: Date;
+  readonly end: Date;
+  readonly purpose?: string;
 }
 
 interface FrozenSession {
@@ -175,13 +222,15 @@ type FrozenCapability =
   | 'deadlines'
   | 'wayfinding'
   | 'issue-reporting'
-  | 'issue-tracking';
+  | 'issue-tracking'
+  | 'room-booking';
 
 interface FrozenProviderDescriptor {
   readonly id: string;
   readonly institution: string;
   readonly locale: string;
   readonly timeZone: string;
+  readonly sites?: readonly FrozenSite[];
   readonly capabilities: readonly FrozenCapability[];
 }
 
@@ -191,6 +240,10 @@ interface FrozenProvider {
     ctx: FrozenRequestContext,
     query: FrozenFreeRoomQuery,
   ): Promise<readonly FrozenRoom[]>;
+  roomSchedule?(
+    ctx: FrozenRequestContext,
+    query: FrozenRoomScheduleQuery,
+  ): Promise<readonly FrozenBusy[]>;
   getRoom?(ctx: FrozenRequestContext, roomId: string): Promise<FrozenRoom | null>;
   listRooms?(ctx: FrozenRequestContext): Promise<readonly FrozenRoom[]>;
   timetable?(
@@ -204,6 +257,7 @@ interface FrozenProvider {
   wayfind?(ctx: FrozenRequestContext, query: FrozenWayfindQuery): Promise<FrozenRoute | null>;
   reportIssue?(ctx: FrozenRequestContext, query: FrozenReportIssueQuery): Promise<FrozenTicket>;
   issueStatus?(ctx: FrozenRequestContext): Promise<readonly FrozenTicket[]>;
+  bookRoom?(ctx: FrozenRequestContext, query: FrozenBookRoomQuery): Promise<FrozenBooking>;
 }
 
 // ── Live against snapshot ────────────────────────────────────────────────────
@@ -213,8 +267,13 @@ type _RequestContext = Unchanged<Locked<RequestContext, FrozenRequestContext>>;
 type _TimeWindow = Unchanged<Locked<TimeWindow, FrozenTimeWindow>>;
 
 type _RoomKind = Unchanged<Same<RoomKind, FrozenRoomKind>>;
+type _Site = Unchanged<Locked<Site, FrozenSite>>;
 type _Room = Unchanged<Locked<Room, FrozenRoom>>;
 type _FreeRoomQuery = Unchanged<Locked<FreeRoomQuery, FrozenFreeRoomQuery>>;
+type _RoomScheduleQuery = Unchanged<Locked<RoomScheduleQuery, FrozenRoomScheduleQuery>>;
+type _Busy = Unchanged<Locked<Busy, FrozenBusy>>;
+type _BookRoomQuery = Unchanged<Locked<BookRoomQuery, FrozenBookRoomQuery>>;
+type _Booking = Unchanged<Locked<Booking, FrozenBooking>>;
 
 type _Session = Unchanged<Locked<Session, FrozenSession>>;
 type _TimetableQuery = Unchanged<Locked<TimetableQuery, FrozenTimetableQuery>>;

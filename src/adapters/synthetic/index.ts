@@ -12,9 +12,13 @@ import {
   UnauthenticatedError,
 } from '../../provider/errors.ts';
 import type {
+  BookRoomQuery,
+  Booking,
+  Busy,
   Deadline,
   DeadlineQuery,
   FreeRoomQuery,
+  RoomScheduleQuery,
   Provider,
   ProviderDescriptor,
   ReportIssueQuery,
@@ -27,16 +31,29 @@ import type {
   WayfindQuery,
 } from '../../provider/index.ts';
 import { CALENDAR, personBySubject } from './academic.ts';
-import { CAMPUS_TIMEZONE, ROOMS, buildingByCode, isOpenThroughout, roomById, walkBetween } from './campus.ts';
+import {
+  CAMPUS_TIMEZONE,
+  ROOMS,
+  SITES,
+  buildingByCode,
+  isOpenThroughout,
+  roomById,
+  walkBetween,
+} from './campus.ts';
+import { InMemoryBookingStore } from './bookings.ts';
+import type { BookingStore } from './bookings.ts';
 import { InMemoryIssueStore } from './issues.ts';
 import type { IssueStore } from './issues.ts';
-import { busyRoomIds, sessionsForPerson } from './timetable.ts';
+import { busyPeriodsFor, busyRoomIds, sessionsForPerson } from './timetable.ts';
 
 export const SYNTHETIC_DESCRIPTOR: ProviderDescriptor = {
   id: 'synthetic',
   institution: 'Universidad de San Telmo',
   locale: 'es-ES',
   timeZone: CAMPUS_TIMEZONE,
+  // Two campuses. Both keep the institution's zone, so neither declares one of its own — which is
+  // the common case and the reason `timeZone` is optional on a site.
+  sites: SITES,
   // San Telmo runs its own maintenance queue, so it can both take a report and answer how it is
   // getting on. An institution whose service desk is an email address declares only the first.
   capabilities: [
@@ -47,6 +64,10 @@ export const SYNTHETIC_DESCRIPTOR: ProviderDescriptor = {
     'wayfinding',
     'issue-reporting',
     'issue-tracking',
+    // San Telmo owns its own room diary, so it can hold a room as well as say one is free. An
+    // institution whose calendars are a published iCalendar feed can do the second and not the
+    // first, and says so by leaving this out.
+    'room-booking',
   ],
 };
 
@@ -69,9 +90,14 @@ function buildingOf(ref: string): string {
 export class SyntheticProvider implements Provider {
   readonly descriptor = SYNTHETIC_DESCRIPTOR;
   readonly #issues: IssueStore;
+  readonly #bookings: BookingStore;
 
-  constructor(issues: IssueStore = new InMemoryIssueStore()) {
+  constructor(
+    issues: IssueStore = new InMemoryIssueStore(),
+    bookings: BookingStore = new InMemoryBookingStore(),
+  ) {
     this.#issues = issues;
+    this.#bookings = bookings;
   }
 
   // ── rooms ──────────────────────────────────────────────────────────────────
@@ -89,8 +115,13 @@ export class SyntheticProvider implements Provider {
     }
 
     const busy = busyRoomIds(query.window);
+    // A room somebody has booked is not free, and forgetting that is how two groups end up in it.
+    for (const booking of await this.#bookings.overlapping(query.window)) {
+      busy.add(booking.roomId);
+    }
 
     return ROOMS.filter((room) => {
+      if (query.site && room.site !== query.site) return false;
       if (query.building && room.building !== query.building) return false;
       if (room.supervised) return false;
       if (busy.has(room.id)) return false;
@@ -101,6 +132,34 @@ export class SyntheticProvider implements Provider {
     })
       .map(toRoom)
       .sort((a, b) => a.id.localeCompare(b.id));
+  }
+
+  /**
+   * When one room is taken, teaching and bookings together.
+   *
+   * Both, because the person asking does not care which system said no. A room held for a
+   * departmental meeting is exactly as unavailable as one with a lecture in it, and an answer that
+   * only knew about one of them would send somebody to a door that does not open.
+   */
+  async roomSchedule(_ctx: RequestContext, query: RoomScheduleQuery): Promise<readonly Busy[]> {
+    if (query.window.end <= query.window.start) {
+      throw new InvalidRequestError('The time window ends before it starts.');
+    }
+    if (!roomById(query.roomId)) throw new NotFoundError('room', query.roomId);
+
+    const booked = (await this.#bookings.overlapping(query.window))
+      .filter((b) => b.roomId === query.roomId)
+      .map((b) => ({
+        start: b.start,
+        end: b.end,
+        // Only when the person who booked it said what for. "Busy" and "busy with the credit
+        // transfer committee" are different claims, and only one of them is on record.
+        ...(b.purpose ? { label: b.purpose } : {}),
+      }));
+
+    return [...busyPeriodsFor(query.roomId, query.window), ...booked].sort(
+      (a, b) => a.start.getTime() - b.start.getTime(),
+    );
   }
 
   async getRoom(_ctx: RequestContext, roomId: string): Promise<Room | null> {
@@ -235,6 +294,58 @@ export class SyntheticProvider implements Provider {
       openedBy: subject,
     });
   }
+
+  // ── booking ───────────────────────────────────────────────────────────────
+
+  /**
+   * Holds a room for the caller.
+   *
+   * Every refusal here is a refusal somebody can act on: the room does not exist, it is supervised,
+   * the building is shut, or it is already taken. None of them is "that did not work" — a booking
+   * tool that cannot say *why* it said no is a tool people stop using.
+   *
+   * By the time this runs, somebody has already confirmed. The two-turn conversation is the tool's
+   * business, the same way it is for filing a fault.
+   */
+  async bookRoom(ctx: RequestContext, query: BookRoomQuery): Promise<Booking> {
+    const subject = requirePrincipal(ctx, 'Booking a room');
+
+    const room = roomById(query.roomId);
+    if (!room) throw new NotFoundError('room', query.roomId);
+    if (room.supervised) {
+      throw new InvalidRequestError(`${room.id} is a supervised room and is not bookable.`);
+    }
+    if (query.minutes < 15 || query.minutes > 480) {
+      throw new InvalidRequestError('A booking runs from fifteen minutes to eight hours.');
+    }
+
+    const window = {
+      start: query.start,
+      end: new Date(query.start.getTime() + query.minutes * 60_000),
+    };
+
+    const building = buildingByCode(room.building);
+    if (!building || !isOpenThroughout(building, window.start, window.end)) {
+      throw new InvalidRequestError(`${building?.name ?? room.building} is not open for all of that.`);
+    }
+
+    // Checked here and not only in the tool: a provider that trusts its caller to have checked is
+    // one double booking away from being wrong, and this is the only place that sees both the
+    // timetable and the diary.
+    const taken = await this.roomSchedule(ctx, { roomId: room.id, window });
+    if (taken.length > 0) {
+      throw new InvalidRequestError(`${room.id} is already taken then.`);
+    }
+
+    return this.#bookings.add({
+      roomId: room.id,
+      start: window.start,
+      end: window.end,
+      ...(query.purpose ? { purpose: query.purpose } : {}),
+      bookedBy: subject,
+    });
+  }
+
 
   /** Only what this caller filed. UC-06 is a privacy boundary, not a convenience filter. */
   async issueStatus(ctx: RequestContext): Promise<readonly Ticket[]> {

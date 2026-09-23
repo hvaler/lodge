@@ -13,7 +13,9 @@ import { InvalidRequestError, NotFoundError, UnauthenticatedError } from '../../
 import type {
   Deadline,
   DeadlineQuery,
+  Busy,
   FreeRoomQuery,
+  RoomScheduleQuery,
   Provider,
   ReportIssueQuery,
   RequestContext,
@@ -55,6 +57,42 @@ export interface DirectoryLookup {
   modulesFor(subject: string): Promise<readonly string[] | null>;
 }
 
+/**
+ * When one room is taken, from the same feed the timetable comes from.
+ *
+ * The mirror of {@link findFreeRooms}, and the reason both belong to `room-availability`: an
+ * institution that publishes an iCalendar feed already knows when each room is busy, and can
+ * therefore answer "when is it free again" without owning anything it can write to.
+ *
+ * What it cannot do is hold the room. That is `room-booking`, this adapter does not declare it,
+ * and a feed it can only read is exactly why.
+ */
+function roomSchedule(loaded: Loaded) {
+  return async (_ctx: RequestContext, query: RoomScheduleQuery): Promise<readonly Busy[]> => {
+    if (query.window.end <= query.window.start) {
+      throw new InvalidRequestError('The time window ends before it starts.');
+    }
+
+    const inventory = loaded.inventory!;
+    if (!inventory.rooms.some((room) => room.id === query.roomId)) {
+      throw new NotFoundError('room', query.roomId);
+    }
+
+    const feed = loaded.timetable!;
+    return feed
+      .sessionsFor(feed.modules, query.window)
+      .filter((session) => session.roomId === query.roomId)
+      .map((session) => ({
+        start: session.start,
+        end: session.end,
+        // The module code, because that is what the feed says. Not a name for it: the calendar was
+        // not asked what the class is called and this adapter does not get to decide.
+        label: session.courseCode,
+      }))
+      .sort((a, b) => a.start.getTime() - b.start.getTime());
+  };
+}
+
 function findFreeRooms(loaded: Loaded) {
   return async (_ctx: RequestContext, query: FreeRoomQuery): Promise<readonly Room[]> => {
     if (query.window.end <= query.window.start) {
@@ -72,6 +110,7 @@ function findFreeRooms(loaded: Loaded) {
 
     return inventory.rooms
       .filter((room) => {
+        if (query.site && room.site !== query.site) return false;
         if (query.building && room.building !== query.building) return false;
         if (room.supervised) return false;
         if (busy.has(room.id)) return false;
@@ -259,7 +298,10 @@ export async function createStandardsProvider(
     provider['getRoom'] = getRoom(loaded);
     provider['listRooms'] = listRooms(loaded);
   }
-  if (capabilities.includes('room-availability')) provider['findFreeRooms'] = findFreeRooms(loaded);
+  if (capabilities.includes('room-availability')) {
+    provider['findFreeRooms'] = findFreeRooms(loaded);
+    provider['roomSchedule'] = roomSchedule(loaded);
+  }
   if (capabilities.includes('wayfinding')) provider['wayfind'] = wayfind(loaded);
   if (capabilities.includes('deadlines')) provider['deadlines'] = deadlines(loaded);
   if (capabilities.includes('timetable')) provider['timetable'] = timetable(loaded);

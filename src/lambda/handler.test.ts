@@ -46,7 +46,7 @@ describe('the health probe', () => {
     expect(body.status).toBe('ok');
     expect(body.default).toBe('san-telmo');
     expect(body.institutions['san-telmo']?.institution).toBe('Universidad de San Telmo');
-    expect(body.institutions['san-telmo']?.tools).toHaveLength(6);
+    expect(body.institutions['san-telmo']?.tools).toHaveLength(8);
   });
 });
 

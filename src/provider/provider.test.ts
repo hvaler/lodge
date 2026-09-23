@@ -41,7 +41,7 @@ describe('assertProviderCoherent', () => {
   // Every capability stands alone except the one that depends on another, which has its own
   // block below. Listing the exception here rather than filtering silently keeps the test honest
   // about what it is not covering.
-  const NEEDS_ANOTHER = ['room-availability', 'issue-reporting'];
+  const NEEDS_ANOTHER = ['room-availability', 'issue-reporting', 'room-booking'];
   const STANDALONE = CAPABILITIES.filter((c) => !NEEDS_ANOTHER.includes(c));
 
   it.each(STANDALONE)('accepts %s declared on its own', (capability) => {
@@ -126,28 +126,35 @@ describe('toolCatalogue', () => {
       providerFor(['room-inventory', 'room-availability', 'timetable', 'deadlines']),
     );
 
-    expect(catalogue).toEqual(['campus.find_room', 'campus.timetable', 'campus.deadlines']);
+    expect(catalogue).toEqual([
+      'campus.find_room',
+      'campus.room_schedule',
+      'campus.timetable',
+      'campus.deadlines',
+    ]);
     expect(catalogue).not.toContain('campus.report_issue');
     expect(catalogue).not.toContain('campus.issue_status');
   });
 
-  it('publishes all six tools when every capability is declared', () => {
+  it('publishes all eight tools when every capability is declared', () => {
     const catalogue = toolCatalogue(providerFor([...CAPABILITIES]));
 
     expect([...catalogue].sort()).toEqual([
+      'campus.book_room',
       'campus.deadlines',
       'campus.find_room',
       'campus.issue_status',
       'campus.report_issue',
+      'campus.room_schedule',
       'campus.timetable',
       'campus.wayfind',
     ]);
   });
 
-  it('covers the six tools of the runbook across the capability map, with no duplicates', () => {
+  it('covers every tool across the capability map, with no duplicates', () => {
     const all = Object.values(CAPABILITY_TOOLS).flat();
 
-    expect(all).toHaveLength(6);
-    expect(new Set(all).size).toBe(6);
+    expect(all).toHaveLength(8);
+    expect(new Set(all).size).toBe(8);
   });
 });

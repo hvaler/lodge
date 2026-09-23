@@ -7,7 +7,7 @@
  * it is generated.
  */
 
-import type { Room, RoomKind } from '../../provider/index.ts';
+import type { Room, RoomKind, Site } from '../../provider/index.ts';
 import { instantAt, isOpenThroughout as isOpenIn, localParts, weekOf } from '../../shared/time.ts';
 import type { DayHours, OpeningHours } from '../../shared/time.ts';
 
@@ -45,9 +45,27 @@ interface RoomBlock {
   readonly extras?: Readonly<Record<number, readonly string[]>>;
 }
 
+/**
+ * The sites San Telmo has.
+ *
+ * Two rather than one because a university with several campuses is the normal case, and a
+ * generated institution that only ever has one would let the seam go untested. Two rather than
+ * four because the discipline that produced two adapters produces two sites: one fakes it, three
+ * is decoration.
+ *
+ * El Faro — the lighthouse — is on the coast, which is why it is not on the same campus as a
+ * nineteenth-century block on the main square. The data was already telling us this.
+ */
+export const SITES = [
+  { id: 'centro', name: 'Campus Centro' },
+  { id: 'mar', name: 'Campus del Mar' },
+] as const satisfies readonly Site[];
+
 export interface BuildingSpec {
   readonly code: string;
   readonly name: string;
+  /** Which site it stands on. Every building is on exactly one. */
+  readonly site: string;
   readonly blurb: string;
   readonly openingHours: OpeningHours;
   readonly blocks: readonly RoomBlock[];
@@ -56,6 +74,7 @@ export interface BuildingSpec {
 export const BUILDINGS: readonly BuildingSpec[] = [
   {
     code: 'MEN',
+    site: 'centro',
     name: 'Mendizábal',
     blurb: 'Nineteenth-century block on the main square.',
     openingHours: week({ open: '07:30', close: '21:30' }, { open: '09:00', close: '14:00' }, null),
@@ -91,6 +110,7 @@ export const BUILDINGS: readonly BuildingSpec[] = [
   },
   {
     code: 'SCL',
+    site: 'centro',
     name: 'Santa Clara',
     blurb: 'Former convent, two cloisters. Thick walls, and no lift in the west wing.',
     openingHours: week({ open: '08:00', close: '20:00' }, null, null),
@@ -118,6 +138,7 @@ export const BUILDINGS: readonly BuildingSpec[] = [
   },
   {
     code: 'FAR',
+    site: 'mar',
     name: 'El Faro',
     blurb: 'Built 2019 next to the old lighthouse. Fully accessible.',
     openingHours: week({ open: '07:00', close: '22:00' }, { open: '09:00', close: '18:00' }, { open: '10:00', close: '14:00' }),
@@ -166,6 +187,7 @@ function expand(building: BuildingSpec): CampusRoom[] {
       const extras = block.extras?.[number] ?? [];
       rooms.push({
         id: `${building.code}-${String(number).padStart(3, '0')}`,
+        site: building.site,
         building: building.code,
         floor: block.floor,
         kind: block.kind,

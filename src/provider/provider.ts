@@ -8,14 +8,19 @@
  */
 
 import type {
+  BookRoomQuery,
+  Booking,
+  Busy,
   Deadline,
   DeadlineQuery,
   FreeRoomQuery,
   ReportIssueQuery,
   RequestContext,
   Room,
+  RoomScheduleQuery,
   Route,
   Session,
+  Site,
   Ticket,
   TimetableQuery,
   WayfindQuery,
@@ -34,6 +39,7 @@ export const CAPABILITIES = [
   'wayfinding',
   'issue-reporting',
   'issue-tracking',
+  'room-booking',
 ] as const;
 
 export type Capability = (typeof CAPABILITIES)[number];
@@ -54,6 +60,15 @@ export interface ProviderDescriptor {
    * one it means.
    */
   readonly timeZone: string;
+  /**
+   * The sites this institution has, when it has more than one.
+   *
+   * Absent means one site and no name for it, which is most institutions and all of the ones this
+   * project shipped with before. Present means rooms may carry a `site` and callers may filter by
+   * one — and the tools say which site a room is on, because "room A-12" is ambiguous the moment
+   * there are two campuses.
+   */
+  readonly sites?: readonly Site[];
   readonly capabilities: readonly Capability[];
 }
 
@@ -69,6 +84,20 @@ export interface Provider {
    * supervised rooms.
    */
   findFreeRooms?(ctx: RequestContext, query: FreeRoomQuery): Promise<readonly Room[]>;
+
+  /**
+   * `room-availability` — when one particular room is taken, over a window.
+   *
+   * The mirror of {@link findFreeRooms} and deliberately the same capability: an institution that
+   * can say which rooms are free already knows when each one is busy. Asking about a room by name
+   * is the question somebody asks when they have one in mind, and it is the only way to answer
+   * "and when will it be free?" without listing the whole campus.
+   *
+   * Returns busy periods rather than free ones so an adapter can hand over what its calendar says
+   * without computing anything; turning that into "free until four" is the tool's job, where the
+   * institution's language and time zone already live.
+   */
+  roomSchedule?(ctx: RequestContext, query: RoomScheduleQuery): Promise<readonly Busy[]>;
 
   /** `room-inventory` — a single room by id, for validating a fault report against real equipment. */
   getRoom?(ctx: RequestContext, roomId: string): Promise<Room | null>;
@@ -104,17 +133,32 @@ export interface Provider {
 
   /** `issue-tracking` — only the tickets opened by `ctx.principal` (UC-06). */
   issueStatus?(ctx: RequestContext): Promise<readonly Ticket[]>;
+
+  /**
+   * `room-booking` — holds a room for the authenticated caller.
+   *
+   * The second write in the whole interface, and it follows the first exactly: the call with
+   * `confirmed: false` validates and returns without booking anything, and only a second call with
+   * `confirmed: true` holds the room (ADR-011).
+   *
+   * Separate from `room-availability` because reading a calendar and writing to one are different
+   * permissions and, usually, different systems. An institution that publishes its timetable as
+   * iCalendar can say when a room is free and cannot hold it, and it should be able to offer the
+   * first without being asked to pretend at the second.
+   */
+  bookRoom?(ctx: RequestContext, query: BookRoomQuery): Promise<Booking>;
 }
 
 /** Which methods each capability obliges an adapter to implement. */
 export const CAPABILITY_METHODS = {
   'room-inventory': ['getRoom', 'listRooms'],
-  'room-availability': ['findFreeRooms'],
+  'room-availability': ['findFreeRooms', 'roomSchedule'],
   timetable: ['timetable'],
   deadlines: ['deadlines'],
   wayfinding: ['wayfind'],
   'issue-reporting': ['reportIssue'],
   'issue-tracking': ['issueStatus'],
+  'room-booking': ['bookRoom'],
 } as const satisfies Record<Capability, readonly (keyof Provider)[]>;
 
 /**
@@ -139,6 +183,9 @@ export const CAPABILITY_METHODS = {
 export const CAPABILITY_REQUIRES = {
   'room-availability': ['room-inventory'],
   'issue-reporting': ['room-inventory'],
+  // Booking a room you cannot see is free is how two people end up in it. The dependency is on
+  // availability rather than only on inventory for exactly that reason.
+  'room-booking': ['room-inventory', 'room-availability'],
 } as const satisfies Partial<Record<Capability, readonly Capability[]>>;
 
 /** Which MCP tools each capability publishes. The catalogue is the union over declared ones. */
@@ -146,12 +193,13 @@ export const CAPABILITY_TOOLS = {
   // Deliberately empty: knowing what rooms exist is what *other* capabilities are built on, and
   // "list every room out loud" is not a question anybody asks a speaker.
   'room-inventory': [],
-  'room-availability': ['campus.find_room'],
+  'room-availability': ['campus.find_room', 'campus.room_schedule'],
   timetable: ['campus.timetable'],
   deadlines: ['campus.deadlines'],
   wayfinding: ['campus.wayfind'],
   'issue-reporting': ['campus.report_issue'],
   'issue-tracking': ['campus.issue_status'],
+  'room-booking': ['campus.book_room'],
 } as const satisfies Record<Capability, readonly string[]>;
 
 export class ProviderContractError extends Error {

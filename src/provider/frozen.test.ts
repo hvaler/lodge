@@ -22,7 +22,7 @@ import {
 import type { Provider } from './provider.ts';
 
 describe(`the provider interface, frozen on ${FROZEN_ON}, amended ${AMENDED_ON.join(', ')} (ADR-006)`, () => {
-  it('declares seven capabilities, in this order', () => {
+  it('declares eight capabilities, in this order', () => {
     // The order is the catalogue order a client sees, so it is part of the contract too.
     expect([...CAPABILITIES]).toEqual([
       'room-inventory',
@@ -32,18 +32,20 @@ describe(`the provider interface, frozen on ${FROZEN_ON}, amended ${AMENDED_ON.j
       'wayfinding',
       'issue-reporting',
       'issue-tracking',
+      'room-booking',
     ]);
   });
 
   it('obliges exactly these methods per capability', () => {
     expect(CAPABILITY_METHODS).toEqual({
       'room-inventory': ['getRoom', 'listRooms'],
-      'room-availability': ['findFreeRooms'],
+      'room-availability': ['findFreeRooms', 'roomSchedule'],
       timetable: ['timetable'],
       deadlines: ['deadlines'],
       wayfinding: ['wayfind'],
       'issue-reporting': ['reportIssue'],
       'issue-tracking': ['issueStatus'],
+      'room-booking': ['bookRoom'],
     });
   });
 
@@ -51,6 +53,8 @@ describe(`the provider interface, frozen on ${FROZEN_ON}, amended ${AMENDED_ON.j
     expect(CAPABILITY_REQUIRES).toEqual({
       'room-availability': ['room-inventory'],
       'issue-reporting': ['room-inventory'],
+      // Booking needs both: you cannot hold a room you cannot see, nor one you cannot see is free.
+      'room-booking': ['room-inventory', 'room-availability'],
     });
   });
 
@@ -58,27 +62,30 @@ describe(`the provider interface, frozen on ${FROZEN_ON}, amended ${AMENDED_ON.j
     expect(CAPABILITY_TOOLS).toEqual({
       // Knowing what rooms exist publishes nothing on its own. It is what the other two stand on.
       'room-inventory': [],
-      'room-availability': ['campus.find_room'],
+      'room-availability': ['campus.find_room', 'campus.room_schedule'],
       timetable: ['campus.timetable'],
       deadlines: ['campus.deadlines'],
       wayfinding: ['campus.wayfind'],
       'issue-reporting': ['campus.report_issue'],
       'issue-tracking': ['campus.issue_status'],
+      'room-booking': ['campus.book_room'],
     });
   });
 
-  it('offers six tools to an institution that can answer everything', () => {
+  it('offers eight tools to an institution that can answer everything', () => {
     const everything = {
       descriptor: { capabilities: CAPABILITIES },
     } as unknown as Provider;
 
     expect(toolCatalogue(everything)).toEqual([
       'campus.find_room',
+      'campus.room_schedule',
       'campus.timetable',
       'campus.deadlines',
       'campus.wayfind',
       'campus.report_issue',
       'campus.issue_status',
+      'campus.book_room',
     ]);
   });
 });

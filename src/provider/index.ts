@@ -1,4 +1,7 @@
 export type {
+  BookRoomQuery,
+  Booking,
+  Busy,
   Deadline,
   DeadlineQuery,
   FreeRoomQuery,
@@ -8,8 +11,10 @@ export type {
   RequestContext,
   Room,
   RoomKind,
+  RoomScheduleQuery,
   Route,
   Session,
+  Site,
   Ticket,
   TimeWindow,
   TimetableQuery,

@@ -20,6 +20,7 @@ import {
 } from '../provider/index.ts';
 import type { Capability, Deadline, Provider, RequestContext, Room, Session } from '../provider/index.ts';
 import { asCard, clientShowsCards, floorPlanCard, issueCard, occupancyCard } from '../cards/index.ts';
+import { instantAt, localParts } from '../shared/time.ts';
 import { messagesFor } from './messages.ts';
 import type { Messages } from './messages.ts';
 
@@ -118,6 +119,10 @@ export function registerTools(
         break;
       case 'room-availability':
         registerFindRoom(server, provider, resolveContext);
+        registerRoomSchedule(server, provider, resolveContext);
+        break;
+      case 'room-booking':
+        registerBookRoom(server, provider, resolveContext);
         break;
       case 'timetable':
         registerTimetable(server, provider, resolveContext);
@@ -205,6 +210,138 @@ function registerFindRoom(server: McpServer, provider: Provider, resolve: Resolv
       }
     },
   );
+}
+
+// ── campus.room_schedule ─────────────────────────────────────────────────────
+
+function registerRoomSchedule(server: McpServer, provider: Provider, resolve: ResolveContext): void {
+  server.registerTool(
+    'campus.room_schedule',
+    {
+      description:
+        'Whether one particular room is free now, and when it is next free. Use this when '
+        + 'somebody names a room; use campus.find_room when they just want any free room.',
+      inputSchema: z.object({
+        room: z.string().describe('Room id, e.g. MEN-203.'),
+      }),
+    },
+    async ({ room }, toolCtx): Promise<CallToolResult> => {
+      const ctx = resolve(toolCtx);
+      const m = wordsFor(provider);
+
+      // The rest of today, in the institution's own clock. Not the next twenty-four hours: "free
+      // until nine tomorrow morning" is true and useless to somebody standing in a corridor.
+      const endOfDay = new Date(ctx.now);
+      endOfDay.setUTCHours(endOfDay.getUTCHours() + 24);
+
+      try {
+        const busy = await provider.roomSchedule!(ctx, {
+          roomId: room,
+          window: { start: ctx.now, end: endOfDay },
+        });
+
+        if (busy.length === 0) return say(m.roomFreeAllDay(room));
+
+        const current = busy.find((slot) => slot.start <= ctx.now && slot.end > ctx.now);
+        if (!current) {
+          // Free now, and the first booking is when that ends.
+          return say(m.roomFreeUntil(room, timeOf(busy[0]!.start, provider)));
+        }
+
+        // Taken now. What matters next is when it frees up, and back-to-back slots have to be
+        // walked through rather than reporting the first gap that is really no gap at all.
+        let freeFrom = current.end;
+        for (const slot of busy) {
+          if (slot.start <= freeFrom && slot.end > freeFrom) freeFrom = slot.end;
+        }
+
+        const taken = m.roomTakenUntil(room, timeOf(current.end, provider), current.label);
+        return say(
+          freeFrom >= endOfDay
+            ? m.roomTakenAllDay(room)
+            : taken + m.roomFreeUntil(room, timeOf(freeFrom, provider)),
+        );
+      } catch (error) {
+        return spoken(error, m);
+      }
+    },
+  );
+}
+
+// ── campus.book_room ─────────────────────────────────────────────────────────
+
+function registerBookRoom(server: McpServer, provider: Provider, resolve: ResolveContext): void {
+  server.registerTool(
+    'campus.book_room',
+    {
+      description:
+        'Hold a room. Call once WITHOUT confirmed to get the question to ask, then again '
+        + 'with confirmed=true once the person has said yes. Nothing is held until then.',
+      inputSchema: z.object({
+        room: z.string().describe('Room id, e.g. MEN-203.'),
+        at: z
+          .string()
+          .regex(/^\d{2}:\d{2}$/)
+          .optional()
+          .describe('Start time today as HH:MM on the institution\'s clock. Defaults to now.'),
+        forMinutes: z
+          .number()
+          .int()
+          .min(15)
+          .max(480)
+          .optional()
+          .describe('How long for. Defaults to an hour.'),
+        purpose: z.string().optional().describe('What it is for, if they said.'),
+        confirmed: z
+          .boolean()
+          .optional()
+          .describe('Omit on the first call. Pass true only after the person has agreed.'),
+      }),
+    },
+    async ({ room, at, forMinutes, purpose, confirmed }, toolCtx): Promise<CallToolResult> => {
+      const ctx = resolve(toolCtx);
+      const m = wordsFor(provider);
+      const minutes = forMinutes ?? 60;
+
+      try {
+        const start = at ? atToday(at, ctx.now, provider) : ctx.now;
+
+        // The first call validates and holds nothing. The room has to exist and be free before
+        // anybody is asked to confirm — being asked "shall I?" and only then told the room is
+        // taken wastes the person's turn, which is why the fault tool checks first too.
+        const target = await provider.getRoom!(ctx, room);
+        if (!target) return say(m.noSuchRoom(room));
+
+        if (confirmed !== true) {
+          const busy = await provider.roomSchedule!(ctx, {
+            roomId: room,
+            window: { start, end: new Date(start.getTime() + minutes * 60_000) },
+          });
+          if (busy.length > 0) {
+            return say(m.roomTakenUntil(room, timeOf(busy[busy.length - 1]!.end, provider)).trim());
+          }
+          return say(m.confirmBooking(room, timeOf(start, provider), minutes));
+        }
+
+        const booking = await provider.bookRoom!(ctx, {
+          roomId: room,
+          start,
+          minutes,
+          ...(purpose ? { purpose } : {}),
+        });
+
+        return say(m.booked(room, timeOf(booking.start, provider), booking.reference));
+      } catch (error) {
+        return spoken(error, m);
+      }
+    },
+  );
+}
+
+/** `16:00` today, on the institution's clock rather than the server's. */
+function atToday(hhmm: string, now: Date, provider: Provider): Date {
+  const today = localParts(now, provider.descriptor.timeZone).isoDate;
+  return instantAt(today, hhmm, provider.descriptor.timeZone);
 }
 
 // ── campus.timetable ─────────────────────────────────────────────────────────

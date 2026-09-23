@@ -48,6 +48,15 @@ export interface Messages {
   unknownPlace(place: string): string;
 
   confirmFault(equipment: string, room: string): string;
+
+  /** One room's diary. `until`/`from` are already formatted in the institution's clock. */
+  roomFreeAllDay(room: string): string;
+  roomFreeUntil(room: string, until: string): string;
+  roomTakenUntil(room: string, until: string, by?: string): string;
+  roomTakenAllDay(room: string): string;
+  /** Booking, in two turns like a fault report. */
+  confirmBooking(room: string, at: string, minutes: number): string;
+  booked(room: string, at: string, reference: string): string;
   faultFiled(reference: string, equipment: string, room: string): string;
   noSuchRoom(room: string): string;
   roomHasNoSuch(room: string, equipment: string, actual: readonly string[]): string;
@@ -112,6 +121,13 @@ const english: Messages = {
   unknownPlace: (place) => `I do not know a place called ${place}.`,
 
   confirmFault: (equipment, room) => `File a fault for the ${equipment} in ${room}?`,
+  roomFreeAllDay: (room) => `${room} is free all day.`,
+  roomFreeUntil: (room, until) => `${room} is free until ${until}.`,
+  roomTakenUntil: (room, until, by) =>
+    by ? `${room} is taken until ${until}, with ${by}. ` : `${room} is taken until ${until}. `,
+  roomTakenAllDay: (room) => `${room} is taken for the rest of the day.`,
+  confirmBooking: (room, at, minutes) => `Shall I hold ${room} at ${at} for ${minutes} minutes?`,
+  booked: (room, at, reference) => `Done. ${room} is yours at ${at}. The reference is ${reference}.`,
   faultFiled: (reference, equipment, room) =>
     `Filed. The reference is ${reference}, for the ${equipment} in ${room}.`,
   noSuchRoom: (room) => `I have no room called ${room}.`,
@@ -181,6 +197,13 @@ const spanish: Messages = {
   unknownPlace: (place) => `No conozco ningún sitio llamado ${place}.`,
 
   confirmFault: (equipment, room) => `¿Abro un aviso por ${equipment} en ${room}?`,
+  roomFreeAllDay: (room) => `${room} está libre todo el día.`,
+  roomFreeUntil: (room, until) => `${room} está libre hasta las ${until}.`,
+  roomTakenUntil: (room, until, by) =>
+    by ? `${room} está ocupada hasta las ${until}, con ${by}. ` : `${room} está ocupada hasta las ${until}. `,
+  roomTakenAllDay: (room) => `${room} está ocupada el resto del día.`,
+  confirmBooking: (room, at, minutes) => `¿Reservo ${room} a las ${at} durante ${minutes} minutos?`,
+  booked: (room, at, reference) => `Hecho. ${room} es tuya a las ${at}. La referencia es ${reference}.`,
   faultFiled: (reference, equipment, room) =>
     `Hecho. La referencia es ${reference}, por ${equipment} en ${room}.`,
   noSuchRoom: (room) => `No tengo ningún aula llamada ${room}.`,

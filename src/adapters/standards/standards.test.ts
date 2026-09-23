@@ -57,8 +57,11 @@ function ctx(subject: string | null = null): RequestContext {
 }
 
 describe('the catalogue follows what the institution configured', () => {
-  it('publishes four tools for Carrigmore with a directory, not six', async () => {
-    // No issue tracker is connected, so the two fault tools do not exist here. A student asking
+  it('publishes five tools for Carrigmore with a directory, not eight', async () => {
+    // No issue tracker is connected, so the two fault tools do not exist here. Nor is there
+    // anywhere to write a booking: a published calendar can say when a room is taken and cannot
+    // hold it, which is why `campus.room_schedule` is here and `campus.book_room` is not.
+    // A student asking
     // Carrigmore to report a broken projector is told the agent cannot, because it genuinely
     // cannot — not because it tried and failed.
     const provider = await createStandardsProvider(CARRIGMORE, directory);
@@ -66,6 +69,7 @@ describe('the catalogue follows what the institution configured', () => {
     expect([...toolCatalogue(provider)].sort()).toEqual([
       'campus.deadlines',
       'campus.find_room',
+      'campus.room_schedule',
       'campus.timetable',
       'campus.wayfind',
     ]);
@@ -78,6 +82,7 @@ describe('the catalogue follows what the institution configured', () => {
     expect([...toolCatalogue(provider)].sort()).toEqual([
       'campus.deadlines',
       'campus.find_room',
+      'campus.room_schedule',
       'campus.wayfind',
     ]);
   });

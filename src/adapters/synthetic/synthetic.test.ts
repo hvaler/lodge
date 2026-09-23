@@ -47,12 +47,14 @@ describe('the adapter honours its own declaration', () => {
     expect(() => assertProviderCoherent(provider)).not.toThrow();
   });
 
-  it('publishes all six tools, because San Telmo can answer everything', () => {
+  it('publishes all eight tools, because San Telmo can answer everything', () => {
     expect([...toolCatalogue(provider)].sort()).toEqual([
+      'campus.book_room',
       'campus.deadlines',
       'campus.find_room',
       'campus.issue_status',
       'campus.report_issue',
+      'campus.room_schedule',
       'campus.timetable',
       'campus.wayfind',
     ]);

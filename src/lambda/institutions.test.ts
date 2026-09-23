@@ -42,19 +42,20 @@ async function toolsAt(path: string): Promise<string[]> {
   expect(result.statusCode).toBe(200);
 
   // The body is an SSE frame; the tool names are what this is about.
-  return ['campus.find_room', 'campus.timetable', 'campus.deadlines', 'campus.wayfind',
-    'campus.report_issue', 'campus.issue_status'].filter((t) => result.body.includes(`"${t}"`));
+  return ['campus.find_room', 'campus.room_schedule', 'campus.timetable', 'campus.deadlines',
+    'campus.wayfind', 'campus.report_issue', 'campus.issue_status', 'campus.book_room']
+    .filter((t) => result.body.includes(`"${t}"`));
 }
 
 describe('one function, two institutions', () => {
   it('keeps San Telmo at bare /mcp, where everything already points', async () => {
     // Clients, the documentation and the demonstration page all use this path. Moving it to earn
     // symmetry with the second institution would break all three to gain nothing.
-    expect(await toolsAt('/mcp')).toHaveLength(6);
+    expect(await toolsAt('/mcp')).toHaveLength(8);
   });
 
   it('serves each of them by name too', async () => {
-    expect(await toolsAt('/mcp/san-telmo')).toHaveLength(6);
+    expect(await toolsAt('/mcp/san-telmo')).toHaveLength(8);
     expect((await toolsAt('/mcp/carrigmore')).length).toBeGreaterThan(0);
   });
 
@@ -64,6 +65,7 @@ describe('one function, two institutions', () => {
     // your timetable, because it cannot know who you are.
     expect(await toolsAt('/mcp/carrigmore')).toEqual([
       'campus.find_room',
+      'campus.room_schedule',
       'campus.deadlines',
       'campus.wayfind',
     ]);
@@ -97,7 +99,7 @@ describe('one function, two institutions', () => {
     };
 
     expect(body.institutions['carrigmore']?.institution).toBe('Carrigmore College');
-    expect(body.institutions['carrigmore']?.tools).toHaveLength(3);
-    expect(body.institutions['san-telmo']?.tools).toHaveLength(6);
+    expect(body.institutions['carrigmore']?.tools).toHaveLength(4);
+    expect(body.institutions['san-telmo']?.tools).toHaveLength(8);
   });
 });

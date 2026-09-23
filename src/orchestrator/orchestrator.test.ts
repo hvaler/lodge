@@ -96,10 +96,12 @@ describe('the tools come from the server, not from this file', () => {
     await orchestrator.ask('hola', { institution: 'San Telmo', locale: 'es-ES', timeZone: MADRID });
 
     expect(model.seenTools[0]?.map((t) => t.name).sort()).toEqual([
+      'campus.book_room',
       'campus.deadlines',
       'campus.find_room',
       'campus.issue_status',
       'campus.report_issue',
+      'campus.room_schedule',
       'campus.timetable',
       'campus.wayfind',
     ]);
@@ -124,7 +126,7 @@ describe('the tools come from the server, not from this file', () => {
     await orchestrator.ask('hello', { institution: 'Carrigmore College', locale: 'en-IE', timeZone: DUBLIN });
 
     const names = model.seenTools[0]?.map((t) => t.name) ?? [];
-    expect(names).toHaveLength(3);
+    expect(names).toHaveLength(4);
     expect(names).not.toContain('campus.report_issue');
   });
 

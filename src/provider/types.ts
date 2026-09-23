@@ -42,9 +42,41 @@ export interface TimeWindow {
 
 export type RoomKind = 'lecture' | 'seminar' | 'lab' | 'computer-lab' | 'study' | 'auditorium';
 
+/**
+ * One site of an institution that has more than one.
+ *
+ * Added because a university with several campuses is the normal case, not the exception, and
+ * "building" is the wrong level to hang it on: two sites can each have a building A, and a room
+ * code is only unique within its site.
+ *
+ * Every field an institution might reasonably differ on lives here rather than being assumed from
+ * the institution: a site can sit in another country, and a spoken "your class is at nine" is
+ * wrong in the listener's zone unless somebody says which one it means.
+ */
+export interface Site {
+  /** Stable id used in queries and on rooms, e.g. `cantoblanco`. */
+  readonly id: string;
+  /** What it is called out loud, e.g. `Cantoblanco`. */
+  readonly name: string;
+  /**
+   * IANA zone, when this site does not keep the institution's own.
+   *
+   * Absent means "the same as the institution", which is the answer for every site of every
+   * institution in one country — so nobody has to write it to get the common case right.
+   */
+  readonly timeZone?: string;
+}
+
 export interface Room {
   /** Qualified and unique across the institution, e.g. `MEN-203`. */
   readonly id: string;
+  /**
+   * Which site it is on, when the institution declared more than one.
+   *
+   * Optional on purpose: an institution with a single site should not have to invent an id for it,
+   * and every adapter written before sites existed keeps working untouched.
+   */
+  readonly site?: string;
   /** Building code, e.g. `MEN`. */
   readonly building: string;
   readonly floor: number;
@@ -55,10 +87,59 @@ export interface Room {
 }
 
 export interface FreeRoomQuery {
+  /** Site id. Omitted means every site the institution serves. */
+  readonly site?: string;
   /** Building code. Omitted means the whole campus. */
   readonly building?: string;
   readonly window: TimeWindow;
   readonly minCapacity?: number;
+}
+
+// ── One room's diary ──────────────────────────────────────────────────────────
+
+/** When a particular room is taken, rather than which rooms are free. */
+export interface RoomScheduleQuery {
+  readonly roomId: string;
+  readonly window: TimeWindow;
+}
+
+/**
+ * A period a room is taken for.
+ *
+ * `label` is whatever the source says is using it and nothing more. An adapter that only knows a
+ * room is busy says so and leaves this out, because "busy" and "busy with Discrete Mathematics"
+ * are different claims and only one of them is on record.
+ */
+export interface Busy {
+  readonly start: Date;
+  readonly end: Date;
+  readonly label?: string;
+}
+
+// ── Booking ───────────────────────────────────────────────────────────────────
+
+/** A request to hold a room. The caller's identity comes from the context, never from here. */
+export interface BookRoomQuery {
+  readonly roomId: string;
+  readonly start: Date;
+  /** How long, in minutes. */
+  readonly minutes: number;
+  /** What it is for, if the person said. Shown to whoever else looks at the room's diary. */
+  readonly purpose?: string;
+}
+
+// Note what is NOT here: `confirmed`. The two-turn confirmation is a conversation, and a
+// conversation is the tool's business — `campus.report_issue` keeps it there too. A provider that
+// knew about it would be an adapter author's problem for no gain: by the time this is called,
+// somebody has already said yes.
+
+/** A held room. `reference` is whatever the booking system calls it, never invented here. */
+export interface Booking {
+  readonly reference: string;
+  readonly roomId: string;
+  readonly start: Date;
+  readonly end: Date;
+  readonly purpose?: string;
 }
 
 // ── Timetable ────────────────────────────────────────────────────────────────

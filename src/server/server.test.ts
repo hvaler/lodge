@@ -77,15 +77,17 @@ describe('a generic MCP client can use it over HTTP', () => {
     await listen();
   });
 
-  it('lists the six tools', async () => {
+  it('lists the eight tools', async () => {
     const client = await connectClient();
     const { tools } = await client.listTools();
 
     expect(tools.map((t) => t.name).sort()).toEqual([
+      'campus.book_room',
       'campus.deadlines',
       'campus.find_room',
       'campus.issue_status',
       'campus.report_issue',
+      'campus.room_schedule',
       'campus.timetable',
       'campus.wayfind',
     ]);
@@ -125,7 +127,7 @@ describe('a generic MCP client can use it over HTTP', () => {
       const client = await connectClient({}, { mode });
 
       const { tools } = await client.listTools();
-      expect(tools).toHaveLength(6);
+      expect(tools).toHaveLength(8);
       expect(await textOf(client, 'campus.find_room')).toMatch(/Libres de aquí a las/);
 
       await client.close();
@@ -142,7 +144,7 @@ describe('a generic MCP client can use it over HTTP', () => {
     expect(body['status']).toBe('ok');
     expect(institutions['default']?.['institution']).toBe('Universidad de San Telmo');
     expect(institutions['default']?.['timeZone']).toBe('Europe/Madrid');
-    expect(institutions['default']?.['tools']).toHaveLength(6);
+    expect(institutions['default']?.['tools']).toHaveLength(8);
   });
 
   it('404s anything that is not the two paths it serves', async () => {
@@ -288,9 +290,12 @@ describe('UC-07 · one server, two institutions', () => {
     const spanish = await connectClient({}, undefined, '/mcp/san-telmo');
     const irish = await connectClient({}, undefined, '/mcp/carrigmore');
 
-    expect((await spanish.listTools()).tools).toHaveLength(6);
+    expect((await spanish.listTools()).tools).toHaveLength(8);
     const irishTools = (await irish.listTools()).tools.map((t) => t.name);
-    expect(irishTools).toHaveLength(4);
+    // Five, not eight: Carrigmore can say when a room is taken and cannot hold it, because a
+    // published calendar is something you read.
+    expect(irishTools).toHaveLength(5);
+    expect(irishTools).not.toContain('campus.book_room');
     expect(irishTools).not.toContain('campus.report_issue');
 
     await Promise.all([spanish.close(), irish.close()]);
@@ -313,7 +318,7 @@ describe('UC-07 · one server, two institutions', () => {
     await bothInstitutions('carrigmore');
     const client = await connectClient({}, undefined, '/mcp');
 
-    expect((await client.listTools()).tools).toHaveLength(4);
+    expect((await client.listTools()).tools).toHaveLength(5);
     await client.close();
   });
 
