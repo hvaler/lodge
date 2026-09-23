@@ -54,6 +54,8 @@ export interface Messages {
   roomFreeUntil(room: string, until: string): string;
   roomTakenUntil(room: string, until: string, by?: string): string;
   roomTakenAllDay(room: string): string;
+  /** A booking asked for a time already gone today. */
+  alreadyPast(at: string): string;
   /** What follows a taken slot: the gap, or the rest of the day. */
   thenFreeUntil(until: string): string;
   thenFreeAllDay(): string;
@@ -129,6 +131,7 @@ const english: Messages = {
   roomTakenUntil: (room, until, by) =>
     by ? `${room} is taken until ${until}, with ${by}. ` : `${room} is taken until ${until}. `,
   roomTakenAllDay: (room) => `${room} is taken for the rest of the day.`,
+  alreadyPast: (at) => `${at} has already gone today. I can only hold a room from now on.`,
   thenFreeUntil: (until) => `After that it is free until ${until}.`,
   thenFreeAllDay: () => 'After that it is free for the rest of the day.',
   confirmBooking: (room, at, minutes) => `Shall I hold ${room} at ${at} for ${minutes} minutes?`,
@@ -207,6 +210,7 @@ const spanish: Messages = {
   roomTakenUntil: (room, until, by) =>
     by ? `${room} está ocupada hasta las ${until}, con ${by}. ` : `${room} está ocupada hasta las ${until}. `,
   roomTakenAllDay: (room) => `${room} está ocupada el resto del día.`,
+  alreadyPast: (at) => `Las ${at} ya han pasado hoy. Solo puedo reservar de ahora en adelante.`,
   thenFreeUntil: (until) => `Después queda libre hasta las ${until}.`,
   thenFreeAllDay: () => 'Después queda libre el resto del día.',
   confirmBooking: (room, at, minutes) => `¿Reservo ${room} a las ${at} durante ${minutes} minutos?`,

@@ -316,6 +316,10 @@ export class SyntheticProvider implements Provider {
     if (room.supervised) {
       throw new InvalidRequestError(`${room.id} es un aula supervisada y no se reserva.`);
     }
+    // The tool refuses this too; checked here as well so no caller can hold a room in the past.
+    if (query.start.getTime() < ctx.now.getTime() - 5 * 60_000) {
+      throw new InvalidRequestError('Esa hora ya ha pasado.');
+    }
     if (query.minutes < 15 || query.minutes > 480) {
       throw new InvalidRequestError('Una reserva dura de quince minutos a ocho horas.');
     }

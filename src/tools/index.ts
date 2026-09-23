@@ -310,6 +310,12 @@ function registerBookRoom(server: McpServer, provider: Provider, resolve: Resolv
 
       try {
         const start = at ? atToday(at, ctx.now, provider) : ctx.now;
+        // "At five" said at six means five today, which has gone. Said out loud it is easy to
+        // mean tomorrow, but guessing which day somebody meant is exactly what UC-03 forbids.
+        // A few minutes of slack, so "at 18:00" said at 18:02 still means now.
+        if (start.getTime() < ctx.now.getTime() - PAST_SLACK_MS) {
+          return say(m.alreadyPast(timeOf(start, provider)));
+        }
 
         // The first call validates and holds nothing. The room has to exist and be free before
         // anybody is asked to confirm — being asked "shall I?" and only then told the room is
@@ -342,6 +348,9 @@ function registerBookRoom(server: McpServer, provider: Provider, resolve: Resolv
     },
   );
 }
+
+/** How late a start time may be and still mean "now". */
+const PAST_SLACK_MS = 5 * 60_000;
 
 /** `16:00` today, on the institution's clock rather than the server's. */
 function atToday(hhmm: string, now: Date, provider: Provider): Date {

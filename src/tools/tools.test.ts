@@ -446,6 +446,26 @@ describe('campus.book_room', () => {
     ).toContain('no está abierto');
   });
 
+  it('will not hold a time already gone today, and does not guess tomorrow', async () => {
+    // NOW is 16:30.
+    expect(await call('campus.book_room', { room: 'FAR-101', at: '15:00' })).toBe(
+      'Las 15:00 ya han pasado hoy. Solo puedo reservar de ahora en adelante.',
+    );
+    expect(await call('campus.book_room', { room: 'FAR-101', at: '15:00', confirmed: true })).toMatch(
+      /ya han pasado/,
+    );
+    // A couple of minutes late still means now.
+    expect(await call('campus.book_room', { room: 'FAR-101', at: '16:28' })).toMatch(/^¿Reservo/);
+
+    // And the adapter refuses it on its own, whoever is calling.
+    await expect(
+      provider.bookRoom!(
+        { principal: { subject: 'doc-0007' }, now: NOW, locale: 'es-ES' },
+        { roomId: 'FAR-101', start: campusInstant('2026-10-06', '15:00'), minutes: 60 },
+      ),
+    ).rejects.toThrow(/ya ha pasado/);
+  });
+
   it('refuses a supervised lab, however empty', async () => {
     expect(await call('campus.book_room', { room: 'SCL-101', confirmed: true })).toContain('supervisada');
   });

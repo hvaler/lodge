@@ -91,5 +91,5 @@ UC-08 and UC-09 were added on 23-09-2026 by the third amendment to the frozen in
 - **Actor:** Lecturer or staff
 - **Trigger:** Needs a room for a meeting this afternoon
 - **Flow:** `campus.book_room` validates that the room exists and is free, then returns the question to ask and holds nothing. Once the person says yes it calls again with `confirmed`, and the booking is made. The same two turns as UC-05 (ADR-011).
-- **Acceptance:** Nothing is held without confirmation; the booking made is spoken back with its reference and immediately disappears from `campus.find_room`; a taken room, a shut building, a supervised lab and an unidentified caller are each refused with a reason. Only an institution that declares `room-booking` publishes the tool.
+- **Acceptance:** Nothing is held without confirmation; the booking made is spoken back with its reference and immediately disappears from `campus.find_room`; a taken room, a shut building, a supervised lab, a time already gone today and an unidentified caller are each refused with a reason — a past time is never quietly read as tomorrow. Only an institution that declares `room-booking` publishes the tool.
 - **Priority:** improvement
