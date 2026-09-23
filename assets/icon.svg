@@ -19,7 +19,7 @@
   <!-- The dome, its base, and the button, as one silhouette. -->
   <g fill="#f0b429">
     <path d="M13 41a19 19 0 0 1 38 0z"/>
-    <rect x="9" y="42.5" width="46" height="6.5" rx="3.25"/>
+    <rect x="9" y="41" width="46" height="6.5" rx="3.25"/>
     <circle cx="32" cy="19" r="4.5"/>
   </g>
 

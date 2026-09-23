@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Lodge icon · render target</title>
+<!--
+  Only here to turn assets/icon.svg into the PNG sizes the Alexa developer console asks for
+  (108 and 512). The icon fills the viewport exactly, so a screenshot at NxN *is* the icon at NxN.
+
+  A browser rather than a command-line converter on purpose: ImageMagick's built-in SVG renderer
+  rounds arcs badly at small sizes, and the machine this was built on turned out to have Windows'
+  own convert.exe on the path instead of ImageMagick's, which fails with a message about FAT
+  partitions. A browser is the renderer the icon is designed for anyway.
+
+  To regenerate: open this at the size you want and screenshot the page. No build step, and nothing
+  to install.
+-->
+<style>
+  html, body { margin: 0; padding: 0; width: 100%; height: 100%; }
+  /* No page background: the icon draws its own, and anything behind it would be baked in. */
+  svg { display: block; width: 100vw; height: 100vh; }
+</style>
+</head>
+<body>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Lodge">
+  <title>Lodge</title>
+  <rect width="64" height="64" rx="14" fill="#16171a"/>
+  <g fill="#f0b429">
+    <path d="M13 41a19 19 0 0 1 38 0z"/>
+    <rect x="9" y="41" width="46" height="6.5" rx="3.25"/>
+    <circle cx="32" cy="19" r="4.5"/>
+  </g>
+  <rect x="20" y="33" width="24" height="3.5" rx="1.75" fill="#16171a"/>
+</svg>
+</body>
+</html>

@@ -589,7 +589,7 @@ export function demoPage(): string {
 <title>Lodge · demonstration</title>
 <!-- Inline, like everything else here: a 404 in the console of a demonstration is a distraction
      the viewer has to be told to ignore. -->
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%2316171a'/><g fill='%23f0b429'><path d='M13 41a19 19 0 0 1 38 0z'/><rect x='9' y='42.5' width='46' height='6.5' rx='3.25'/><circle cx='32' cy='19' r='4.5'/></g><rect x='20' y='33' width='24' height='3.5' rx='1.75' fill='%2316171a'/></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%2316171a'/><g fill='%23f0b429'><path d='M13 41a19 19 0 0 1 38 0z'/><rect x='9' y='41' width='46' height='6.5' rx='3.25'/><circle cx='32' cy='19' r='4.5'/></g><rect x='20' y='33' width='24' height='3.5' rx='1.75' fill='%2316171a'/></svg>">
 <style>${STYLE}</style>
 </head>
 <body>
