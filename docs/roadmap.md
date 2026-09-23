@@ -23,9 +23,11 @@ should have to deploy a second place where their students' passwords live.
 **Roots, sampling and protocol logging.** Obsolete in the revision we target, and adopting them
 would be work that ages immediately.
 
-**Writing to institutional systems beyond a fault report.** Lodge answers questions. A server that
-can also change a timetable is a different security conversation, and one an institution should have
-deliberately rather than inherit.
+**Writing to institutional systems beyond a fault report and a room booking.** Lodge answers
+questions. Since 23 September it writes two things — a fault, and a meeting-room booking (ADR-020) —
+both confirmed in two turns, both only for a signed-in caller, and both only where the institution
+declared the capability. A server that can also change a timetable is a different security
+conversation, and one an institution should have deliberately rather than inherit.
 
 ---
 
@@ -49,6 +51,23 @@ improvement in *who* is trusted to observe the yes, not in whether it happens.
 ## What an adopter would ask for next
 
 Ordered by how often we think it would come up.
+
+**More than one campus.** ✅ **Built, 23 September** (ADR-020). An institution can declare its
+sites; every room says which one it is on, and `campus.find_room` takes a site. The synthetic
+university has two — Campus Centro and Campus del Mar — so the demonstration can ask for a free room
+"on the other campus". What the contract deliberately does *not* model is sites that each run their
+own systems: one provider is one institution, and an institution whose sites keep separate booking
+or fault systems is served by an adapter that composes one store per site. That is adapter code,
+not interface.
+
+**Is this room free, and book it.** ✅ **Built, 23 September** (ADR-020, UC-08, UC-09).
+`campus.room_schedule` reads one room's diary for the rest of the day; `campus.book_room` holds it,
+in the same two turns as a fault. The diary sits behind `BookingStore`, like faults behind
+`IssueStore`: memory in the container, DynamoDB in the managed deployment. The obvious next store is
+**Exchange resource mailboxes through Microsoft Graph**, which is where most universities already
+keep room calendars — and which rejects a conflicting booking itself, closing the one race the
+DynamoDB store leaves open. `standards` does not declare `room-booking`: a timetable feed is not a
+room diary, and pretending otherwise would be worse than not publishing the tool.
 
 **More ways to read a room list.** Today `standards` reads a CSV. An institution with a booking
 system has a REST endpoint, and one on Microsoft 365 has room lists in Graph. Each is a small
@@ -125,7 +144,7 @@ its own retention and breach surface; and adding a capability means amending a f
 (ADR-006), which is a deliberate act, not a convenience.
 
 **Scopes per tool.** Today an institution declares one scope list and a token either opens
-everything or nothing. Separating read from write — the fault report is the only write — is the
+everything or nothing. Separating read from write — a fault report and a booking are the only writes — is the
 first thing a security review would ask for.
 
 **Speech that sounds like speech.** The demonstration uses the browser's speech synthesis. A
@@ -138,11 +157,12 @@ of scope for the deadline, and the first thing we would add for a real pilot.
 
 Things that are true today and that we would rather say ourselves.
 
-**A self-hosted container forgets filed faults when it restarts.** The fault queue is in memory
-there; only the managed deployment persists it, in DynamoDB. For a single-node demonstration this is
-invisible, and for an institution actually taking reports it is not good enough. The store is behind
-an interface — `IssueStore`, two methods — so pointing the container at Postgres or the
-institution's own ticketing system is a small piece of work, and the right one.
+**A self-hosted container forgets filed faults and bookings when it restarts.** Both are in memory
+there; only the managed deployment persists them, in DynamoDB. For a single-node demonstration this
+is invisible, and for an institution actually taking reports it is not good enough. Both stores are
+behind interfaces — `IssueStore` and `BookingStore`, two methods each — so pointing the container at
+Postgres, the institution's ticketing system or its Exchange room calendars is a small piece of work,
+and the right one.
 
 **~~The deployed page serves one institution.~~** ✅ **Fixed, 20 September.** Carrigmore's files
 were not in the managed function's bundle, so the institution switch — the single most convincing
