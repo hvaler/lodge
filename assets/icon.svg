@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Lodge">
+  <title>Lodge</title>
+
+  <!--
+    The bell on a porter's desk: the one object that means "somebody is there".
+
+    Drawn rather than borrowed from an emoji font, which is what this replaced — an emoji renders
+    as a different picture on every platform, and at 16px several of them render as a grey box.
+
+    Two things the shape has to survive: a 16px favicon, where only the silhouette reads, and a
+    512px tile in the Alexa console, where a flat fill looks unfinished. Hence a solid silhouette
+    with one interior cut, and nothing thinner than two units at this scale.
+
+    The colours are the demonstration page's own background and accent, so the tab icon and the
+    page it opens are visibly the same thing.
+  -->
+  <rect width="64" height="64" rx="14" fill="#16171a"/>
+
+  <!-- The dome, its base, and the button, as one silhouette. -->
+  <g fill="#f0b429">
+    <path d="M13 41a19 19 0 0 1 38 0z"/>
+    <rect x="9" y="42.5" width="46" height="6.5" rx="3.25"/>
+    <circle cx="32" cy="19" r="4.5"/>
+  </g>
+
+  <!--
+    The cut: a slot across the dome, in the background colour rather than a lighter amber, so the
+    icon stays legible when a platform renders it in a single colour. It reads as the lodge hatch —
+    the window a porter slides open — which is the whole idea of the project in one line.
+  -->
+  <rect x="20" y="33" width="24" height="3.5" rx="1.75" fill="#16171a"/>
+</svg>
