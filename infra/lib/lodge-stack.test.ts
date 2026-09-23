@@ -32,11 +32,13 @@ function templateOf(sandbox = false): Template {
 }
 
 describe('the shape of the bill', () => {
-  it('is one function and one table, which is the whole claim', () => {
+  it('is one function and a table per thing a person writes, which is the whole claim', () => {
+    // Faults and bookings (ADR-020). Nothing else Lodge knows is state: the rest is read from what
+    // the institution already has, on every request.
     const template = templateOf();
 
     template.resourceCountIs('AWS::Lambda::Function', 1);
-    template.resourceCountIs('AWS::DynamoDB::GlobalTable', 1);
+    template.resourceCountIs('AWS::DynamoDB::GlobalTable', 2);
   });
 
   it('grows by exactly one function and one table when the demonstration is added', () => {
@@ -45,7 +47,7 @@ describe('the shape of the bill', () => {
     const template = templateOf(true);
 
     template.resourceCountIs('AWS::Lambda::Function', 2);
-    template.resourceCountIs('AWS::DynamoDB::GlobalTable', 2);
+    template.resourceCountIs('AWS::DynamoDB::GlobalTable', 3);
     template.resourceCountIs('AWS::Lambda::Url', 2);
   });
 

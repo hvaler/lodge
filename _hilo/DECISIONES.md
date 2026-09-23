@@ -27,12 +27,13 @@ el markdown es **lo que cambia mientras se construye**.
 | ADR-011 | La confirmacion viaja como argumento, no como peticion al cliente | 2026-09-16 | Aceptada | Protocolo |
 | ADR-012 | Las tarjetas se adjuntan salvo que el cliente diga que no tiene pantalla | 2026-09-16 | Aceptada | Arquitectura |
 | ADR-013 | Lodge es servidor de recursos, nunca servidor de autorizacion | 2026-09-16 | Aceptada | Seguridad |
-| ADR-014 | En el destino gestionado solo persisten los avisos; el dataset vive en el codigo | 2026-09-16 | Aceptada | Despliegue |
+| ADR-014 | En el destino gestionado solo persisten los avisos; el dataset vive en el codigo | 2026-09-16 | Enmendada (ADR-020) | Despliegue |
 | ADR-015 | Instrumentar siempre, exportar solo si lo piden | 2026-09-16 | Aceptada | Observabilidad |
 | ADR-016 | La demostracion publica es una segunda funcion, con tope diario duro | 2026-09-16 | Aceptada | Despliegue |
 | ADR-017 | 'issues' se parte en abrir y consultar | 2026-09-17 | Aceptada | Arquitectura |
 | ADR-018 | Los partes van al sistema que la institucion ya vigila | 2026-09-17 | Aceptada | Integracion |
 | ADR-019 | 'rooms' se parte en saber cuales hay y saber cuales estan libres | 2026-09-17 | Aceptada | Arquitectura |
+| ADR-020 | Sedes, el diario de una sala y reservarla (tercera enmienda de ADR-006) | 2026-09-23 | Aceptada | Arquitectura |
 
 ---
 
@@ -150,6 +151,9 @@ en `frozen.ts` senalando tres lineas, se actualizo la instantanea **a mano**, se
 adaptadores y las seis herramientas, y seis tests del contrato se pusieron en rojo y hubo que
 decidir uno por uno si el cambio era correcto. Uno de ellos —"acepta `issue-reporting` declarada
 sola"— fallaba porque la comprobacion de dependencias nueva funcionaba.
+
+**ENMENDADA UNA TERCERA VEZ el 23-09-2026** (ADR-020): sedes, `roomSchedule` y la capacidad
+`room-booking`. Mismo procedimiento, y otra vez aditiva: nada de lo congelado cambio de forma.
 
 La fecha de congelacion **no se reinicia**. Una congelacion que reiniciase el reloj cada vez que
 alguien cambia algo seria un registro de cambios, no una congelacion; lo que la fecha dice es cuando
@@ -380,6 +384,10 @@ funcionar.
 **Decision** — Una tabla de DynamoDB con **solo la cola de incidencias**. Los avisos sembrados de la
 Universidad de San Telmo **no entran en la tabla**: viven en el codigo y se mezclan al leer.
 
+> **Enmendada el 23-09-2026 (ADR-020)**: una segunda tabla para las reservas, con el mismo patron
+> —sembradas en codigo, mezcladas al leer, tres permisos—. La regla de fondo no cambia: persiste
+> solo lo que escribe una persona.
+
 **Razon** — El conjunto de datos de San Telmo es generado y determinista, y eso es una promesa del
 proyecto: quien clone el repositorio obtiene las respuestas del video. Sembrar la tabla al desplegar
 introduce un paso que puede quedarse a medias, una migracion que mantener, y la posibilidad de que
@@ -597,5 +605,57 @@ test que mide milisegundos de reloj con veinticuatro workers compitiendo midiera
 de ellos ni siquiera fallaba su asercion — se agotaba su tiempo antes de llegar a ella. Reformulados
 como guardias de regresion, con la medida de verdad donde de verdad esta: 214 ms contra el servidor
 desplegado.
+
+---
+
+## ADR-020 · Sedes, el diario de una sala y reservarla (tercera enmienda de ADR-006)
+
+**Contexto** — Tres preguntas que cualquier universidad con más de un campus hace a diario y que
+Lodge no sabía contestar: *¿hay una sala libre en la otra sede?*, *¿está libre la MEN-203, y si no,
+cuándo?* y *resérvamela a las cinco*. La primera la dejaba fuera un campus plano; la segunda,
+`campus.find_room`, que responde «cualquier sala libre» pero no «esta sala»; la tercera no existía.
+Y muchas instituciones tienen el sistema de reservas centralizado, pero no todas las sedes: algunas
+llevan el suyo.
+
+**Decisión** — Tres cambios al contrato, todos aditivos:
+
+| Cambio | Dónde | Por qué así |
+|---|---|---|
+| `Site`, `ProviderDescriptor.sites?`, `Room.site?`, `FreeRoomQuery.site?` | tipos | Opcionales: una institución de un solo campus no declara nada y no cambia nada |
+| `roomSchedule` en `room-availability` | método | Quien sabe qué salas están libres sabe cuándo lo está una. Publica `campus.room_schedule` |
+| `room-booking` → `bookRoom` | capacidad nueva | Exige `room-inventory` y `room-availability`: no se reserva lo que no se ve ni lo que no se sabe libre |
+
+`confirmed` **no** está en `BookRoomQuery`. Lo metí primero y lo quité: la confirmación en dos
+vueltas es de la herramienta (ADR-011), y un proveedor que la viera tendría que decidir qué hacer
+con `confirmed: false`, que es una pregunta sin respuesta sensata.
+
+**Las reservas, detrás de una interfaz** — `BookingStore`, igual que `IssueStore`. Hoy es memoria,
+sembrada con tres reservas para que la demostración pueda ver una sala libre y que le nieguen una
+ocupada en el mismo minuto. Mañana es lo que ya lleva los calendarios de salas —en la mayoría de
+universidades, buzones de recurso de Exchange—, y cambiarlo es un argumento del constructor. El
+adaptador de estándares **no** declara `room-booking`: un feed de horario no es un diario de salas,
+y fingirlo sería peor que no publicarlo.
+
+**Varias sedes con sistemas distintos** — No hace falta nada más en el contrato. Un proveedor es
+una institución; una institución cuyas sedes tienen cada una su sistema se sirve con un adaptador
+que compone varios almacenes por sede. Eso es código del adaptador, no de la interfaz.
+
+**Cómo se hizo** — El mismo procedimiento que las dos veces anteriores: el compilador falló en
+`frozen.ts`, la instantánea se actualizó a mano (`AMENDED_ON` gana `2026-09-23`) y los tests de
+recuento se decidieron uno a uno: San Telmo publica ocho herramientas; Carrigmore, cinco con
+directorio y cuatro sin él, porque gana `campus.room_schedule` pero no reserva. Lo que los tests
+nuevos encontraron: la respuesta decía «ocupada hasta las 16:50… libre **hasta** las 16:50» cuando
+quería decir desde, y el diario miraba veinticuatro horas en vez del resto del día —«libre hasta
+mañana a las nueve» es verdad e inútil para alguien plantado en un pasillo.
+
+**Una segunda tabla** — En Lambda, una reserva en memoria solo existe en el contenedor que la hizo,
+y el siguiente vería la sala libre. `DynamoBookingStore` va en una tabla propia, con clave por el
+dia UTC en que empieza la reserva: «que se solapa con esta ventana» es una consulta por dia y no un
+*scan*. Eso **enmienda ADR-014**, que decia una tabla con solo la cola de avisos. Lo que ADR-014
+defendia sigue en pie: el estado es solo lo que escribe una persona, y ahora son dos cosas.
+
+**Consecuencia** — UC-08 y UC-09 entran en `docs/use-cases.md` como `improvement`: llegaron tras la
+congelación y el vídeo no depende de ellos. Los recuentos de herramientas en la documentación y el
+cliente .NET (que afirma seis y tres) hay que ponerlos al día antes de redesplegar.
 
 ---

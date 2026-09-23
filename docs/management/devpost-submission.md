@@ -39,8 +39,8 @@ The result is something you configure in an afternoon instead of something you p
 
 ## What it does
 
-Lodge is a Model Context Protocol server. It publishes six tools — find a free room, my timetable,
-an administrative deadline, directions, report a fault, chase that fault — and any agent can speak
+Lodge is a Model Context Protocol server. It publishes eight tools — find a free room, is this room free, book it,
+my timetable, an administrative deadline, directions, report a fault, chase that fault — and any agent can speak
 to it. Alexa+ today, somebody's laptop assistant tomorrow. The institution publishes once and stops
 choosing clients.
 
@@ -108,7 +108,7 @@ custom skill** — Alexa Skills Kit, private, uncertified — **not Alexa+**. It
 thing a browser tab cannot do, which is answer out loud in a room. It reuses the same orchestrator
 the web app runs on, so the device cannot drift from what the page shows. One skill carries two
 locales, which means the language you speak picks the institution: English reaches Carrigmore and
-its three tools, Spanish reaches San Telmo and its six. Nothing was written to make that work — the
+its four tools, Spanish reaches San Telmo and its eight. Nothing was written to make that work — the
 catalogue is derived either way, so the device inherits the difference for free.
 
 What the speaker does *not* demonstrate is identity. It talks to the sandbox deployment, which
@@ -212,8 +212,8 @@ ldap · docker · alexa
 | Adoption guide | https://github.com/hvaler/lodge/blob/main/docs/adopting.md |
 
 > The page answers a bounded number of questions a day, because each one calls a model. Both
-> institutions are live: `/mcp` is San Telmo with six tools, `/mcp/carrigmore` is Carrigmore with
-> three — ask that one for a timetable and watch it decline rather than guess. `npm run demo` runs
+> institutions are live: `/mcp` is San Telmo with eight tools, `/mcp/carrigmore` is Carrigmore with
+> four — ask that one for a timetable and watch it decline rather than guess. `npm run demo` runs
 > the same thing locally with no limit.
 
 ---

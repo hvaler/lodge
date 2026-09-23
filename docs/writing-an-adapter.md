@@ -71,7 +71,7 @@ Filing and chasing are **two** capabilities on purpose. A service desk reached b
 receive a fault report and cannot answer "how is mine going"; one capability would have forced such
 an institution to publish a tool that cannot work (ADR-017).
 
-That check is the whole reason the catalogue is trustworthy. The six MCP tools are derived from what
+That check is the whole reason the catalogue is trustworthy. The MCP tools are derived from what
 you declare, so an institution with no fault tracker never sees the agent offer to file one — and
 the agent genuinely cannot, because the tool was never in the list it was given. It is not a rule
 the model is asked to follow.
@@ -207,5 +207,5 @@ snapshot the compiler checks on every build, so a change fails loudly rather tha
 
 If your source genuinely needs the contract to move, that is worth knowing and the build will make
 sure somebody looks: update the snapshot by hand, record what moved and why in `_hilo/DECISIONES.md`
-under ADR-006, and re-check both existing adapters and all six tools. That blast radius is exactly
+under ADR-006, and re-check both existing adapters and every tool. That blast radius is exactly
 what the freeze exists to make visible — it is not a wall, it is a doorbell.

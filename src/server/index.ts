@@ -64,7 +64,7 @@ async function peek(request: Request): Promise<Peeked | null> {
 /**
  * One span per MCP request, continuing whatever trace the caller was already in.
  *
- * Wrapped here rather than around each of the six tools: this is the boundary the 500 ms budget is
+ * Wrapped here rather than around each tool: this is the boundary the 500 ms budget is
  * measured at, and it is the only place that sees the request as a whole. The adapters add their
  * own spans underneath for the parts that actually go somewhere — a directory lookup, a calendar
  * fetch — which is where a slow answer will turn out to have been spent.

@@ -2,7 +2,7 @@
  * The provider interface.
  *
  * This is the piece that makes Lodge reusable, and as of 16 September 2026 it is **frozen**
- * (ADR-006): implemented against, not edited. Touching it hits both adapters and all six tools at
+ * (ADR-006): implemented against, not edited. Touching it hits both adapters and every tool at
  * once, which is why `frozen.ts` keeps a snapshot the compiler checks on every build. Read that
  * file before changing anything here.
  */

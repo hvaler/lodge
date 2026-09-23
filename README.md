@@ -170,9 +170,9 @@ can do. The page answers a bounded number of questions a day, because each one c
 `npm run demo` runs the same thing locally with no limit and with a real LDAP directory behind
 Carrigmore, which the deployed one has no way to reach.
 
-**Both institutions are live.** San Telmo answers at `/mcp` with six tools; Carrigmore answers at
-`/mcp/carrigmore` with three, because in the cloud it has a room table and two calendars and no
-directory. Press the other button on the page and three of the tools you were using disappear. That
+**Both institutions are live.** San Telmo answers at `/mcp` with eight tools; Carrigmore answers at
+`/mcp/carrigmore` with four, because in the cloud it has a room table and two calendars and no
+directory. Press the other button on the page and four of the tools you were using disappear. That
 is UC-07, and it is the only part of this you have to see rather than read.
 
 This is a **public sandbox over a fictional university**: the `x-lodge-dev-subject` header lets any
@@ -188,7 +188,7 @@ Two first-class targets, and the core does not know which it is running on.
 **Your own infrastructure** — a container, a config file and your own credentials.
 `ops/environment/` has both, and nothing in it reaches a cloud.
 
-**AWS** — one function, one table and a URL:
+**AWS** — one function, a table for faults and one for bookings, and a URL:
 
 ```bash
 cd infra
@@ -204,8 +204,9 @@ themselves; it is off otherwise, and it is only defensible here because the Lamb
 the fictional institution and has no path to a real one.
 
 ```
-Lambda (nodejs24.x, arm64, 512 MB)   the same six tools, the same answers
-DynamoDB (on demand)                 the fault queue, partitioned by who filed it
+Lambda (nodejs24.x, arm64, 512 MB)   the same tools, the same answers  
+DynamoDB (on demand)                 the fault queue, partitioned by who filed it,
+                                     and the room diary, by the day a booking starts
 Function URL (no authorizer)         so a client needs an MCP client, not an AWS account
 ```
 

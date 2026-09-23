@@ -40,7 +40,7 @@ function lodgeUrl(): string {
  * and `handler.ts` serves it at `/mcp/carrigmore`, so the switch is real here too.
  *
  * The two are deliberately unequal. San Telmo is generated and complete — a directory, a fault
- * queue, six tools. Carrigmore is read from four files a real institution would already have, with
+ * queue, eight tools. Carrigmore is read from four files a real institution would already have, with
  * no directory to bind to and no service desk to mail, so it publishes **three**. Nobody has to be
  * told that the catalogue follows the sources: you press the other button and two of the buttons
  * you were just using are gone.
@@ -73,7 +73,7 @@ const INSTITUTIONS: readonly Omit<DemoInstitution, 'mcpUrl'>[] = [
     locale: 'en-IE',
     timeZone: 'Europe/Dublin',
     // Empty on purpose. There is no directory in front of this one, so there is nobody to be: the
-    // three tools it publishes are the three that do not need to know who is asking. Offering
+    // four tools it publishes are the four that do not need to know who is asking. Offering
     // identities that change nothing would be a control that lies.
     identities: [],
     suggestions: [

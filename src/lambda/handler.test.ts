@@ -51,7 +51,7 @@ describe('the health probe', () => {
 });
 
 describe('the MCP endpoint', () => {
-  it('publishes the six tools', async () => {
+  it('publishes all eight tools', async () => {
     const result = await lambdaHandler(event({ body: rpc('tools/list') }));
 
     expect(result.statusCode).toBe(200);

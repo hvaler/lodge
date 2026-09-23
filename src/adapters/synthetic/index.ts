@@ -282,7 +282,7 @@ export class SyntheticProvider implements Provider {
     const equipment = room.equipment.find((item) => item.toLowerCase() === wanted);
     if (!equipment) {
       throw new InvalidRequestError(
-        `${room.id} has no '${query.equipment}'. It has: ${room.equipment.join(', ')}.`,
+        `${room.id} no tiene ${query.equipment}. Tiene: ${room.equipment.join(', ')}.`,
       );
     }
 
@@ -313,10 +313,10 @@ export class SyntheticProvider implements Provider {
     const room = roomById(query.roomId);
     if (!room) throw new NotFoundError('room', query.roomId);
     if (room.supervised) {
-      throw new InvalidRequestError(`${room.id} is a supervised room and is not bookable.`);
+      throw new InvalidRequestError(`${room.id} es un aula supervisada y no se reserva.`);
     }
     if (query.minutes < 15 || query.minutes > 480) {
-      throw new InvalidRequestError('A booking runs from fifteen minutes to eight hours.');
+      throw new InvalidRequestError('Una reserva dura de quince minutos a ocho horas.');
     }
 
     const window = {
@@ -326,7 +326,7 @@ export class SyntheticProvider implements Provider {
 
     const building = buildingByCode(room.building);
     if (!building || !isOpenThroughout(building, window.start, window.end)) {
-      throw new InvalidRequestError(`${building?.name ?? room.building} is not open for all of that.`);
+      throw new InvalidRequestError(`${building?.name ?? room.building} no está abierto todo ese tiempo.`);
     }
 
     // Checked here and not only in the tool: a provider that trusts its caller to have checked is
@@ -334,7 +334,7 @@ export class SyntheticProvider implements Provider {
     // timetable and the diary.
     const taken = await this.roomSchedule(ctx, { roomId: room.id, window });
     if (taken.length > 0) {
-      throw new InvalidRequestError(`${room.id} is already taken then.`);
+      throw new InvalidRequestError(`${room.id} ya está ocupada a esa hora.`);
     }
 
     return this.#bookings.add({

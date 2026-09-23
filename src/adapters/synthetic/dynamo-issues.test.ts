@@ -27,7 +27,7 @@ function fakeTable(): DynamoLike & { rows(): Item[] } {
   return {
     rows: () => [...rows.values()],
     async send(command: never): Promise<unknown> {
-      const { input } = command as unknown as { input: Record<string, never> };
+      const { input } = command as unknown as { input: Record<string, unknown> };
       const name = (command as unknown as object).constructor.name;
 
       if (name === 'QueryCommand') {

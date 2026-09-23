@@ -43,7 +43,7 @@ const SUBJECT = process.env['LODGE_SKILL_SUBJECT'] ?? 'est-0001';
  * One skill, two locales, and the same thing the page demonstrates with its institution switcher:
  * a single server answering for more than one place, with the *client* saying which. Somebody
  * asking in Spanish reaches San Telmo; in English, Carrigmore — which is an Irish college with no
- * directory and no service desk, so it publishes three tools where San Telmo publishes six. The
+ * directory and no service desk, so it publishes four tools where San Telmo publishes eight. The
  * device inherits that difference for free, because the catalogue is derived either way.
  *
  * `LODGE_SKILL_INSTITUTION` pins every locale to one institution, for a deployment that serves

@@ -268,7 +268,7 @@ export async function createDemoIdp(options: DemoIdpOptions): Promise<DemoIdp> {
      * The demonstration's own token, for reading tool catalogues.
      *
      * The page has to draw the catalogue before anyone signs in — that is the moment where
-     * switching institution makes three tools disappear — and `tools/list` is behind the same
+     * switching institution makes four tools disappear — and `tools/list` is behind the same
      * protected endpoint as everything else. So the demonstration backend is a client in its own
      * right and holds a token that names *it*, not a person.
      *

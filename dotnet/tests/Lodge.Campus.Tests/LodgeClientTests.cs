@@ -27,7 +27,7 @@ public sealed class LodgeClientTests
     private const string Student = "est-0001";
 
     [Fact]
-    public async Task san_telmo_publishes_all_six_tools()
+    public async Task san_telmo_publishes_all_eight_tools()
     {
         await using var lodge = await LodgeClient.ConnectAsync(
             Institutions.EndpointFor(Deployment, null),
@@ -41,10 +41,12 @@ public sealed class LodgeClientTests
 
         Assert.Equal(
             [
+                "campus.book_room",
                 "campus.deadlines",
                 "campus.find_room",
                 "campus.issue_status",
                 "campus.report_issue",
+                "campus.room_schedule",
                 "campus.timetable",
                 "campus.wayfind",
             ],
@@ -69,8 +71,12 @@ public sealed class LodgeClientTests
 
         Assert.DoesNotContain("campus.timetable", names);
         Assert.DoesNotContain("campus.report_issue", names);
+        // A timetable feed says when a room is taught in, so Carrigmore can say whether one is free;
+        // it is not a room diary, so it cannot hold one.
+        Assert.DoesNotContain("campus.book_room", names);
         Assert.Contains("campus.find_room", names);
-        Assert.Equal(3, names.Length);
+        Assert.Contains("campus.room_schedule", names);
+        Assert.Equal(4, names.Length);
     }
 
     [Fact]

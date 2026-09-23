@@ -14,7 +14,7 @@
  *
  * **If the build sent you here:** decide whether the interface genuinely has to move. If it does,
  * update the snapshot, record what moved and why in ADR-006, and re-check both adapters and all
- * six tools — that blast radius is precisely what the freeze exists to make visible.
+ * every tool — that blast radius is precisely what the freeze exists to make visible.
  */
 
 import type { Capability, Provider, ProviderDescriptor } from './provider.ts';

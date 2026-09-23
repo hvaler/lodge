@@ -26,8 +26,8 @@ other twenty-six are the envelope handling, which needs no network and should no
 
 | The test says | Which matters because |
 |---|---|
-| San Telmo publishes exactly six tools | The catalogue is written nowhere in this client. It is discovered. |
-| Carrigmore publishes exactly three, with no `campus.timetable` | Same server, same code, different institution — UC-07 from C# |
+| San Telmo publishes exactly eight tools | The catalogue is written nowhere in this client. It is discovered. |
+| Carrigmore publishes exactly four, with no `campus.timetable` and no `campus.book_room` | Same server, same code, different institution — UC-07 from C# |
 | A room question calls `campus.find_room` and comes back speakable | The loop closes: discover, decide, call, speak |
 | **A timetable question to Carrigmore is declined with an empty trace** | UC-03. Not good behaviour — *impossibility*. The tool was never in the list the model was handed |
 

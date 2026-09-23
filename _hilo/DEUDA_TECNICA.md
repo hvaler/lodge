@@ -152,7 +152,7 @@ entrada que se reenvían en cada vuelta.
 
 **Para el vídeo sí conviene bajarlo**, porque dos segundos de silencio en cámara se hacen largos:
 
-1. **Prompt caching** (soportado, 5 min, mínimo 1K tokens). El prompt de sistema y las seis
+1. **Prompt caching** (soportado, 5 min, mínimo 1K tokens). El prompt de sistema y las
    definiciones de herramienta son idénticos en cada vuelta: es exactamente el caso de uso.
 2. ~~**Perfil EU**~~ — **hecho el 16-09**. Se desbloqueó solo; la verificación iba por regiones y
    EU tardó más. Medido con el orquestador completo, seis turnos por configuración desde España:
@@ -263,6 +263,30 @@ import que debe ser `type-only`, dos sobrecargas, cuatro conversiones desde `und
 aula en linea. Arreglarlos y quitar el `exclude` cerraria el agujero. No se hace ahora porque toca
 ficheros de test ajenos al cambio a cuatro semanas del envio, y porque conviene decidirlo con la
 cifra delante en vez de a ciegas.
+
+**Actualizado el 23-09: quedan 4.** Los cuatro de `dynamo-issues.test.ts` eran un `Record<string,
+never>` en el falso de DynamoDB; al copiar ese falso para las reservas se copiaron los errores, y
+el arreglo era una palabra en los dos. Quedan `inventory.test.ts`, `server.test.ts` (el import
+*type-only*) y las dos sobrecargas de `transport.test.ts` y `web.test.ts`.
+
+### 🟡 MEDIO · Dos reservas simultáneas de la misma sala pueden pasar las dos (23-09)
+
+`bookRoom` comprueba el diario y después escribe. En memoria no hay carrera —un solo hilo—, pero en
+`DynamoBookingStore` dos contenedores pueden leer «libre» a la vez y escribir las dos reservas. Las
+referencias no chocan (el contador es atómico); **la sala sí**. Una escritura condicional no lo
+arregla sola, porque un solapamiento no es una clave. El arreglo real es de quien lleve el diario de
+verdad: un buzón de recurso de Exchange rechaza el conflicto él mismo, y ese es el sistema que un
+adaptador de producción usaría. Para la demostración, sobre datos ficticios y con una persona
+reservando, se acepta y se dice.
+
+### 🟢 BAJO · La primera vuelta de `campus.book_room` no mira el horario del edificio (23-09)
+
+La primera llamada valida que la sala existe y que nadie la ocupa; que el edificio esté abierto solo
+lo comprueba `bookRoom` en la segunda. Así que a las 19:30 en Santa Clara se pregunta «¿la reservo?»
+y después se niega, que es justo lo que el comentario de la herramienta dice evitar. La interfaz no
+tiene un «¿se podría reservar?» y añadirlo sería una cuarta enmienda; se deja así y con test que
+fija la negativa.
+
 
 ### Lo que estaba abierto y se cerro
 

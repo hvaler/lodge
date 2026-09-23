@@ -2,7 +2,7 @@
  * The managed deployment target.
  *
  * ADR-003 says AWS is *a* destination and not a requirement, and this stack is written to keep that
- * true. Nothing in `src/` knows it exists: the same provider, the same six tools and the same
+ * true. Nothing in `src/` knows it exists: the same provider, the same tools and the same
  * answers run here and in the container, and what changes is the shape of the request and where the
  * fault queue lives.
  *
@@ -73,7 +73,7 @@ export class LodgeStack extends Stack {
     });
 
     /**
-     * The only state Lodge has.
+     * Half the state Lodge has; the room diary below is the other half.
      *
      * Partitioned by who filed the fault, because that is the only question ever asked of it:
      * `campus.issue_status` returns what *you* reported and nothing else. No index, no scan.
@@ -87,6 +87,15 @@ export class LodgeStack extends Stack {
       billing: Billing.onDemand(),
       // The faults are demonstration data over a fictional campus. An institution deploying this
       // for real changes one line — and should, because then they are somebody's actual reports.
+      removalPolicy: RemovalPolicy.DESTROY,
+    });
+
+    // The room diary (ADR-020). Keyed by the UTC day a booking starts, so "what overlaps this
+    // window" is a query per day rather than a scan. Same billing and removal policy as the faults.
+    const bookings = new TableV2(this, 'Bookings', {
+      partitionKey: { name: 'startDay', type: AttributeType.STRING },
+      sortKey: { name: 'reference', type: AttributeType.STRING },
+      billing: Billing.onDemand(),
       removalPolicy: RemovalPolicy.DESTROY,
     });
 
@@ -129,6 +138,7 @@ export class LodgeStack extends Stack {
       layers: [carrigmore],
       environment: {
         LODGE_ISSUES_TABLE: issues.tableName,
+        LODGE_BOOKINGS_TABLE: bookings.tableName,
         // Where the layer put them. Absent, the handler serves San Telmo alone.
         LODGE_CARRIGMORE_DIR: '/opt/carrigmore',
         ...(props.sandbox ? { LODGE_DEV_IDENTITY: '1' } : {}),
@@ -147,6 +157,7 @@ export class LodgeStack extends Stack {
     // hands out. Nothing in Lodge scans this table or deletes from it — a fault report is not ours
     // to erase — and a permission granted because it was convenient is one nobody revisits.
     issues.grant(server, 'dynamodb:Query', 'dynamodb:PutItem', 'dynamodb:UpdateItem');
+    bookings.grant(server, 'dynamodb:Query', 'dynamodb:PutItem', 'dynamodb:UpdateItem');
 
     // No authorizer in front. Lodge does its own OAuth when configured (ADR-013), and putting IAM
     // auth here as well would mean a client needs AWS credentials to reach an MCP server — which

@@ -9,7 +9,7 @@ in the [README](../README.md), in the order a question passes through them.
 | `provider/` | **the provider interface, frozen** (ADR-006): capabilities, methods, and which tool each one publishes | `provider.ts`, `frozen.ts` |
 | `adapters/synthetic/` | the Universidad de San Telmo, generated and deterministic | `index.ts` |
 | `adapters/standards/` | iCalendar, LDAP, a room table, and the three places a fault report can go | `config.ts`, `inventory.ts` |
-| `tools/` | the six `campus.*` tools, registered from what the adapter declares | `index.ts` |
+| `tools/` | the eight `campus.*` tools, registered from what the adapter declares | `index.ts` |
 | `cards/` | the visual cards (MCP Apps extension) that ride along with a spoken answer | `index.ts` |
 | `orchestrator/` | the client: Bedrock, the tool-call loop, and prompt caching | `index.ts`, `model.ts` |
 | `web/` | the voice demonstration and the public page, which talk to the server over HTTP like any client | `main.ts` |

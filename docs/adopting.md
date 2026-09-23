@@ -50,7 +50,7 @@ npm start
 > **Expected**, on one line:
 >
 > ```
-> Lodge :3000/mcp — Universidad de San Telmo, 6 tools: campus.find_room, campus.timetable, ...
+> Lodge :3000/mcp — Universidad de San Telmo, 8 tools: campus.find_room, campus.timetable, ...
 >   OAuth: NOT CONFIGURED — this endpoint answers without a token
 > ```
 >

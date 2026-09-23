@@ -4,7 +4,8 @@
  * The managed target runs on Lambda, where "in memory" means *this container's* memory: a fault
  * filed by one invocation is invisible to the next, and UC-06 — chasing the report you just made —
  * would work or not depending on which container answered. The table is the smallest thing that
- * fixes that, and it is the only state Lodge has anywhere.
+ * fixes that. With the room diary (`dynamo-bookings.ts`) it is the only state Lodge has anywhere:
+ * what a person writes. Everything else is read from what the institution already has.
  *
  * Note what is *not* in the table: the seeded faults. Those are part of the San Telmo dataset, which
  * is generated and deterministic, so they live in code and are merged in on read. That keeps a

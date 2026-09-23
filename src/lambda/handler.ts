@@ -2,7 +2,7 @@
  * Lodge on AWS Lambda, behind a Function URL.
  *
  * The managed target from ADR-003: AWS is *a* destination, not a requirement. Everything below the
- * server layer is the same code the container runs — same adapter, same six tools, same answers.
+ * server layer is the same code the container runs — same adapter, same tools, same answers.
  * The event-to-`Request` translation lives in `event.ts`, shared with the demonstration function.
  *
  * It is short because the server is stateless (ADR-009). There is no session to rebuild, nothing to
@@ -20,6 +20,7 @@ import { join } from 'node:path';
 
 import { createStandardsProvider } from '../adapters/standards/index.ts';
 import { createSyntheticProvider } from '../adapters/synthetic/index.ts';
+import { DynamoBookingStore, bookingsTableFrom } from '../adapters/synthetic/dynamo-bookings.ts';
 import { DynamoIssueStore, issuesTableFrom } from '../adapters/synthetic/dynamo-issues.ts';
 import type { Provider } from '../provider/index.ts';
 import { createLodgeHandler, describeDeployment, institutionFor } from '../server/index.ts';
@@ -39,6 +40,12 @@ function issueStore(env: NodeJS.ProcessEnv): DynamoIssueStore | undefined {
   return table ? new DynamoIssueStore({ tableName: table }) : undefined;
 }
 
+/** The room diary, for the same reason: a room held in one container must be taken in all of them. */
+function bookingStore(env: NodeJS.ProcessEnv): DynamoBookingStore | undefined {
+  const table = bookingsTableFrom(env);
+  return table ? new DynamoBookingStore({ tableName: table }) : undefined;
+}
+
 /**
  * Carrigmore College, when its files shipped with this deployment.
  *
@@ -48,7 +55,7 @@ function issueStore(env: NodeJS.ProcessEnv): DynamoIssueStore | undefined {
  *
  * No directory and no fault destination here, and that is the point rather than a shortcut. There
  * is no LDAP inside a Lambda and no service desk to mail, so Carrigmore declares what it can prove
- * — a room table and two calendars — and its catalogue comes out **three tools against San Telmo's
+ * — a room table and two calendars — and its catalogue comes out **four tools against San Telmo's
  * six**. That difference is UC-07, visible in a browser rather than described in a README.
  */
 async function carrigmore(dir: string): Promise<Provider> {
@@ -68,7 +75,7 @@ async function carrigmore(dir: string): Promise<Provider> {
 // registers its tools, and paying for that on every invocation would be paying for nothing.
 const carrigmoreDir = process.env['LODGE_CARRIGMORE_DIR'];
 const providers = new Map<string, Provider>([
-  ['san-telmo', createSyntheticProvider(issueStore(process.env))],
+  ['san-telmo', createSyntheticProvider(issueStore(process.env), bookingStore(process.env))],
   ...(carrigmoreDir ? ([['carrigmore', await carrigmore(carrigmoreDir)]] as const) : []),
 ]);
 

@@ -18,7 +18,7 @@
 | 05 | Orquestador de demostracion | Amazon Bedrock · Nova 2 Lite | Simulacion propia de Alexa+; se publica |
 | 06 | Identidad | OAuth 2.1 · **servidor de recursos** (`jose`) | Cada persona ve solo lo suyo. Lodge verifica, no emite: ADR-013 |
 | 07 | Despliegue autonomo | Contenedor · compose | Un fichero de configuracion y credenciales propias |
-| 08 | Despliegue gestionado | AWS Lambda (nodejs24.x, arm64) · DynamoDB · CDK v2 | Una funcion, una tabla y una URL. La tabla guarda **solo** los avisos: ADR-014 |
+| 08 | Despliegue gestionado | AWS Lambda (nodejs24.x, arm64) · DynamoDB · CDK v2 | Una funcion, dos tablas y una URL. Las tablas guardan **solo** lo que escribe una persona: los avisos (ADR-014) y las reservas (ADR-020) |
 | 09 | Observabilidad | OpenTelemetry (`api` siempre, SDK bajo demanda) | La traza **continua** la del cliente, por cabecera o por `_meta`: ADR-015 |
 
 **El nucleo corre en cualquier sitio; AWS es un destino, no un requisito.** Un proyecto que aspira a

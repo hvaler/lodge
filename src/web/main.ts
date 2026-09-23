@@ -207,7 +207,7 @@ const institutions: DemoInstitution[] = [...providers].map(([slug, provider]) =>
  *
  * Obtained through the provider like any other client, not minted behind its back. They let the
  * backend read tool catalogues before anyone has signed in — which is the moment where switching
- * institution makes three tools disappear — and they name `lodge-demo`, so they cannot answer for
+ * institution makes four tools disappear — and they name `lodge-demo`, so they cannot answer for
  * a person. They never leave this process.
  */
 const serviceTokens = new Map<string, string>();

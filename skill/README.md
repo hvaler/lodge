@@ -22,8 +22,8 @@ decides which institution it reaches:
 
 | Spoken in | Reaches | Publishes |
 | :-- | :-- | --: |
-| Spanish | Universidad de San Telmo | **6 tools** |
-| English | Carrigmore College | **3 tools** |
+| Spanish | Universidad de San Telmo | **8 tools** |
+| English | Carrigmore College | **4 tools** |
 
 That is the same thing the page demonstrates with its institution switcher, arriving at a device
 for free: one server answering for more than one place, with the *client* saying which. Carrigmore

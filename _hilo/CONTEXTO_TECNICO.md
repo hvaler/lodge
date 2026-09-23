@@ -113,7 +113,7 @@ src/
 ├── adapters/
 │   ├── synthetic/   ← Universidad de San Telmo (determinista)
 │   └── standards/   ← iCalendar · LDAP · CSV
-├── tools/       ← las seis herramientas campus.*
+├── tools/       ← las ocho herramientas campus.*
 └── cards/       ← tarjetas visuales (MCP Apps)
 infra/           ← pila AWS CDK v2
 docs/use-cases.md ← criterios de aceptacion = tests de contrato
@@ -124,7 +124,7 @@ docs/use-cases.md ← criterios de aceptacion = tests de contrato
 ## Observaciones
 
 - **La interfaz de proveedor se congela al cerrar M1** (27 sep). Despues solo se implementa contra
-  ella: tocarla impacta a los dos adaptadores y a las seis herramientas a la vez.
+  ella: tocarla impacta a los dos adaptadores y a todas las herramientas a la vez.
 - El servidor es **sin estado** por opcion del transporte, no por la revision: no introducir sesiones.
   Se deja montado `createMcpHandler(({ era }) => ...)` para servir revisiones posteriores sin reabrir
   la interfaz de proveedor (ADR-009).

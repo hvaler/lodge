@@ -160,7 +160,7 @@ describe('one skill, two languages', () => {
   it('reaches a different institution depending on what language it is spoken to', async () => {
     // The same thing the page demonstrates with its institution switcher, and the same argument:
     // one server answering for more than one place, with the client saying which. Carrigmore has
-    // no directory and no service desk, so it publishes three tools where San Telmo publishes six
+    // no directory and no service desk, so it publishes four tools where San Telmo publishes eight
     // — the device inherits that difference for free.
     const asked: string[] = [];
     const skill = skillWith(async (r) => {

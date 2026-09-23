@@ -1,5 +1,5 @@
 /**
- * The six MCP tools.
+ * The eight MCP tools.
  *
  * Registered from the provider's *declared* capabilities, not from this file's imports (ADR-004):
  * an institution with no issue tracker never sees the agent offer to file a fault, because the

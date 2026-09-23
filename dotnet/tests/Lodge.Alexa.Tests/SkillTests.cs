@@ -152,8 +152,8 @@ public sealed class SkillTests
     {
         // The same thing the page demonstrates with its institution switcher, and the same argument:
         // one server answering for more than one place, with the client saying which. Carrigmore has
-        // no directory and no service desk, so it publishes three tools where San Telmo publishes
-        // six — the device inherits that difference for free.
+        // no directory and no service desk, so it publishes four tools where San Telmo publishes
+        // eight — the device inherits that difference for free.
         var asked = new List<string>();
         var skill = new Skill((institution, _, _, _) => { asked.Add(institution); return Task.FromResult("ok"); });
         var token = TestContext.Current.CancellationToken;

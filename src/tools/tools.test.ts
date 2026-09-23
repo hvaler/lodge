@@ -1,5 +1,5 @@
 /**
- * The six tools, exercised through a real MCP client over an in-memory transport.
+ * The eight tools, exercised through a real MCP client over an in-memory transport.
  *
  * Deliberately not unit tests on the handlers: M1's output is "answers a generic MCP client", so
  * the tests go through the same listTools / callTool path any client would. That is what catches a
@@ -429,7 +429,7 @@ describe('campus.book_room', () => {
       /^MEN-101 está ocupada hasta las/,
     );
     expect(await call('campus.book_room', { room: 'MEN-101', at: '17:00', confirmed: true })).toContain(
-      'already taken',
+      'ya está ocupada',
     );
   });
 
@@ -437,11 +437,11 @@ describe('campus.book_room', () => {
     // Santa Clara closes at 20:00.
     expect(
       await call('campus.book_room', { room: 'SCL-001', at: '19:30', confirmed: true }),
-    ).toContain('not open');
+    ).toContain('no está abierto');
   });
 
   it('refuses a supervised lab, however empty', async () => {
-    expect(await call('campus.book_room', { room: 'SCL-101', confirmed: true })).toContain('supervised');
+    expect(await call('campus.book_room', { room: 'SCL-101', confirmed: true })).toContain('supervisada');
   });
 
   it('says there is no such room before asking', async () => {

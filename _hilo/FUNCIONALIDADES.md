@@ -37,7 +37,7 @@ consumirlo. La institucion publica sus capacidades una vez y deja de elegir clie
 
 ---
 
-## Las seis herramientas MCP
+## Las ocho herramientas MCP
 
 Se publican **segun capacidades**: ninguna aparece si el adaptador no la soporta. Una institucion sin
 gestor de incidencias no publica las de incidencias, y el agente nunca ofrece lo que no existe.
@@ -49,7 +49,9 @@ entregue, asi que la confirmacion viaja como argumento y funciona en cualquier t
 
 | Herramienta | Pregunta que resuelve | Nivel |
 |---|---|---|
-| `campus.find_room` | "¿Donde puedo estudiar ahora mismo?" | lectura |
+| `campus.find_room` | "¿Donde puedo estudiar ahora mismo?" (tambien por sede) | lectura |
+| `campus.room_schedule` | "¿Esta libre la MEN-203? ¿Hasta cuando?" | lectura |
+| `campus.book_room` | "Reservame la FAR-101 a las cinco" | **escritura** |
 | `campus.timetable` | "¿Que tengo manana a primera hora?" | lectura |
 | `campus.deadlines` | "¿Cuando acaba el plazo de matricula?" | lectura |
 | `campus.wayfind` | "¿Como llego al aula del examen?" | lectura |
@@ -73,10 +75,12 @@ entregue, asi que la confirmacion viaja como argumento y funciona en cualquier t
 | UC-04 | Llegar al aula | `campus.wayfind` | essential |
 | UC-05 | Reportar una averia | `campus.report_issue` | essential |
 | UC-06 | Seguimiento del aviso | `campus.issue_status` | **improvement** |
-| UC-07 | El estudiante de intercambio | las seis, dos adaptadores | essential |
+| UC-07 | El estudiante de intercambio | las mismas, dos adaptadores | essential |
+| UC-08 | ¿Esta libre esa sala? | `campus.room_schedule` | **improvement** |
+| UC-09 | Reservar una sala de reuniones | `campus.book_room` | **improvement** |
 
 **UC-07 justifica la arquitectura entera.** Un estudiante matriculado en dos instituciones pregunta
-lo mismo sobre la otra: se conmuta el adaptador activo y las mismas seis herramientas resuelven
+lo mismo sobre la otra: se conmuta el adaptador activo y las mismas herramientas resuelven
 contra otro origen de datos y otro idioma, sin reiniciar ni recompilar. Si deja de funcionar, esto es
 un servidor de campus mas y no una implementacion de referencia.
 

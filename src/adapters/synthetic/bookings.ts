@@ -31,7 +31,7 @@ export function formatBookingReference(sequence: number): string {
   return `RES-2026-${String(sequence).padStart(4, '0')}`;
 }
 
-const FIRST_FREE_BOOKING = 4;
+export const FIRST_FREE_BOOKING = 4;
 
 /**
  * In-memory diary, seeded so a clean clone has something to collide with.
@@ -76,7 +76,7 @@ export class InMemoryBookingStore implements BookingStore {
  * Deterministic like everything else here: whoever clones the repository gets the same diary, so a
  * recorded demonstration and a fresh checkout agree about which rooms are taken.
  */
-function seededBookings(): StoredBooking[] {
+export function seededBookings(): StoredBooking[] {
   return [
     {
       reference: formatBookingReference(1),

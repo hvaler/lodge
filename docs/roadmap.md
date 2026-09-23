@@ -148,7 +148,7 @@ institution's own ticketing system is a small piece of work, and the right one.
 were not in the managed function's bundle, so the institution switch — the single most convincing
 thing Lodge does — was only visible locally. A Lambda layer now mounts them read-only and the
 handler serves Carrigmore at `/mcp/carrigmore`, deliberately unequal: no LDAP inside a Lambda and no
-service desk to mail, so it publishes **three tools against San Telmo's six**. The switch is live.
+service desk to mail, so it publishes **four tools against San Telmo's eight**. The switch is live.
 
 **The managed deployment has a generated URL.** It changes if the stack is recreated, which is
 survivable for a demonstration and not for OAuth: tokens are bound to a canonical URI. A real
